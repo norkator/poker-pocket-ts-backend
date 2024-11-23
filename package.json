@@ -1,0 +1,19 @@
+{
+  "name": "poker-pocket-ts-backend",
+  "version": "1.0.0",
+  "description": "Poker Pocket multi game typescript websocket backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/norkator/poker-pocket-ts-backend.git"
+  },
+  "author": "Martin Kankaanranta (norkator)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/norkator/poker-pocket-ts-backend/issues"
+  },
+  "homepage": "https://github.com/norkator/poker-pocket-ts-backend#readme"
+}
