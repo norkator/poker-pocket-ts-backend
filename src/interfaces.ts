@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 
-interface GameHandlerInterface {
+export interface GameHandlerInterface {
   onConnection(socket: WebSocket): void;
 
   onMessage(message: string): void;
@@ -11,7 +11,7 @@ interface GameHandlerInterface {
 }
 
 
-interface PlayerInterface {
+export interface PlayerInterface {
   isBot: boolean;
   connection: WebSocket;
   socketKey: string;
@@ -52,4 +52,3 @@ interface PlayerInterface {
   setStateRaise(): void;
 }
 
-export { GameHandlerInterface }

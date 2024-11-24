@@ -1,3 +1,5 @@
+import {PlayerInterface} from './interfaces';
+
 class Player implements PlayerInterface {
   // static PLAYER_STATE_NONE = PlayerState.NONE;
   // static PLAYER_STATE_FOLD = PlayerState.FOLD;
@@ -5,7 +7,7 @@ class Player implements PlayerInterface {
   // static PLAYER_STATE_RAISE = PlayerState.RAISE;
 
   isBot: boolean;
-  connection: WebSocket;
+  connection: any;
   socketKey: string;
   playerId: string | number;
   playerDatabaseId: number = -1;
@@ -28,7 +30,7 @@ class Player implements PlayerInterface {
   cardsInvolvedOnEvaluation: any[] = [];
 
   constructor(
-    connection: WebSocket,
+    connection: any,
     socketKey: string,
     connectionId: string | number,
     playerMoney: number,
