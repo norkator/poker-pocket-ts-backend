@@ -4,6 +4,7 @@
   "description": "Poker Pocket multi game typescript websocket backend",
   "main": "index.js",
   "scripts": {
+    "start:dev": "nodemon",
     "start": "npx ts-node src/index.ts",
     "test": "jest"
   },
@@ -26,6 +27,7 @@
     "@types/node": "22.9.3",
     "@types/ws": "8.5.13",
     "jest": "29.7.0",
+    "nodemon": "3.1.7",
     "pino-pretty": "13.0.0",
     "ts-jest": "29.2.5",
     "ts-node": "10.9.2",
