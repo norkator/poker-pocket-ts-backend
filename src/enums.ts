@@ -1,4 +1,4 @@
-enum SocketState {
+export enum SocketState {
   CONNECTING = 0,
   OPEN = 1,
   CLOSING = 2,
@@ -18,7 +18,7 @@ export enum HoldemStage {
   TEN_RESULTS = 9,
 }
 
-enum PlayerState {
+export enum PlayerState {
   NONE = 0,
   FOLD = 1,
   CHECK = 2,

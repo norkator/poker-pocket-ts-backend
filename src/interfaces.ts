@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import {PlayerState} from './enums';
 
 export interface GameHandlerInterface {
   onConnection(socket: WebSocket): void;
@@ -52,3 +53,53 @@ export interface PlayerInterface {
   setStateRaise(): void;
 }
 
+export interface RoomInfoInterface {
+  roomId: number;
+  roomName: string;
+  roomMinBet: number;
+  playerCount: number;
+  maxSeats: number;
+}
+
+export interface HoldemTableInterface {
+
+  resetRoomParams(): void;
+
+  getRoomInfo(): RoomInfoInterface;
+
+  triggerNewGame(): void;
+
+  cleanSpectators(): void;
+
+  startGame(): void;
+
+  newGame(): void;
+
+  staging(): void;
+
+}
+
+export interface Player {
+  playerId: string | number;
+  playerName: string;
+  playerMoney: number;
+  isDealer: boolean;
+}
+
+export interface RoomParamsResponse {
+  key: string;
+  data: {
+    gameStarted: boolean;
+    playerCount: number;
+    roomMinBet: number;
+    middleCards: any[];
+    playersData: PlayerData[];
+  };
+}
+
+export interface PlayerData {
+  playerId: string | number;
+  playerName: string;
+  playerMoney: number;
+  isDealer: boolean;
+}
