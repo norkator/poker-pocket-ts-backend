@@ -20,7 +20,8 @@ const POKER_COLOR_RANK: { [key: string]: number } = {
   '♦': 1, '♣': 2, '♥': 3, '♠': 4
 };
 
-const POKER_CARDS: PokerCards = {};
+const POKER_CARDS: any = {};
+
 for (let color = 1; color <= 4; color++) {
   for (let number = 2; number <= 14; number++) {
     const card = (color << 4) | number;
@@ -157,3 +158,5 @@ class Poker {
   // }
 
 }
+
+export {Poker}

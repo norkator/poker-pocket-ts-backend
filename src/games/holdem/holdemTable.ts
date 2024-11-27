@@ -1,9 +1,10 @@
 import {EventEmitter} from 'events';
 import {gameConfig} from '../../gameConfig';
-import {HoldemStage} from '../../enums';
-import {HoldemTableInterface, RoomInfoInterface, RoomParamsResponse} from '../../interfaces';
+import {HoldemStage, PlayerState, SocketState} from '../../enums';
+import {ClientResponse, HoldemTableInterface, RoomInfoInterface, RoomParamsResponse} from '../../interfaces';
 import logger from '../../logger';
-import {} from '../../poker';
+import {Poker} from '../../poker';
+import {ResponseKey} from "../../types";
 
 export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
@@ -232,7 +233,7 @@ export class HoldemTable implements HoldemTableInterface {
 
   newGame(): void {
     // Always shuffle new deck
-    this.deck = poker.visualize(poker.randomize(poker.newSet()));
+    this.deck = Poker.visualize(Poker.randomize(Poker.newSet()));
     this.deckSize = this.deck.length;
     this.deckCard = 0;
     this.sendStatusUpdate();
@@ -329,7 +330,7 @@ export class HoldemTable implements HoldemTableInterface {
         currentStatus: this.currentStatusText,
         currentTurnText: this.currentTurnText,
         middleCards: this.middleCards,
-        playersData: [],
+        playersData: [] as any[],
         isCallSituation: this.isCallSituation,
         isResultsCall: this.isResultsCall,
         roundWinnerPlayerIds: this.roundWinnerPlayerIds,
@@ -361,5 +362,290 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
+
+  holeCards(): void {
+    // this.currentStage = HoldemStage.TWO_PRE_FLOP;
+    // for (let i = 0; i < this.players.length; i++) {
+    //   this.players[i].playerCards[0] = this.getNextDeckCard();
+    //   this.players[i].playerCards[1] = this.getNextDeckCard();
+    // }
+    // let response = {key: '', data: {}};
+    // response.key = 'holeCards';
+    // for (let i = 0; i < this.players.length; i++) {
+    //   response.data.players = [];
+    //   for (let p = 0; p < this.players.length; p++) {
+    //     let playerData = {};
+    //     playerData.playerId = this.players[p].playerId;
+    //     playerData.playerName = this.players[p].playerName;
+    //     this.players[p].playerId === this.players[i].playerId ? playerData.cards = this.players[p].playerCards : playerData.cards = [];
+    //     response.data.players.push(playerData);
+    //   }
+    //   this.sendWebSocketData(i, response);
+    // }
+    // response.data.players = [];
+    // for (let i = 0; i < this.players.length; i++) {
+    //   let playerData = {};
+    //   playerData.playerId = this.players[i].playerId;
+    //   playerData.cards = []; // Empty cards, otherwise causes security problem
+    //   response.data.players.push(playerData);
+    // }
+    // for (let i = 0; i < this.spectators.length; i++) {
+    //   this.sendSpectatorWebSocketData(i, response);
+    // }
+    // this.holeCardsGiven = true;
+    // setTimeout(() => {
+    //   this.staging();
+    // }, 3000);
+  }
+
+  theFlop(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  theTurn(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  theRiver(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  sendAllPlayersCards(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  roundResultsEnd(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  roundResultsMiddleOfTheGame(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  bettingRound(currentPlayerTurn: number): void {
+    if (this.getActivePlayers()) { // Checks that game has active players (not fold ones)
+      let verifyBets = this.verifyPlayersBets(); // Active players have correct amount of money in game
+      let noRoundPlayedPlayer = this.getNotRoundPlayedPlayer(); // Returns player position who has not played it's round
+      if (currentPlayerTurn >= this.players.length || this.isCallSituation && verifyBets === -1 || verifyBets === -1 && noRoundPlayedPlayer === -1) {
+        this.resetPlayerStates();
+        if (verifyBets === -1 && this.smallBlindGiven) {
+          if (noRoundPlayedPlayer === -1) {
+            this.currentStage = this.currentStage + 1;
+            if (this.collectChipsToPotAndSendAction()) { // Collect pot and send action if there is pot to collect
+              setTimeout(() => {
+                this.collectingPot = false;
+                this.staging();
+              }, 2500); // Have some time to collect pot and send action
+            } else {
+              setTimeout(() => {
+                this.staging(); // No pot to collect, continue without timing
+              }, 1000);
+            }
+          } else {
+            //this.bettingRound(noRoundPlayedPlayer);
+            // --- going into testing ---
+            this.players[noRoundPlayedPlayer].isPlayerTurn = true;
+            this.players[noRoundPlayedPlayer].playerTimeLeft = this.turnTimeOut;
+            this.currentTurnText = '' + this.players[noRoundPlayedPlayer].playerName + ' Turn';
+            this.sendStatusUpdate();
+
+            if (this.players[noRoundPlayedPlayer].isBot) {
+              this.botActionHandler(noRoundPlayedPlayer);
+            }
+            this.bettingRoundTimer(noRoundPlayedPlayer);
+            // --- going into testing ---
+          }
+        } else {
+          this.isCallSituation = true;
+          this.bettingRound(verifyBets);
+        }
+      } else {
+        if (this.players[currentPlayerTurn] != null || this.isCallSituation && verifyBets === -1 || !this.smallBlindGiven || !this.bigBlindGiven || !this.bigBlindPlayerHadTurn) { // 07.08.2018, added || !this.bigBlindPlayerHadTurn
+          // Forced small and big blinds case
+          if (this.currentStage === HoldemStage.TWO_PRE_FLOP && (!this.smallBlindGiven || !this.bigBlindGiven)) {
+            this.playerCheck(this.players[currentPlayerTurn].playerId, this.players[currentPlayerTurn].socketKey);
+            this.bettingRound(currentPlayerTurn + 1);
+          } else {
+            if (!this.players[currentPlayerTurn].isFold && !this.players[currentPlayerTurn].isAllIn) {
+              if (verifyBets !== -1 || !this.smallBlindGiven || !this.bigBlindGiven) {
+                this.isCallSituation = true;
+              }
+              // player's turn
+              this.players[currentPlayerTurn].isPlayerTurn = true;
+              this.players[currentPlayerTurn].playerTimeLeft = this.turnTimeOut;
+              this.currentTurnText = '' + this.players[currentPlayerTurn].playerName + ' Turn';
+              this.sendStatusUpdate();
+
+              if (this.players[currentPlayerTurn].isBot) {
+                this.botActionHandler(currentPlayerTurn);
+              }
+              this.bettingRoundTimer(currentPlayerTurn);
+            } else {
+              this.current_player_turn = this.current_player_turn + 1;
+              this.bettingRound(this.current_player_turn);
+            }
+          }
+        } else {
+          if (this.isCallSituation && verifyBets !== -1) {
+            this.bettingRound(verifyBets);
+          } else {
+            this.current_player_turn = this.current_player_turn + 1;
+            this.bettingRound(this.current_player_turn);
+          }
+        }
+      }
+    } else {
+      this.roundResultsMiddleOfTheGame();
+    }
+  }
+
+  bettingRoundTimer(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  clearTimers(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  playerFold(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  playerCheck(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  playerRaise(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  checkHighestBet(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  sendWebSocketData(player: any, data: any): void {
+    if (this.players[player] != null && !this.players[player].isBot) {
+      if (this.players[player].connection != null) {
+        if (this.players[player].connection.readyState === SocketState.OPEN) {
+          this.players[player].connection.sendText(JSON.stringify(data));
+        } else {
+          this.players[player].connection = null;
+        }
+      } else {
+        this.players[player].setStateFold();
+      }
+    }
+  }
+
+  sendWaitingPlayerWebSocketData(player: any, data: any): void {
+    if (this.playersToAppend[player] != null && !this.playersToAppend[player].isBot) {
+      if (this.playersToAppend[player].connection != null) {
+        if (this.playersToAppend[player].connection.readyState === SocketState.OPEN) {
+          this.playersToAppend[player].connection.sendText(JSON.stringify(data));
+        } else {
+          this.playersToAppend[player].connection = null;
+        }
+      }
+    }
+  }
+
+  sendSpectatorWebSocketData(spectator: any, data: any): void {
+    if (this.spectators[spectator] != null) {
+      if (this.spectators[spectator].connection != null) {
+        if (this.spectators[spectator].connection.readyState === SocketState.OPEN) {
+          this.spectators[spectator].connection.sendText(JSON.stringify(data));
+        }
+      }
+    }
+  }
+
+  sendAudioCommand(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  sendLastPlayerAction(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  collectChipsToPotAndSendAction(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  sendClientMessage(playerObject: any, message: string): void {
+    const response: ClientResponse = {key: '', data: {}};
+    response.key = 'clientMessage' as ResponseKey;
+    response.data.message = message;
+    if (playerObject.connection != null) {
+      if (playerObject.connection.readyState === SocketState.OPEN) {
+        playerObject.connection.sendText(JSON.stringify(response));
+      }
+    }
+  }
+
+  getNextDeckCard(): number {
+    let nextCard = this.deck[this.deckCard];
+    this.deckCard = this.deckCard + 1;
+    return nextCard;
+  }
+
+  getPlayerId(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  getActivePlayers(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  someOneHasAllIn(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  setNextDealerPlayer(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  getNextSmallBlindPlayer(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  getNextBigBlindPlayer(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  resetRoundParameters(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  getNotRoundPlayedPlayer(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  evaluatePlayerCards(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  updateLoggedInPlayerDatabaseStatistics(): void {
+    throw new Error('Method not implemented.');
+  }
+
+  burnCard() {
+    this.deckCard = this.deckCard + 1;
+    this.deckCardsBurned = this.deckCardsBurned + 1;
+  };
+
+
+  resetPlayerParameters() {
+    this.resetPlayerStates();
+    for (let i = 0; i < this.players.length; i++) {
+      this.players[i].resetParams();
+      this.players[i].checkFunds(this.roomMinBet);
+    }
+  };
+
+  resetPlayerStates() {
+    for (let i = 0; i < this.players.length; i++) {
+      this.players[i].playerState = PlayerState.NONE;
+    }
+  };
 
 }

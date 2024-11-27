@@ -63,7 +63,7 @@ export interface RoomInfoInterface {
 
 export interface HoldemTableInterface {
 
-  resetRoomParams(): void;
+  resetRoomParams(): void; // Run before each new round
 
   getRoomInfo(): RoomInfoInterface;
 
@@ -73,9 +73,93 @@ export interface HoldemTableInterface {
 
   startGame(): void;
 
-  newGame(): void;
+  newGame(): void; // New deck here
 
   staging(): void;
+
+  holeCards(): void; // Give players two cards
+
+  theFlop(): void; // Show three middle cards
+
+  theTurn(): void; // Show fourth card
+
+  theRiver(): void; // Show fifth card
+
+  sendAllPlayersCards(): void; // Send all player cards to all clients before round results call
+
+  roundResultsEnd(): void; // Calculate winner and transfer money
+
+  roundResultsMiddleOfTheGame(): void; // Game has stopped middle of the game due everyone folded or disconnected except one
+
+  bettingRound(currentPlayerTurn: number): void;
+
+  bettingRoundTimer(): void;
+
+  clearTimers(): void;
+
+  sendStatusUpdate(): void;
+
+  playerFold(): void; // Remember that if small or big blind is not given, folding player must still pay blind
+
+  playerCheck(): void; // Player checks but also Call goes through this function
+
+  playerRaise(): void;
+
+  burnCard(): void; // Burn one card before dealing
+
+  resetPlayerParameters(): void;
+
+  resetPlayerStates(): void;
+
+  verifyPlayersBets(): void; // Method checks that every player has correct amount of money in bet
+
+  checkHighestBet(): void;
+
+  getRoomParams(): void;
+
+  sendWebSocketData(player: any, data: any): void; // Send data to table players via this function
+
+  sendWaitingPlayerWebSocketData(player: any, data: any): void; // Send data to waiting table players via this function
+
+  sendSpectatorWebSocketData(spectator: any, data: any): void; // Send room status data to spectators
+
+  cleanSpectators(): void;
+
+  sendAudioCommand(): void; // Needed to be able to play other players command audio on client side
+
+  sendLastPlayerAction(): void; // Animated last user action text command
+
+  collectChipsToPotAndSendAction(): void; // Collect chips to pot action, collects and clears user total pots for this round
+
+  sendClientMessage(playerObject: any, message: string): void; // Custom message to send to a playing client before object is moved
+
+  getNextDeckCard(): number;
+
+  getPlayerId(): void;
+
+  getActivePlayers(): void;
+
+  someOneHasAllIn(): void;
+
+  setNextDealerPlayer(): void;
+
+  getNextSmallBlindPlayer(): void;
+
+  getNextBigBlindPlayer(): void;
+
+  resetRoundParameters(): void;
+
+  getNotRoundPlayedPlayer(): void;
+
+  evaluatePlayerCards(): void;
+
+  updateLoggedInPlayerDatabaseStatistics(): void;
+
+  botActionHandler(): void;
+
+  removeBotFromRoom(): void;
+
+  getRoomBotCount(): void;
 
 }
 
@@ -102,4 +186,11 @@ export interface PlayerData {
   playerName: string;
   playerMoney: number;
   isDealer: boolean;
+}
+
+export interface ClientResponse {
+  key: string;
+  data: {
+    message?: string;
+  };
 }

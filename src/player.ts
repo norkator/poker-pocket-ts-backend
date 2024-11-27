@@ -1,11 +1,7 @@
 import {PlayerInterface} from './interfaces';
+import {PlayerState} from './enums';
 
 class Player implements PlayerInterface {
-  // static PLAYER_STATE_NONE = PlayerState.NONE;
-  // static PLAYER_STATE_FOLD = PlayerState.FOLD;
-  // static PLAYER_STATE_CHECK = PlayerState.CHECK;
-  // static PLAYER_STATE_RAISE = PlayerState.RAISE;
-
   isBot: boolean;
   connection: any;
   socketKey: string;

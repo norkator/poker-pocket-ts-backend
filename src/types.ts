@@ -1,2 +1,3 @@
+export type ResponseKey = 'clientMessage';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD';
-type PokerCards = { [key: number]: string };
+export type PokerCards = { [key: number]: string };
