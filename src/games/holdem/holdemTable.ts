@@ -4,16 +4,17 @@ import {HoldemStage, PlayerState, SocketState} from '../../enums';
 import {
   ClientResponse,
   HandEvaluationInterface,
-  HoldemTableInterface,
+  HoldemTableInterface, PlayerData,
   RoomInfoInterface,
   RoomParamsResponse
 } from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
-import {PlayerAction, ResponseKey} from "../../types";
-import {getRandomInt} from "../../utils";
-import {PlayerActions} from "../../constants";
-import evaluator from "../../evaluator";
+import {PlayerAction, ResponseKey} from '../../types';
+import {getRandomInt} from '../../utils';
+import {PlayerActions} from '../../constants';
+import evaluator from '../../evaluator';
+import {Bot} from '../../bot';
 
 export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
@@ -371,38 +372,38 @@ export class HoldemTable implements HoldemTableInterface {
 
 
   holeCards(): void {
-    // this.currentStage = HoldemStage.TWO_PRE_FLOP;
-    // for (let i = 0; i < this.players.length; i++) {
-    //   this.players[i].playerCards[0] = this.getNextDeckCard();
-    //   this.players[i].playerCards[1] = this.getNextDeckCard();
-    // }
-    // let response = {key: '', data: {}};
-    // response.key = 'holeCards';
-    // for (let i = 0; i < this.players.length; i++) {
-    //   response.data.players = [];
-    //   for (let p = 0; p < this.players.length; p++) {
-    //     let playerData = {};
-    //     playerData.playerId = this.players[p].playerId;
-    //     playerData.playerName = this.players[p].playerName;
-    //     this.players[p].playerId === this.players[i].playerId ? playerData.cards = this.players[p].playerCards : playerData.cards = [];
-    //     response.data.players.push(playerData);
-    //   }
-    //   this.sendWebSocketData(i, response);
-    // }
-    // response.data.players = [];
-    // for (let i = 0; i < this.players.length; i++) {
-    //   let playerData = {};
-    //   playerData.playerId = this.players[i].playerId;
-    //   playerData.cards = []; // Empty cards, otherwise causes security problem
-    //   response.data.players.push(playerData);
-    // }
-    // for (let i = 0; i < this.spectators.length; i++) {
-    //   this.sendSpectatorWebSocketData(i, response);
-    // }
-    // this.holeCardsGiven = true;
-    // setTimeout(() => {
-    //   this.staging();
-    // }, 3000);
+    this.currentStage = HoldemStage.TWO_PRE_FLOP;
+    for (let i = 0; i < this.players.length; i++) {
+      this.players[i].playerCards[0] = this.getNextDeckCard();
+      this.players[i].playerCards[1] = this.getNextDeckCard();
+    }
+    let response: ClientResponse = {key: '', data: {}};
+    response.key = 'holeCards';
+    for (let i = 0; i < this.players.length; i++) {
+      response.data.players = [];
+      for (let p = 0; p < this.players.length; p++) {
+        let playerData: PlayerData = {};
+        playerData.playerId = this.players[p].playerId;
+        playerData.playerName = this.players[p].playerName;
+        this.players[p].playerId === this.players[i].playerId ? playerData.cards = this.players[p].playerCards : playerData.cards = [];
+        response.data.players.push(playerData);
+      }
+      this.sendWebSocketData(i, response);
+    }
+    response.data.players = [];
+    for (let i = 0; i < this.players.length; i++) {
+      let playerData: PlayerData = {};
+      playerData.playerId = this.players[i].playerId;
+      playerData.cards = []; // Empty cards, otherwise causes security problem
+      response.data.players.push(playerData);
+    }
+    for (let i = 0; i < this.spectators.length; i++) {
+      this.sendSpectatorWebSocketData(i, response);
+    }
+    this.holeCardsGiven = true;
+    setTimeout(() => {
+      this.staging();
+    }, 3000);
   }
 
   theFlop(): void {
@@ -560,7 +561,6 @@ export class HoldemTable implements HoldemTableInterface {
           }
           this.players[playerId].setStateFold();
           this.checkHighestBet();
-          //this.calculateTotalPot();
           this.sendLastPlayerAction(connectionId, PlayerActions.FOLD);
           this.sendAudioCommand('fold');
         }
@@ -783,16 +783,33 @@ export class HoldemTable implements HoldemTableInterface {
     return count > 1;
   }
 
-  someOneHasAllIn(): void {
-    throw new Error('Method not implemented.');
+  someOneHasAllIn(): boolean {
+    let count = 0;
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].isAllIn) {
+        count = count + 1;
+      }
+    }
+    return count > 0;
   }
 
   setNextDealerPlayer(): void {
-    throw new Error('Method not implemented.');
+    this.dealerPlayerArrayIndex = this.dealerPlayerArrayIndex + 1;
+    if (this.dealerPlayerArrayIndex >= this.players.length) {
+      this.dealerPlayerArrayIndex = 0;
+    }
+    this.players[this.dealerPlayerArrayIndex].isDealer = true;
   }
 
   getNextSmallBlindPlayer(): void {
-    throw new Error('Method not implemented.');
+    if (this.players.length > 2) {
+      this.smallBlindPlayerArrayIndex = this.dealerPlayerArrayIndex + 1;
+      if (this.smallBlindPlayerArrayIndex >= this.players.length) {
+        this.smallBlindPlayerArrayIndex = 0;
+      }
+    } else {
+      this.smallBlindPlayerArrayIndex = this.dealerPlayerArrayIndex;
+    }
   }
 
   getNextBigBlindPlayer(): number {
@@ -804,7 +821,9 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   resetRoundParameters(): void {
-    throw new Error('Method not implemented.');
+    for (let i = 0; i < this.players.length; i++) {
+      this.players[i].roundPlayed = false;
+    }
   }
 
   getNotRoundPlayedPlayer(): number {
@@ -852,7 +871,7 @@ export class HoldemTable implements HoldemTableInterface {
         if (cl === 3 || cl === 5 || cl === 6 || cl === 7) {
           return evaluator.evalHand(cardsToEvaluate);
         } else {
-          return {value: null, handName: null};
+          return {value: 0, handName: null};
         }
       }
     }
@@ -912,7 +931,7 @@ export class HoldemTable implements HoldemTableInterface {
     let check_amount = (this.currentHighestBet === 0 ? this.roomMinBet :
       (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
     let playerId = this.players[currentPlayerTurn].playerId;
-    let botObj = new bot.Bot(
+    let botObj = new Bot(
       this.holdemType,
       this.players[currentPlayerTurn].playerName,
       this.players[currentPlayerTurn].playerMoney,

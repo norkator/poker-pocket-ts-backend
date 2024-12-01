@@ -183,10 +183,11 @@ export interface RoomParamsResponse {
 }
 
 export interface PlayerData {
-  playerId: string | number;
-  playerName: string;
-  playerMoney: number;
-  isDealer: boolean;
+  playerId?: string | number;
+  playerName?: string;
+  playerMoney?: number;
+  isDealer?: boolean;
+  cards?: any;
 }
 
 export interface ClientResponse {
@@ -194,12 +195,17 @@ export interface ClientResponse {
   data: {
     message?: string;
     command?: string;
+    players?: PlayerData[];
   };
 }
 
 export interface HandEvaluationInterface {
-  value: number | null;
+  value: number;
   handName: string | null;
   handRank?: number;
   handType?: number;
+}
+
+export interface BotInterface {
+  performAction(): { action: string; amount: number };
 }
