@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import {HandEvaluationInterface} from './interfaces';
 
 class PokerEvaluator {
 
@@ -74,7 +75,7 @@ class PokerEvaluator {
 
   static ranks: Buffer;
 
-  static evalHand(cards: (string | number)[]): { handType: number; handRank: number; value: number; handName: string } {
+  static evalHand(cards: (string | number)[]): HandEvaluationInterface {
     if (!this.ranks) {
       throw new Error("HandRanks.dat not loaded");
     }
@@ -94,7 +95,7 @@ class PokerEvaluator {
     return this.eval(cards as number[]);
   }
 
-  static eval(cards: number[]): { handType: number; handRank: number; value: number; handName: string } {
+  static eval(cards: number[]): HandEvaluationInterface {
     let p = 53;
     for (const card of cards) {
       p = this.evalCard(p + card);

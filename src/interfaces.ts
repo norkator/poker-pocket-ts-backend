@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import {PlayerState} from './enums';
+import {PlayerAction} from "./types";
 
 export interface GameHandlerInterface {
   onConnection(socket: WebSocket): void;
@@ -93,17 +94,17 @@ export interface HoldemTableInterface {
 
   bettingRound(currentPlayerTurn: number): void;
 
-  bettingRoundTimer(): void;
+  bettingRoundTimer(currentPlayerTurn: number): void;
 
   clearTimers(): void;
 
   sendStatusUpdate(): void;
 
-  playerFold(): void; // Remember that if small or big blind is not given, folding player must still pay blind
+  playerFold(connectionId: any, socketKey: any): void; // Remember that if small or big blind is not given, folding player must still pay blind
 
-  playerCheck(): void; // Player checks but also Call goes through this function
+  playerCheck(connectionId: any, socketKey: any): void; // Player checks but also Call goes through this function
 
-  playerRaise(): void;
+  playerRaise(connectionId: any, socketKey: any, amount: number): void;
 
   burnCard(): void; // Burn one card before dealing
 
@@ -111,7 +112,7 @@ export interface HoldemTableInterface {
 
   resetPlayerStates(): void;
 
-  verifyPlayersBets(): void; // Method checks that every player has correct amount of money in bet
+  verifyPlayersBets(): number; // Method checks that every player has correct amount of money in bet
 
   checkHighestBet(): void;
 
@@ -125,19 +126,19 @@ export interface HoldemTableInterface {
 
   cleanSpectators(): void;
 
-  sendAudioCommand(): void; // Needed to be able to play other players command audio on client side
+  sendAudioCommand(action: string): void; // Needed to be able to play other players command audio on client side
 
-  sendLastPlayerAction(): void; // Animated last user action text command
+  sendLastPlayerAction(connectionId: any, playerAction: PlayerAction): void; // Animated last user action text command
 
-  collectChipsToPotAndSendAction(): void; // Collect chips to pot action, collects and clears user total pots for this round
+  collectChipsToPotAndSendAction(): boolean; // Collect chips to pot action, collects and clears user total pots for this round
 
   sendClientMessage(playerObject: any, message: string): void; // Custom message to send to a playing client before object is moved
 
   getNextDeckCard(): number;
 
-  getPlayerId(): void;
+  getPlayerId(connectionId: any): number;
 
-  getActivePlayers(): void;
+  hasActivePlayers(): boolean;
 
   someOneHasAllIn(): void;
 
@@ -145,21 +146,21 @@ export interface HoldemTableInterface {
 
   getNextSmallBlindPlayer(): void;
 
-  getNextBigBlindPlayer(): void;
+  getNextBigBlindPlayer(): number;
 
   resetRoundParameters(): void;
 
-  getNotRoundPlayedPlayer(): void;
+  getNotRoundPlayedPlayer(): number;
 
-  evaluatePlayerCards(): void;
+  evaluatePlayerCards(currentPlayer: number): HandEvaluationInterface;
 
   updateLoggedInPlayerDatabaseStatistics(): void;
 
-  botActionHandler(): void;
+  botActionHandler(currentPlayerTurn: number): void;
 
-  removeBotFromRoom(): void;
+  removeBotFromRoom(currentPlayerTurn: number): void;
 
-  getRoomBotCount(): void;
+  getRoomBotCount(): number;
 
 }
 
@@ -192,5 +193,13 @@ export interface ClientResponse {
   key: string;
   data: {
     message?: string;
+    command?: string;
   };
+}
+
+export interface HandEvaluationInterface {
+  value: number | null;
+  handName: string | null;
+  handRank?: number;
+  handType?: number;
 }

@@ -1,10 +1,19 @@
 import {EventEmitter} from 'events';
 import {gameConfig} from '../../gameConfig';
 import {HoldemStage, PlayerState, SocketState} from '../../enums';
-import {ClientResponse, HoldemTableInterface, RoomInfoInterface, RoomParamsResponse} from '../../interfaces';
+import {
+  ClientResponse,
+  HandEvaluationInterface,
+  HoldemTableInterface,
+  RoomInfoInterface,
+  RoomParamsResponse
+} from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
-import {ResponseKey} from "../../types";
+import {PlayerAction, ResponseKey} from "../../types";
+import {getRandomInt} from "../../utils";
+import {PlayerActions} from "../../constants";
+import evaluator from "../../evaluator";
 
 export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
@@ -309,11 +318,9 @@ export class HoldemTable implements HoldemTableInterface {
         this.bettingRound(this.current_player_turn); // this.bettingRound(this.current_player_turn);
         break;
       case HoldemStage.NINE_SEND_ALL_PLAYERS_CARDS: // Send all players cards here before results to all players and spectators
-        logger.log(this.roomName + ' sending cards to all room clients...');
         this.sendAllPlayersCards(); // Avoiding cheating with this
         break;
       case HoldemStage.TEN_RESULTS:
-        logger.log('-------- Results : ' + this.roomName + ' --------');
         this.roundResultsEnd();
         break;
       default:
@@ -423,7 +430,7 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   bettingRound(currentPlayerTurn: number): void {
-    if (this.getActivePlayers()) { // Checks that game has active players (not fold ones)
+    if (this.hasActivePlayers()) { // Checks that game has active players (not fold ones)
       let verifyBets = this.verifyPlayersBets(); // Active players have correct amount of money in game
       let noRoundPlayedPlayer = this.getNotRoundPlayedPlayer(); // Returns player position who has not played it's round
       if (currentPlayerTurn >= this.players.length || this.isCallSituation && verifyBets === -1 || verifyBets === -1 && noRoundPlayedPlayer === -1) {
@@ -499,24 +506,145 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  bettingRoundTimer(): void {
-    throw new Error('Method not implemented.');
+  bettingRoundTimer(currentPlayerTurn: number): void {
+    let turnTime = 0;
+    this.turnIntervalObj = setInterval(() => {
+      if (this.players[currentPlayerTurn] !== null) {
+        if (this.players[currentPlayerTurn].playerState === PlayerState.NONE) {
+          turnTime = turnTime + 1000;
+          this.players[currentPlayerTurn].playerTimeLeft = this.turnTimeOut - turnTime;
+        } else {
+          this.clearTimers();
+          this.bettingRound(currentPlayerTurn + 1);
+        }
+      } else {
+        this.clearTimers();
+        this.bettingRound(currentPlayerTurn + 1);
+      }
+    }, 1000);
+    this.turnTimeOutObj = setTimeout(() => {
+      if (this.players[currentPlayerTurn].playerState === PlayerState.NONE) {
+        this.playerFold(this.players[currentPlayerTurn].playerId, this.players[currentPlayerTurn].socketKey);
+        this.sendStatusUpdate();
+      }
+      this.clearTimers();
+      this.bettingRound(currentPlayerTurn + 1);
+    }, this.turnTimeOut + 200);
   }
 
   clearTimers(): void {
     throw new Error('Method not implemented.');
   }
 
-  playerFold(): void {
-    throw new Error('Method not implemented.');
+  playerFold(connectionId: any, socketKey: any): void {
+    let playerId = this.getPlayerId(connectionId);
+    if (this.players[playerId] !== undefined) {
+      if (this.players[playerId].connection != null && this.players[playerId].socketKey === socketKey || this.players[playerId].isBot) {
+        if (playerId !== -1) {
+          if (!this.smallBlindGiven || !this.bigBlindGiven) {
+            let blind_amount = 0;
+            if (!this.smallBlindGiven && !this.bigBlindGiven) {
+              blind_amount = (this.roomMinBet / 2);
+              this.smallBlindGiven = true;
+            } else if (this.smallBlindGiven && !this.bigBlindGiven) {
+              blind_amount = this.roomMinBet;
+              this.bigBlindGiven = true;
+            }
+            if (blind_amount <= this.players[playerId].playerMoney) {
+              if (blind_amount === this.players[playerId].playerMoney || this.someOneHasAllIn()) {
+                this.players[playerId].isAllIn = true;
+              }
+              this.players[playerId].totalBet = this.players[playerId].totalBet + blind_amount;
+              this.players[playerId].playerMoney = this.players[playerId].playerMoney - blind_amount;
+            }
+          }
+          this.players[playerId].setStateFold();
+          this.checkHighestBet();
+          //this.calculateTotalPot();
+          this.sendLastPlayerAction(connectionId, PlayerActions.FOLD);
+          this.sendAudioCommand('fold');
+        }
+      }
+    }
   }
 
-  playerCheck(): void {
-    throw new Error('Method not implemented.');
+  playerCheck(connectionId: any, socketKey: any): void {
+    let playerId = this.getPlayerId(connectionId);
+    if (this.players[playerId].connection != null && this.players[playerId].socketKey === socketKey || this.players[playerId].isBot) {
+      if (playerId !== -1) {
+        let check_amount = 0;
+        if (this.isCallSituation || this.totalPot === 0 || !this.smallBlindGiven || !this.bigBlindGiven) {
+          if (this.smallBlindGiven && this.bigBlindGiven) {
+            check_amount = this.currentHighestBet === 0 ? this.roomMinBet : (this.currentHighestBet - this.players[playerId].totalBet);
+          } else {
+            if (this.smallBlindGiven && !this.bigBlindGiven) {
+              check_amount = this.roomMinBet;
+              this.bigBlindGiven = true;
+              this.players[playerId].roundPlayed = false;
+            } else {
+              check_amount = this.roomMinBet / 2;
+              this.smallBlindGiven = true;
+            }
+          }
+          if (check_amount <= this.players[playerId].playerMoney) {
+            this.players[playerId].setStateCheck();
+            if (check_amount === this.players[playerId].playerMoney || this.someOneHasAllIn()) {
+              this.players[playerId].isAllIn = true;
+            }
+            this.players[playerId].totalBet = this.players[playerId].totalBet + check_amount;
+            this.players[playerId].playerMoney = this.players[playerId].playerMoney - check_amount;
+          }
+          if (this.isCallSituation) {
+            this.sendLastPlayerAction(connectionId, PlayerActions.CALL);
+          }
+        } else {
+          this.players[playerId].setStateCheck();
+          this.sendLastPlayerAction(connectionId, PlayerActions.CHECK);
+        }
+        if (this.isCallSituation || check_amount > 0) {
+          this.sendAudioCommand('call');
+        } else {
+          this.sendAudioCommand('check');
+        }
+        this.checkHighestBet();
+      }
+    }
   }
 
-  playerRaise(): void {
-    throw new Error('Method not implemented.');
+  playerRaise(connectionId: any, socketKey: any, amount: number): void {
+    let playerId = this.getPlayerId(connectionId);
+    if (this.players[playerId].connection !== null && this.players[playerId].socketKey === socketKey || this.players[playerId].isBot) {
+      if (playerId !== -1) {
+        let playerBetDifference = (this.currentHighestBet - this.players[playerId].totalBet);
+        if (amount === 0) {
+          amount = playerBetDifference;
+        }
+        if (amount < playerBetDifference) {
+          amount = (playerBetDifference + amount);
+        }
+        if (amount <= this.players[playerId].playerMoney) {
+          if (amount === this.players[playerId].playerMoney || this.someOneHasAllIn()) {
+            this.players[playerId].isAllIn = true;
+          }
+          this.players[playerId].setStateRaise();
+          this.players[playerId].totalBet = this.players[playerId].totalBet + amount;
+          this.players[playerId].playerMoney = this.players[playerId].playerMoney - amount;
+          this.isCallSituation = true;
+          if (!this.smallBlindGiven || !this.bigBlindGiven) {
+            if (amount >= (this.roomMinBet / 2)) {
+              this.smallBlindGiven = true;
+            }
+            if (amount >= this.roomMinBet) {
+              this.bigBlindGiven = true;
+            }
+          }
+        }
+        this.sendLastPlayerAction(connectionId, PlayerActions.RAISE);
+        this.sendAudioCommand('raise');
+        this.checkHighestBet();
+        //this.calculateTotalPot();
+      }
+    }
   }
 
   checkHighestBet(): void {
@@ -559,16 +687,67 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  sendAudioCommand(): void {
-    throw new Error('Method not implemented.');
+  sendAudioCommand(action: string): void {
+    let response: ClientResponse = {key: '', data: {}};
+    response.key = 'audioCommand';
+    response.data.command = action;
+    for (let i = 0; i < this.players.length; i++) {
+      this.updateJsonTemp = response;
+      this.sendWebSocketData(i, response);
+    }
+    for (let w = 0; w < this.playersToAppend.length; w++) {
+      this.sendWaitingPlayerWebSocketData(w, response);
+    }
+    for (let s = 0; s < this.spectators.length; s++) {
+      this.sendSpectatorWebSocketData(s, response);
+    }
   }
 
-  sendLastPlayerAction(): void {
-    throw new Error('Method not implemented.');
+  sendLastPlayerAction(connectionId: any, playerAction: PlayerAction): void {
+    let response = {key: '', data: {}};
+    response.key = 'lastUserAction';
+    this.lastUserAction.playerId = connectionId;
+    this.lastUserAction.actionText = playerAction;
+    response.data = this.lastUserAction;
+    for (let i = 0; i < this.players.length; i++) {
+      this.updateJsonTemp = response;
+      this.sendWebSocketData(i, response);
+    }
+    for (let w = 0; w < this.playersToAppend.length; w++) {
+      this.sendWaitingPlayerWebSocketData(w, response);
+    }
+    for (let s = 0; s < this.spectators.length; s++) {
+      this.sendSpectatorWebSocketData(s, response);
+    }
   }
 
-  collectChipsToPotAndSendAction(): void {
-    throw new Error('Method not implemented.');
+  collectChipsToPotAndSendAction(): boolean {
+    let boolMoneyToCollect = false;
+    for (let u = 0; u < this.players.length; u++) {
+      if (this.players[u].totalBet > 0) {
+        boolMoneyToCollect = true;
+      }
+      this.totalPot = this.totalPot + this.players[u].totalBet; // Get round bet to total pot
+      this.players[u].totalBet = 0; // It's collected, we can empty players total bet
+    }
+    // Send animation action
+    if (boolMoneyToCollect) {
+      this.collectingPot = true;
+      let response = {key: '', data: {}};
+      response.key = 'collectChipsToPot';
+      for (let i = 0; i < this.players.length; i++) {
+        this.updateJsonTemp = response;
+        this.sendWebSocketData(i, response);
+      }
+      for (let w = 0; w < this.playersToAppend.length; w++) {
+        this.sendWaitingPlayerWebSocketData(w, response);
+      }
+      for (let s = 0; s < this.spectators.length; s++) {
+        this.sendSpectatorWebSocketData(s, response);
+      }
+      return true; // Money to collect, wait before continuing to staging
+    }
+    return false; // No money to collect, continue staging without delay
   }
 
   sendClientMessage(playerObject: any, message: string): void {
@@ -588,12 +767,20 @@ export class HoldemTable implements HoldemTableInterface {
     return nextCard;
   }
 
-  getPlayerId(): void {
-    throw new Error('Method not implemented.');
+  getPlayerId(connectionId: any): number {
+    return this.players.findIndex(player => player.playerId === connectionId);
   }
 
-  getActivePlayers(): void {
-    throw new Error('Method not implemented.');
+  hasActivePlayers(): boolean {
+    let count = 0;
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i] !== null) {
+        if (!this.players[i].isFold) {
+          count = count + 1;
+        }
+      }
+    }
+    return count > 1;
   }
 
   someOneHasAllIn(): void {
@@ -608,20 +795,67 @@ export class HoldemTable implements HoldemTableInterface {
     throw new Error('Method not implemented.');
   }
 
-  getNextBigBlindPlayer(): void {
-    throw new Error('Method not implemented.');
+  getNextBigBlindPlayer(): number {
+    let bigBlindPlayerIndex = this.smallBlindPlayerArrayIndex + 1;
+    if (bigBlindPlayerIndex >= this.players.length) {
+      bigBlindPlayerIndex = 0;
+    }
+    return bigBlindPlayerIndex;
   }
 
   resetRoundParameters(): void {
     throw new Error('Method not implemented.');
   }
 
-  getNotRoundPlayedPlayer(): void {
-    throw new Error('Method not implemented.');
+  getNotRoundPlayedPlayer(): number {
+    // Check that all players have had their turn
+    for (let i = 0; i < this.players.length; i++) {
+      if (!this.players[i].isFold && !this.players[i].roundPlayed && !this.players[i].isAllIn) {
+        return i;
+      }
+    }
+    // Check that big blind player have had its turn
+    if (
+      this.currentStage === HoldemStage.TWO_PRE_FLOP &&
+      this.smallBlindGiven &&
+      this.bigBlindGiven &&
+      !this.bigBlindPlayerHadTurn
+    ) {
+      this.bigBlindPlayerHadTurn = true;
+      let bigBlindPlayer = this.getNextBigBlindPlayer();
+      this.players[bigBlindPlayer].playerState = PlayerState.NONE;
+      this.players[bigBlindPlayer].roundPlayed = false;
+      return bigBlindPlayer;
+    }
+    return -1; // Otherwise return -1 to continue
   }
 
-  evaluatePlayerCards(): void {
-    throw new Error('Method not implemented.');
+  evaluatePlayerCards(currentPlayer: number): HandEvaluationInterface {
+    let cardsToEvaluate = [];
+    let ml = this.middleCards.length;
+    // Push available middle cards
+    for (let i = 0; i < ml; i++) {
+      if (this.middleCards[i] !== void 0) { // Index is not 'undefined'
+        cardsToEvaluate.push(this.middleCards[i]);
+      }
+    }
+    // Push player hole cards
+    if (this.players[currentPlayer] === undefined) {
+      return {value: 0, handName: null};
+    } else {
+      if (this.players[currentPlayer].playerCards == null || this.players[currentPlayer].playerCards === undefined) {
+        return {value: 0, handName: null};
+      } else {
+        cardsToEvaluate.push(this.players[currentPlayer].playerCards[0]);
+        cardsToEvaluate.push(this.players[currentPlayer].playerCards[1]);
+        let cl = cardsToEvaluate.length;
+        if (cl === 3 || cl === 5 || cl === 6 || cl === 7) {
+          return evaluator.evalHand(cardsToEvaluate);
+        } else {
+          return {value: null, handName: null};
+        }
+      }
+    }
   }
 
   updateLoggedInPlayerDatabaseStatistics(): void {
@@ -647,5 +881,94 @@ export class HoldemTable implements HoldemTableInterface {
       this.players[i].playerState = PlayerState.NONE;
     }
   };
+
+  verifyPlayersBets(): number {
+    let highestBet = 0;
+    for (let i = 0; i < this.players.length; i++) { // Get the highest bet
+      if (this.players[i] != null) {
+        if (!this.players[i].isFold) {
+          if (highestBet === 0) {
+            highestBet = this.players[i].totalBet;
+          }
+          if (this.players[i].totalBet > highestBet) {
+            highestBet = this.players[i].totalBet;
+          }
+        }
+      }
+    }
+    for (let i = 0; i < this.players.length; i++) { // Find someone with lower bet
+      if (this.players[i] != null) {
+        if (!this.players[i].isFold && !this.players[i].isAllIn) {
+          if (this.players[i].totalBet < highestBet) {
+            return i;
+          }
+        }
+      }
+    }
+    return !this.smallBlindGiven || !this.bigBlindGiven ? 0 : -1;
+  }
+
+  botActionHandler(currentPlayerTurn: number): void {
+    let check_amount = (this.currentHighestBet === 0 ? this.roomMinBet :
+      (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
+    let playerId = this.players[currentPlayerTurn].playerId;
+    let botObj = new bot.Bot(
+      this.holdemType,
+      this.players[currentPlayerTurn].playerName,
+      this.players[currentPlayerTurn].playerMoney,
+      this.players[currentPlayerTurn].playerCards,
+      this.isCallSituation,
+      this.roomMinBet,
+      check_amount,
+      this.smallBlindGiven,
+      this.bigBlindGiven,
+      this.evaluatePlayerCards(currentPlayerTurn).value,
+      this.currentStage,
+      this.players[currentPlayerTurn].totalBet
+    );
+    let resultSet = botObj.performAction();
+    let tm = setTimeout(() => {
+      switch (resultSet.action) {
+        case 'bot_fold':
+          this.playerFold(playerId, null);
+          break;
+        case 'bot_check':
+          this.playerCheck(playerId, null);
+          break;
+        case 'bot_call':
+          this.playerCheck(playerId, null);
+          break;
+        case 'bot_raise':
+          this.playerRaise(playerId, null, resultSet.amount);
+          break;
+        case 'remove_bot': // Bot run out of money
+          this.playerFold(playerId, null);
+          this.removeBotFromRoom(currentPlayerTurn);
+          break;
+        default:
+          this.playerCheck(playerId, null);
+          break;
+      }
+      this.sendStatusUpdate();
+
+      clearTimeout(tm);
+    }, gameConfig.games.holdEm.bot.turnTimes[getRandomInt(1, 4)]);
+  }
+
+  removeBotFromRoom(currentPlayerTurn: number): void {
+    this.eventEmitter.emit('needNewBot', this.roomId);
+    this.players[currentPlayerTurn].connection = null;
+  }
+
+  getRoomBotCount(): number {
+    let l = this.players.length;
+    let c = 0;
+    for (let i = 0; i < l; i++) {
+      if (this.players[i].isBot) {
+        c++;
+      }
+    }
+    return c;
+  }
 
 }
