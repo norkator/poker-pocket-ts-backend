@@ -154,7 +154,7 @@ export interface HoldemTableInterface {
 
   evaluatePlayerCards(currentPlayer: number): HandEvaluationInterface;
 
-  updateLoggedInPlayerDatabaseStatistics(): void;
+  updateLoggedInPlayerDatabaseStatistics(winnerPlayers: any, lastWinnerPlayers: any): void;
 
   botActionHandler(currentPlayerTurn: number): void;
 
@@ -196,6 +196,7 @@ export interface ClientResponse {
     message?: string;
     command?: string;
     players?: PlayerData[];
+    middleCards?: any[];
   };
 }
 

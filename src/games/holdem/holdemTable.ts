@@ -11,10 +11,11 @@ import {
 import logger from '../../logger';
 import {Poker} from '../../poker';
 import {PlayerAction, ResponseKey} from '../../types';
-import {getRandomInt} from '../../utils';
+import {asciiToStringCardsArray, getRandomInt, stringToAsciiCardsArray} from '../../utils';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
 import {Bot} from '../../bot';
+import {Hand} from 'pokersolver';
 
 export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
@@ -407,27 +408,169 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   theFlop(): void {
-    throw new Error('Method not implemented.');
+    this.currentStage = HoldemStage.FOUR_POST_FLOP;
+    this.middleCards[0] = this.getNextDeckCard();
+    this.middleCards[1] = this.getNextDeckCard();
+    this.middleCards[2] = this.getNextDeckCard();
+    let response: ClientResponse = {key: '', data: {}};
+    response.key = 'theFlop';
+    response.data.middleCards = this.middleCards;
+    for (let p = 0; p < this.players.length; p++) {
+      this.sendWebSocketData(p, response);
+    }
+    for (let w = 0; w < this.playersToAppend.length; w++) {
+      this.sendWaitingPlayerWebSocketData(w, response);
+    }
+    for (let s = 0; s < this.spectators.length; s++) {
+      this.sendSpectatorWebSocketData(s, response);
+    }
+    setTimeout(() => {
+      this.staging();
+    }, 3000);
   }
 
   theTurn(): void {
-    throw new Error('Method not implemented.');
+    this.currentStage = HoldemStage.SIX_THE_POST_TURN;
+    this.middleCards[3] = this.getNextDeckCard();
+    let response: ClientResponse = {key: '', data: {}};
+    response.key = 'theTurn';
+    response.data.middleCards = this.middleCards;
+    for (let p = 0; p < this.players.length; p++) {
+      this.sendWebSocketData(p, response);
+    }
+    for (let w = 0; w < this.playersToAppend.length; w++) {
+      this.sendWaitingPlayerWebSocketData(w, response);
+    }
+    for (let s = 0; s < this.spectators.length; s++) {
+      this.sendSpectatorWebSocketData(s, response);
+    }
+    setTimeout(() => {
+      this.staging();
+    }, 2000);
   }
 
   theRiver(): void {
-    throw new Error('Method not implemented.');
+    this.currentStage = HoldemStage.EIGHT_THE_SHOW_DOWN;
+    this.middleCards[4] = this.getNextDeckCard();
+    let response: ClientResponse = {key: '', data: {}};
+    response.key = 'theRiver';
+    response.data.middleCards = this.middleCards;
+    for (let p = 0; p < this.players.length; p++) {
+      this.sendWebSocketData(p, response);
+    }
+    for (let w = 0; w < this.playersToAppend.length; w++) {
+      this.sendWaitingPlayerWebSocketData(w, response);
+    }
+    for (let s = 0; s < this.spectators.length; s++) {
+      this.sendSpectatorWebSocketData(s, response);
+    }
+    setTimeout(() => {
+      this.staging();
+    }, 2000);
   }
 
   sendAllPlayersCards(): void {
-    throw new Error('Method not implemented.');
+    this.currentStage = HoldemStage.TEN_RESULTS;
+    let response: ClientResponse = {key: '', data: {}};
+    response.key = 'allPlayersCards';
+    response.data.players = [];
+    for (let i = 0; i < this.players.length; i++) {
+      let playerData: PlayerData = {};
+      playerData.playerId = this.players[i].playerId;
+      playerData.cards = this.players[i].playerCards;
+      response.data.players.push(playerData);
+    }
+    for (let p = 0; p < this.players.length; p++) {
+      this.sendWebSocketData(p, response);
+    }
+    for (let a = 0; a < this.playersToAppend.length; a++) {
+      this.sendWaitingPlayerWebSocketData(a, response);
+    }
+    for (let s = 0; s < this.spectators.length; s++) {
+      this.sendSpectatorWebSocketData(s, response);
+    }
+    setTimeout(() => {
+      this.staging();
+    }, 3000);
   }
 
   roundResultsEnd(): void {
-    throw new Error('Method not implemented.');
+    let winnerPlayers = [];
+    let currentHighestRank = 0;
+    let l = this.players.length;
+    for (let i = 0; i < l; i++) {
+      if (!this.players[i].isFold) {
+        // Use poker solver to get hand used in evaluation
+        let hand = Hand.solve(asciiToStringCardsArray([
+          this.middleCards[0], this.middleCards[1], this.middleCards[2], this.middleCards[3], this.middleCards[4],
+          this.players[i].playerCards[0], this.players[i].playerCards[1]
+        ]));
+        this.players[i].cardsInvolvedOnEvaluation = hand.cards;
+        // Use Hand ranks to get value and hand name
+        let evaluated = this.evaluatePlayerCards(i);
+        this.players[i].handValue = evaluated.value;
+        this.players[i].handName = evaluated.handName;
+        // Log out results
+        logger.info(
+          `${this.players[i].playerName} has ${this.players[i].handName} with value ${this.players[i].handValue} cards involved ${hand.cards}`
+        );
+        // Calculate winner(s)
+        if (this.players[i].handValue > currentHighestRank) {
+          currentHighestRank = this.players[i].handValue;
+          winnerPlayers = []; // zero it
+          winnerPlayers.push(i);
+        } else if (this.players[i].handValue === currentHighestRank) {
+          winnerPlayers.push(i);
+        }
+      }
+    }
+    let winnerNames = [];
+    let sharedPot = (this.totalPot / winnerPlayers.length);
+    l = winnerPlayers.length;
+    for (let i = 0; i < l; i++) {
+      winnerNames.push(this.players[winnerPlayers[i]].playerName + (l > 1 ? '' : ''));
+      this.players[winnerPlayers[i]].playerMoney = this.players[winnerPlayers[i]].playerMoney + sharedPot;
+      this.roundWinnerPlayerIds.push(this.players[winnerPlayers[i]].playerId);
+      this.roundWinnerPlayerCards.push(stringToAsciiCardsArray(this.players[winnerPlayers[i]].cardsInvolvedOnEvaluation));
+    }
+    logger.info(`Room ${this.roomName} winners are ${winnerNames}`);
+    this.currentStatusText = `${winnerNames} got ${this.players[winnerPlayers[0]].handName}`;
+
+    this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
+    this.lastWinnerPlayers = winnerPlayers; // Take new reference of winner players
+    this.totalPot = 0;
+    this.isResultsCall = true;
+
+    setTimeout(() => {
+      this.gameStarted = false;
+      this.triggerNewGame();
+    }, gameConfig.games.holdEm.holdEmGames[this.holdemType].afterRoundCountdown * 1000);
   }
 
   roundResultsMiddleOfTheGame(): void {
-    throw new Error('Method not implemented.');
+    let winnerPlayer = -1;
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i] !== null) {
+        if (!this.players[i].isFold) {
+          winnerPlayer = i;
+          break;
+        }
+      }
+    }
+    if (winnerPlayer !== -1) {
+      this.collectChipsToPotAndSendAction();
+      this.collectingPot = false;
+      this.players[winnerPlayer].playerMoney = this.players[winnerPlayer].playerMoney + this.totalPot;
+      this.currentStatusText = this.players[winnerPlayer].playerName + ' is only standing player!';
+      this.currentTurnText = '';
+      this.isResultsCall = true;
+      this.updateLoggedInPlayerDatabaseStatistics([winnerPlayer], this.lastWinnerPlayers);
+      this.lastWinnerPlayers = [winnerPlayer]; // Take new reference of winner player
+    }
+    setTimeout(() => {
+      this.gameStarted = false;
+      this.triggerNewGame();
+    }, gameConfig.games.holdEm.holdEmGames[this.holdemType].afterRoundCountdown * 1000);
   }
 
   bettingRound(currentPlayerTurn: number): void {
@@ -534,7 +677,12 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   clearTimers(): void {
-    throw new Error('Method not implemented.');
+    if (this.turnIntervalObj !== null) {
+      clearInterval(this.turnIntervalObj);
+    }
+    if (this.turnTimeOutObj !== null) {
+      clearTimeout(this.turnTimeOutObj);
+    }
   }
 
   playerFold(connectionId: any, socketKey: any): void {
@@ -648,7 +796,11 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   checkHighestBet(): void {
-    throw new Error('Method not implemented.');
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].totalBet > this.currentHighestBet) {
+        this.currentHighestBet = this.players[i].totalBet;
+      }
+    }
   }
 
   sendWebSocketData(player: any, data: any): void {
@@ -877,8 +1029,45 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  updateLoggedInPlayerDatabaseStatistics(): void {
-    throw new Error('Method not implemented.');
+  updateLoggedInPlayerDatabaseStatistics(winnerPlayers: any, lastWinnerPlayers: any): void {
+    // for (let i = 0; i < this.players.length; i++) {
+    //   if (this.players[i] !== null) {
+    //     if (this.players[i].connection !== null) {
+    //       if (!this.players[i].isBot && this.players[i].isLoggedInPlayer()) {
+//
+    //         // this.fancyLogGreen(this.arrayHasValue(winnerPlayers, i));
+    //         if (this.arrayHasValue(winnerPlayers, i)) { // Update win count
+    //           let winStreak = this.arrayHasValue(lastWinnerPlayers, i);
+    //           dbUtils.UpdatePlayerWinCountPromise(this.sequelizeObjects, this.eventEmitter, this.players[i].playerId, this.players[i].playerDatabaseId, winStreak).then(() => {
+    //           });
+    //           this.players[i].playerWinCount = this.players[i].playerWinCount + 1;
+//
+    //         } else {
+//
+    //           // Update lose count (update only if money is raised up from small and big blinds)
+    //           if (this.totalPot > (this.roomMinBet * this.players.length)) {
+    //             this.players[i].playerLoseCount = this.players[i].playerLoseCount + 1;
+    //             dbUtils.UpdatePlayerLoseCountPromise(this.sequelizeObjects, this.players[i].playerDatabaseId).then(() => {
+    //             });
+    //           }
+    //         }
+//
+    //         // Update player funds
+    //         dbUtils.UpdatePlayerMoneyPromise(this.sequelizeObjects, this.players[i].playerDatabaseId, this.players[i].playerMoney).then(() => {
+    //         });
+    //         dbUtils.InsertPlayerStatisticPromise(
+    //           this.sequelizeObjects, this.players[i].playerDatabaseId,
+    //           this.players[i].playerMoney, this.players[i].playerWinCount,
+    //           this.players[i].playerLoseCount
+    //         ).then(() => {
+    //           logger.log('Updated player ' + this.players[i].playerName + ' statistics.', logger.LOG_GREEN);
+    //         }).catch(error => {
+    //           logger.log(error, logger.LOG_RED);
+    //         });
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   burnCard() {

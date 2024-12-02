@@ -1,5 +1,6 @@
 import {GameHandlerInterface} from '../interfaces';
 import WebSocket from 'ws';
+import {HoldemTable} from './holdem/holdemTable';
 
 class GameHandler implements GameHandlerInterface {
   onConnection(socket: WebSocket): void {
