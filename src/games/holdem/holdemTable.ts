@@ -1,16 +1,14 @@
-import {EventEmitter} from 'events';
 import {gameConfig} from '../../gameConfig';
 import {HoldemStage, PlayerState, SocketState} from '../../enums';
 import {
   ClientResponse,
   HandEvaluationInterface,
-  HoldemTableInterface, PlayerData,
-  RoomInfoInterface,
-  RoomParamsResponse
+  HoldemTableInterface,
+  PlayerData, TableInfoInterface,
 } from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
-import {PlayerAction, ResponseKey} from '../../types';
+import {PlayerAction} from '../../types';
 import {asciiToStringCardsArray, getRandomInt, stringToAsciiCardsArray} from '../../utils';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
@@ -19,10 +17,9 @@ import {Hand} from 'pokersolver';
 
 export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
-  roomId: number;
-  eventEmitter: EventEmitter;
-  roomMinBet: number;
-  roomName: string;
+  tableId: number;
+  tableMinBet: number;
+  tableName: string;
   maxSeats: number;
   minPlayers: number;
   turnTimeOut: number;
@@ -64,14 +61,12 @@ export class HoldemTable implements HoldemTableInterface {
 
   constructor(
     holdemType: number,
-    number: number,
-    eventEmitter: EventEmitter,
+    tableId: number,
   ) {
     this.holdemType = holdemType;
-    this.roomId = number;
-    this.eventEmitter = eventEmitter;
-    this.roomMinBet = gameConfig.games.holdEm.holdEmGames[holdemType].minBet;
-    this.roomName = 'Room ' + number;
+    this.tableId = tableId;
+    this.tableMinBet = gameConfig.games.holdEm.holdEmGames[holdemType].minBet;
+    this.tableName = 'Table ' + tableId;
     this.maxSeats = gameConfig.games.holdEm.holdEmGames[holdemType].max_seats;
     this.minPlayers = gameConfig.games.holdEm.holdEmGames[holdemType].minPlayers;
     this.turnTimeOut = gameConfig.games.holdEm.holdEmGames[holdemType].turnCountdown * 1000;
@@ -112,7 +107,7 @@ export class HoldemTable implements HoldemTableInterface {
     this.collectingPot = false;
   }
 
-  resetRoomParams(): void {
+  resetTableParams(): void {
     this.currentStage = HoldemStage.ONE_HOLE_CARDS;
     this.holeCardsGiven = false;
     this.totalPot = 0;
@@ -131,11 +126,11 @@ export class HoldemTable implements HoldemTableInterface {
     this.deckCardsBurned = 0;
   }
 
-  getRoomInfo(): RoomInfoInterface {
+  getTableInfo(): TableInfoInterface {
     return {
-      roomId: this.roomId,
-      roomName: this.roomName,
-      roomMinBet: this.roomMinBet,
+      tableId: this.tableId,
+      tableName: this.tableName,
+      tableMinBet: this.tableMinBet,
       playerCount: (this.players.length + this.playersToAppend.length + this.bots.length),
       maxSeats: this.maxSeats
     };
@@ -146,7 +141,7 @@ export class HoldemTable implements HoldemTableInterface {
     if (!this.gameStarted) {
       this.playersTemp = [];
       for (const player of this.players) {
-        if (player && player.connection && player.playerMoney > this.roomMinBet) {
+        if (player && player.connection && player.playerMoney > this.tableMinBet) {
           this.playersTemp.push(player);
         } else if (player && !player.isBot) {
           this.sendClientMessage(player, 'Not enough money to join the game. You are now spectator.');
@@ -157,7 +152,7 @@ export class HoldemTable implements HoldemTableInterface {
       this.playersTemp = [];
       if (this.playersToAppend.length > 0) {
         for (const player of this.playersToAppend) {
-          if (player.connection && player.playerMoney > this.roomMinBet) {
+          if (player.connection && player.playerMoney > this.tableMinBet) {
             this.players.push(player);
           } else if (!player.isBot) {
             this.sendClientMessage(player, 'Not enough money to join the game. You are now spectator.');
@@ -170,7 +165,7 @@ export class HoldemTable implements HoldemTableInterface {
             this.startGame();
           }, gameConfig.common.startGameTimeOut);
         } else {
-          console.log(`* Room ${this.roomName} has not enough players`);
+          console.log(`* Table ${this.tableName} has not enough players`);
         }
       } else {
         if (this.players.length >= this.minPlayers) {
@@ -183,7 +178,7 @@ export class HoldemTable implements HoldemTableInterface {
         }
       }
     } else {
-      console.log(`* Can't append more players since round is running for room: ${this.roomName}`);
+      logger.info(`* Can't append more players since round is running for table: ${this.tableName}`);
     }
   }
 
@@ -201,12 +196,12 @@ export class HoldemTable implements HoldemTableInterface {
   startGame(): void {
     if (!this.gameStarted) {
       this.gameStarted = true;
-      logger.info('Game started for room: ' + this.roomName);
-      this.resetRoomParams();
+      logger.info('Game started for table: ' + this.tableName);
+      this.resetTableParams();
       this.resetPlayerParameters(); // Reset players (resets dealer param too)
       this.setNextDealerPlayer(); // Get next dealer player
       this.getNextSmallBlindPlayer(); // Get small blind player
-      let response = this.getRoomParams();
+      let response = this.getTableParams();
       logger.debug(JSON.stringify(response));
       for (let i = 0; i < this.players.length; i++) {
         this.players[i].isFold = false;
@@ -222,13 +217,13 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  getRoomParams(): RoomParamsResponse {
-    const response: RoomParamsResponse = {
-      key: 'roomParams',
+  getTableParams(): ClientResponse {
+    const response: ClientResponse = {
+      key: 'tableParams',
       data: {
         gameStarted: this.currentStage >= HoldemStage.ONE_HOLE_CARDS && this.holeCardsGiven,
         playerCount: this.players.length,
-        roomMinBet: this.roomMinBet,
+        tableMinBet: this.tableMinBet,
         middleCards: this.middleCards,
         playersData: [],
       },
@@ -263,7 +258,7 @@ export class HoldemTable implements HoldemTableInterface {
         break;
       case HoldemStage.TWO_PRE_FLOP: // First betting round
         this.currentStatusText = 'Pre flop & small blind & big blind';
-        this.isCallSituation = false; // Room related reset
+        this.isCallSituation = false; // table related reset
         this.resetPlayerStates();
         this.resetRoundParameters();
         this.current_player_turn = this.smallBlindPlayerArrayIndex; // Round starting player is always small blind player
@@ -280,7 +275,7 @@ export class HoldemTable implements HoldemTableInterface {
       case HoldemStage.FOUR_POST_FLOP: // Second betting round
         this.currentStatusText = 'Post flop';
         this.currentTurnText = '';
-        this.isCallSituation = false; // Room related reset
+        this.isCallSituation = false; // table related reset
         this.resetPlayerStates();
         this.resetRoundParameters();
         this.current_player_turn = this.smallBlindPlayerArrayIndex; // Round starting player is always small blind player
@@ -296,7 +291,7 @@ export class HoldemTable implements HoldemTableInterface {
       case HoldemStage.SIX_THE_POST_TURN: // Third betting round
         this.currentStatusText = 'Post turn';
         this.currentTurnText = '';
-        this.isCallSituation = false; // Room related reset
+        this.isCallSituation = false; // table related reset
         this.resetPlayerStates();
         this.resetRoundParameters();
         this.current_player_turn = this.smallBlindPlayerArrayIndex; // Round starting player is always small blind player
@@ -312,7 +307,7 @@ export class HoldemTable implements HoldemTableInterface {
       case HoldemStage.EIGHT_THE_SHOW_DOWN: // Fourth and final betting round
         this.currentStatusText = 'The show down';
         this.currentTurnText = '';
-        this.isCallSituation = false; // Room related reset
+        this.isCallSituation = false; // table related reset
         this.resetPlayerStates();
         this.resetRoundParameters();
         this.current_player_turn = this.smallBlindPlayerArrayIndex; // Round starting player is always small blind player
@@ -344,7 +339,7 @@ export class HoldemTable implements HoldemTableInterface {
         isResultsCall: this.isResultsCall,
         roundWinnerPlayerIds: this.roundWinnerPlayerIds,
         roundWinnerPlayerCards: this.roundWinnerPlayerCards,
-        roomName: this.roomName,
+        tableName: this.tableName,
         playingPlayersCount: this.players.length,
         appendPlayersCount: this.playersToAppend.length,
         spectatorsCount: this.spectators.length,
@@ -378,8 +373,7 @@ export class HoldemTable implements HoldemTableInterface {
       this.players[i].playerCards[0] = this.getNextDeckCard();
       this.players[i].playerCards[1] = this.getNextDeckCard();
     }
-    let response: ClientResponse = {key: '', data: {}};
-    response.key = 'holeCards';
+    let response: ClientResponse = {key: 'holeCards', data: {}};
     for (let i = 0; i < this.players.length; i++) {
       response.data.players = [];
       for (let p = 0; p < this.players.length; p++) {
@@ -412,8 +406,7 @@ export class HoldemTable implements HoldemTableInterface {
     this.middleCards[0] = this.getNextDeckCard();
     this.middleCards[1] = this.getNextDeckCard();
     this.middleCards[2] = this.getNextDeckCard();
-    let response: ClientResponse = {key: '', data: {}};
-    response.key = 'theFlop';
+    let response: ClientResponse = {key: 'theFlop', data: {}};
     response.data.middleCards = this.middleCards;
     for (let p = 0; p < this.players.length; p++) {
       this.sendWebSocketData(p, response);
@@ -432,8 +425,7 @@ export class HoldemTable implements HoldemTableInterface {
   theTurn(): void {
     this.currentStage = HoldemStage.SIX_THE_POST_TURN;
     this.middleCards[3] = this.getNextDeckCard();
-    let response: ClientResponse = {key: '', data: {}};
-    response.key = 'theTurn';
+    let response: ClientResponse = {key: 'theTurn', data: {}};
     response.data.middleCards = this.middleCards;
     for (let p = 0; p < this.players.length; p++) {
       this.sendWebSocketData(p, response);
@@ -452,8 +444,7 @@ export class HoldemTable implements HoldemTableInterface {
   theRiver(): void {
     this.currentStage = HoldemStage.EIGHT_THE_SHOW_DOWN;
     this.middleCards[4] = this.getNextDeckCard();
-    let response: ClientResponse = {key: '', data: {}};
-    response.key = 'theRiver';
+    let response: ClientResponse = {key: 'theRiver', data: {}};
     response.data.middleCards = this.middleCards;
     for (let p = 0; p < this.players.length; p++) {
       this.sendWebSocketData(p, response);
@@ -471,8 +462,7 @@ export class HoldemTable implements HoldemTableInterface {
 
   sendAllPlayersCards(): void {
     this.currentStage = HoldemStage.TEN_RESULTS;
-    let response: ClientResponse = {key: '', data: {}};
-    response.key = 'allPlayersCards';
+    let response: ClientResponse = {key: 'allPlayersCards', data: {}};
     response.data.players = [];
     for (let i = 0; i < this.players.length; i++) {
       let playerData: PlayerData = {};
@@ -533,7 +523,7 @@ export class HoldemTable implements HoldemTableInterface {
       this.roundWinnerPlayerIds.push(this.players[winnerPlayers[i]].playerId);
       this.roundWinnerPlayerCards.push(stringToAsciiCardsArray(this.players[winnerPlayers[i]].cardsInvolvedOnEvaluation));
     }
-    logger.info(`Room ${this.roomName} winners are ${winnerNames}`);
+    logger.info(`table ${this.tableName} winners are ${winnerNames}`);
     this.currentStatusText = `${winnerNames} got ${this.players[winnerPlayers[0]].handName}`;
 
     this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
@@ -693,10 +683,10 @@ export class HoldemTable implements HoldemTableInterface {
           if (!this.smallBlindGiven || !this.bigBlindGiven) {
             let blind_amount = 0;
             if (!this.smallBlindGiven && !this.bigBlindGiven) {
-              blind_amount = (this.roomMinBet / 2);
+              blind_amount = (this.tableMinBet / 2);
               this.smallBlindGiven = true;
             } else if (this.smallBlindGiven && !this.bigBlindGiven) {
-              blind_amount = this.roomMinBet;
+              blind_amount = this.tableMinBet;
               this.bigBlindGiven = true;
             }
             if (blind_amount <= this.players[playerId].playerMoney) {
@@ -723,14 +713,14 @@ export class HoldemTable implements HoldemTableInterface {
         let check_amount = 0;
         if (this.isCallSituation || this.totalPot === 0 || !this.smallBlindGiven || !this.bigBlindGiven) {
           if (this.smallBlindGiven && this.bigBlindGiven) {
-            check_amount = this.currentHighestBet === 0 ? this.roomMinBet : (this.currentHighestBet - this.players[playerId].totalBet);
+            check_amount = this.currentHighestBet === 0 ? this.tableMinBet : (this.currentHighestBet - this.players[playerId].totalBet);
           } else {
             if (this.smallBlindGiven && !this.bigBlindGiven) {
-              check_amount = this.roomMinBet;
+              check_amount = this.tableMinBet;
               this.bigBlindGiven = true;
               this.players[playerId].roundPlayed = false;
             } else {
-              check_amount = this.roomMinBet / 2;
+              check_amount = this.tableMinBet / 2;
               this.smallBlindGiven = true;
             }
           }
@@ -779,10 +769,10 @@ export class HoldemTable implements HoldemTableInterface {
           this.players[playerId].playerMoney = this.players[playerId].playerMoney - amount;
           this.isCallSituation = true;
           if (!this.smallBlindGiven || !this.bigBlindGiven) {
-            if (amount >= (this.roomMinBet / 2)) {
+            if (amount >= (this.tableMinBet / 2)) {
               this.smallBlindGiven = true;
             }
-            if (amount >= this.roomMinBet) {
+            if (amount >= this.tableMinBet) {
               this.bigBlindGiven = true;
             }
           }
@@ -840,8 +830,7 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   sendAudioCommand(action: string): void {
-    let response: ClientResponse = {key: '', data: {}};
-    response.key = 'audioCommand';
+    let response: ClientResponse = {key: 'audioCommand', data: {}};
     response.data.command = action;
     for (let i = 0; i < this.players.length; i++) {
       this.updateJsonTemp = response;
@@ -903,8 +892,7 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   sendClientMessage(playerObject: any, message: string): void {
-    const response: ClientResponse = {key: '', data: {}};
-    response.key = 'clientMessage' as ResponseKey;
+    const response: ClientResponse = {key: 'clientMessage', data: {}};
     response.data.message = message;
     if (playerObject.connection != null) {
       if (playerObject.connection.readyState === SocketState.OPEN) {
@@ -1045,7 +1033,7 @@ export class HoldemTable implements HoldemTableInterface {
     //         } else {
 //
     //           // Update lose count (update only if money is raised up from small and big blinds)
-    //           if (this.totalPot > (this.roomMinBet * this.players.length)) {
+    //           if (this.totalPot > (this.tableMinBet * this.players.length)) {
     //             this.players[i].playerLoseCount = this.players[i].playerLoseCount + 1;
     //             dbUtils.UpdatePlayerLoseCountPromise(this.sequelizeObjects, this.players[i].playerDatabaseId).then(() => {
     //             });
@@ -1080,7 +1068,7 @@ export class HoldemTable implements HoldemTableInterface {
     this.resetPlayerStates();
     for (let i = 0; i < this.players.length; i++) {
       this.players[i].resetParams();
-      this.players[i].checkFunds(this.roomMinBet);
+      this.players[i].checkFunds(this.tableMinBet);
     }
   };
 
@@ -1117,7 +1105,7 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   botActionHandler(currentPlayerTurn: number): void {
-    let check_amount = (this.currentHighestBet === 0 ? this.roomMinBet :
+    let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
       (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
     let playerId = this.players[currentPlayerTurn].playerId;
     let botObj = new Bot(
@@ -1126,7 +1114,7 @@ export class HoldemTable implements HoldemTableInterface {
       this.players[currentPlayerTurn].playerMoney,
       this.players[currentPlayerTurn].playerCards,
       this.isCallSituation,
-      this.roomMinBet,
+      this.tableMinBet,
       check_amount,
       this.smallBlindGiven,
       this.bigBlindGiven,
@@ -1151,7 +1139,7 @@ export class HoldemTable implements HoldemTableInterface {
           break;
         case 'remove_bot': // Bot run out of money
           this.playerFold(playerId, null);
-          this.removeBotFromRoom(currentPlayerTurn);
+          this.removeBotFromTable(currentPlayerTurn);
           break;
         default:
           this.playerCheck(playerId, null);
@@ -1163,12 +1151,12 @@ export class HoldemTable implements HoldemTableInterface {
     }, gameConfig.games.holdEm.bot.turnTimes[getRandomInt(1, 4)]);
   }
 
-  removeBotFromRoom(currentPlayerTurn: number): void {
-    this.eventEmitter.emit('needNewBot', this.roomId);
+  removeBotFromTable(currentPlayerTurn: number): void {
+    // this.eventEmitter.emit('needNewBot', this.tableId); // Todo fix
     this.players[currentPlayerTurn].connection = null;
   }
 
-  getRoomBotCount(): number {
+  getTableBotCount(): number {
     let l = this.players.length;
     let c = 0;
     for (let i = 0; i < l; i++) {

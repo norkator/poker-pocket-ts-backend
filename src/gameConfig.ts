@@ -1,27 +1,12 @@
 export const gameConfig = {
-  logging: true,
-  server: {
-    secure: false, // false=ws, true=wss
-    port: 8000,
-    host: '0.0.0.0'
-  },
-  sequelize: {
-    logging: false,
-  },
   common: {
-    startGameTimeOut: 3000,     // 2000 stock
-    startingRooms: 1,          // Default 4, How many rooms to create at start
-    roomZeroBotCount: 5,
-    roomOneBotCount: 2,
-    roomTwoBotCount: 2,
-    roomOthersBotCount: 0,      // For production set to 0
-  },
-  neuralNetwork: {
-    learningRate: 0.3
+    startGameTimeOut: 3000,
   },
   games: {
     holdEm: {
+      startingTables: 1, // default 4, how many tables to create at start
       bot: {
+        botCounts: [2,3,2], // add count for each starting table assuming you want bots in every table
         giveRealNames: true, // true => random from assets/names.txt, false => Bot<numbers>
         startMoney: 10000,
         turnTimes: [1000, 1500, 2000, 2500, 3000],

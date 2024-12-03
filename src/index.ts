@@ -6,18 +6,13 @@ const port = 8000;
 const server = new WebSocketServer({port});
 const gameHandler = new GameHandler();
 
+gameHandler.createStartingTables();
+
 server.on('connection', (socket: WebSocket) => {
-  // logger.info('New client connected');
   gameHandler.onConnection(socket);
 
   socket.on('message', (message: string) => {
-    gameHandler.onMessage(message);
-    // logger.info(`Received: ${message}`);
-    // server.clients.forEach((client) => {
-    //   if (client.readyState === WebSocket.OPEN) {
-    //     client.send(message);
-    //   }
-    // });
+    gameHandler.onMessage(socket, message);
   });
 
   socket.on('error', console.error);

@@ -1,15 +1,14 @@
 import {PlayerInterface} from './interfaces';
 import {PlayerState} from './enums';
+import WebSocket from 'ws';
 
 class Player implements PlayerInterface {
+  socket: WebSocket | null;
   isBot: boolean;
-  connection: any;
-  socketKey: string;
-  playerId: string | number;
+  playerMoney: number;
   playerDatabaseId: number = -1;
   selectedRoomId: number = -1;
   playerName: string | null = null;
-  playerMoney: number;
   playerWinCount: number = 0;
   playerLoseCount: number = 0;
   playerCards: any[] = [];
@@ -26,17 +25,13 @@ class Player implements PlayerInterface {
   cardsInvolvedOnEvaluation: any[] = [];
 
   constructor(
-    connection: any,
-    socketKey: string,
-    connectionId: string | number,
+    socket: WebSocket,
     playerMoney: number,
     isBot: boolean
   ) {
-    this.connection = connection;
-    this.socketKey = socketKey;
-    this.playerId = connectionId;
-    this.playerMoney = playerMoney;
+    this.socket = socket;
     this.isBot = isBot;
+    this.playerMoney = playerMoney;
   }
 
   resetParams(): void {
@@ -52,8 +47,8 @@ class Player implements PlayerInterface {
     this.isDealer = false;
   }
 
-  checkFunds(roomMinBet: number): void {
-    if (this.playerMoney < roomMinBet) {
+  checkFunds(tableMinBet: number): void {
+    if (this.playerMoney < tableMinBet) {
       this.setStateFold();
     }
   }

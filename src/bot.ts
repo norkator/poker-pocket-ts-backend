@@ -16,7 +16,7 @@ export class Bot implements BotInterface {
   playerMoney: number;
   myHand: string[];
   isCallSituation: boolean;
-  roomMinBet: number;
+  tableMinBet: number;
   checkAmount: number;
   smallBlindGiven: boolean;
   bigBlindGiven: boolean;
@@ -39,7 +39,7 @@ export class Bot implements BotInterface {
     playerMoney: number,
     myHand: string[],
     isCallSituation: boolean,
-    roomMinBet: number,
+    tableMinBet: number,
     checkAmount: number,
     smallBlindGiven: boolean,
     bigBlindGiven: boolean,
@@ -52,7 +52,7 @@ export class Bot implements BotInterface {
     this.playerMoney = playerMoney;
     this.myHand = myHand;
     this.isCallSituation = isCallSituation;
-    this.roomMinBet = roomMinBet;
+    this.tableMinBet = tableMinBet;
     this.checkAmount = checkAmount;
     this.smallBlindGiven = smallBlindGiven;
     this.bigBlindGiven = bigBlindGiven;
@@ -63,7 +63,7 @@ export class Bot implements BotInterface {
   }
 
   performAction(): { action: string; amount: number } {
-    if (this.playerMoney <= this.roomMinBet + 500) {
+    if (this.playerMoney <= this.tableMinBet + 500) {
       this.resultsSet.action = Bot.REMOVE_BOT;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {
       this.resultsSet.action = Bot.BOT_FOLD;

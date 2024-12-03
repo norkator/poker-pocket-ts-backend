@@ -1,11 +1,13 @@
 import WebSocket from 'ws';
 import {PlayerState} from './enums';
-import {PlayerAction} from "./types";
+import {PlayerAction, ResponseKey} from './types';
 
 export interface GameHandlerInterface {
+  createStartingTables(): void;
+
   onConnection(socket: WebSocket): void;
 
-  onMessage(message: string): void;
+  onMessage(socket: WebSocket, message: string): void;
 
   onError(): void;
 
@@ -14,14 +16,12 @@ export interface GameHandlerInterface {
 
 
 export interface PlayerInterface {
+  socket: WebSocket | null;
   isBot: boolean;
-  connection: WebSocket;
-  socketKey: string;
-  playerId: string | number;
+  playerMoney: number;
   playerDatabaseId: number;
   selectedRoomId: number;
   playerName: string | null;
-  playerMoney: number;
   playerWinCount: number;
   playerLoseCount: number;
   playerCards: any[];
@@ -39,7 +39,7 @@ export interface PlayerInterface {
 
   resetParams(): void;
 
-  checkFunds(roomMinBet: number): void;
+  checkFunds(tableMinBet: number): void;
 
   isLoggedInPlayer(): boolean;
 
@@ -54,19 +54,19 @@ export interface PlayerInterface {
   setStateRaise(): void;
 }
 
-export interface RoomInfoInterface {
-  roomId: number;
-  roomName: string;
-  roomMinBet: number;
+export interface TableInfoInterface {
+  tableId: number;
+  tableName: string;
+  tableMinBet: number;
   playerCount: number;
   maxSeats: number;
 }
 
 export interface HoldemTableInterface {
 
-  resetRoomParams(): void; // Run before each new round
+  resetTableParams(): void; // Run before each new round
 
-  getRoomInfo(): RoomInfoInterface;
+  getTableInfo(): TableInfoInterface;
 
   triggerNewGame(): void;
 
@@ -116,13 +116,13 @@ export interface HoldemTableInterface {
 
   checkHighestBet(): void;
 
-  getRoomParams(): void;
+  getTableParams(): void;
 
   sendWebSocketData(player: any, data: any): void; // Send data to table players via this function
 
   sendWaitingPlayerWebSocketData(player: any, data: any): void; // Send data to waiting table players via this function
 
-  sendSpectatorWebSocketData(spectator: any, data: any): void; // Send room status data to spectators
+  sendSpectatorWebSocketData(spectator: any, data: any): void; // Send table status data to spectators
 
   cleanSpectators(): void;
 
@@ -158,9 +158,9 @@ export interface HoldemTableInterface {
 
   botActionHandler(currentPlayerTurn: number): void;
 
-  removeBotFromRoom(currentPlayerTurn: number): void;
+  removeBotFromTable(currentPlayerTurn: number): void;
 
-  getRoomBotCount(): number;
+  getTableBotCount(): number;
 
 }
 
@@ -169,17 +169,6 @@ export interface Player {
   playerName: string;
   playerMoney: number;
   isDealer: boolean;
-}
-
-export interface RoomParamsResponse {
-  key: string;
-  data: {
-    gameStarted: boolean;
-    playerCount: number;
-    roomMinBet: number;
-    middleCards: any[];
-    playersData: PlayerData[];
-  };
 }
 
 export interface PlayerData {
@@ -191,12 +180,17 @@ export interface PlayerData {
 }
 
 export interface ClientResponse {
-  key: string;
+  key: ResponseKey;
   data: {
+    tables?: any[];
     message?: string;
     command?: string;
     players?: PlayerData[];
+    gameStarted?: boolean;
+    playerCount?: number;
+    tableMinBet?: number;
     middleCards?: any[];
+    playersData?: PlayerData[];
   };
 }
 
