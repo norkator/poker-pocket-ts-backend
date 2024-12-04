@@ -1,6 +1,9 @@
-import {TableInfoInterface} from '../../interfaces';
+import {ClientResponse, PlayerInterface, TableInfoInterface} from '../../interfaces';
 
 export class FiveCardDrawTable {
+  players: PlayerInterface[] = [];
+  playersToAppend: PlayerInterface[] = [];
+  public maxSeats: number = 6;
 
   getTableInfo(): TableInfoInterface {
     return {
@@ -11,5 +14,29 @@ export class FiveCardDrawTable {
       maxSeats: 0 //this.maxSeats
     };
   }
+
+  triggerNewGame(): void {
+  }
+
+  getTableParams(): ClientResponse {
+    const response: ClientResponse = {
+      key: 'tableParams',
+      data: {
+        // gameStarted: this.currentStage >= HoldemStage.ONE_HOLE_CARDS && this.holeCardsGiven,
+        // playerCount: this.players.length,
+        // tableMinBet: this.tableMinBet,
+        // middleCards: this.middleCards,
+        // playersData: [],
+      },
+    };
+    response.data.playersData = this.players.map((player: PlayerInterface) => ({
+      playerId: player.playerId,
+      playerName: player.playerName,
+      playerMoney: player.playerMoney,
+      isDealer: player.isDealer,
+    }));
+    return response;
+  }
+
 
 }

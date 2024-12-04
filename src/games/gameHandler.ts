@@ -1,4 +1,4 @@
-import {ClientResponse, GameHandlerInterface} from '../interfaces';
+import {ClientResponse, GameHandlerInterface, PlayerInterface} from '../interfaces';
 import WebSocket from 'ws';
 import {HoldemTable} from './holdem/holdemTable';
 import {FiveCardDrawTable} from './fiveCardDraw/fiveCardDrawTable';
@@ -6,9 +6,11 @@ import {Player} from '../player';
 import {ClientMessageKey} from '../types';
 import logger from '../logger';
 import {gameConfig} from '../gameConfig';
+import {generatePlayerName} from '../utils';
 
+let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
-const tables = new Map<number, HoldemTable | FiveCardDrawTable>();
+const tables = new Map<number, FiveCardDrawTable | HoldemTable>();
 
 class GameHandler implements GameHandlerInterface {
 
@@ -19,7 +21,8 @@ class GameHandler implements GameHandlerInterface {
   }
 
   onConnection(socket: WebSocket): void {
-    const player = new Player(socket, 10000, false);
+    const player = new Player(socket, playerIdIncrement, 10000, false, generatePlayerName(socket));
+    playerIdIncrement++;
     players.set(socket, player);
     socket.send(JSON.stringify({key: 'connected'} as ClientResponse));
   }
@@ -41,7 +44,9 @@ class GameHandler implements GameHandlerInterface {
     throw new Error("Method not implemented.");
   }
 
-  private messageHandler(socket: WebSocket, message: { key: ClientMessageKey } | any): void {
+  private messageHandler(socket: WebSocket, message: { key: ClientMessageKey; tableId: number; } | any): void {
+    let tableId: number = -1;
+    let table: any = undefined;
     switch (message.key) {
       case 'getTables':
         break;
@@ -52,6 +57,27 @@ class GameHandler implements GameHandlerInterface {
         });
         logger.info("Sending spectate tables... " + JSON.stringify(tableParams));
         socket.send(JSON.stringify(tableParams));
+        break;
+      case 'selectTable':
+        tableId = message.tableId;
+        table = tables.get(tableId);
+        if (table) {
+          const player: Player | undefined = players.get(socket);
+          if (player && (table.players.length + table.playersToAppend.length) < table.maxSeats) {
+            player.selectedTableId = tableId;
+            table.playersToAppend.push(player);
+            logger.info(`${player.playerName} selected room ${tableId}`);
+            table.triggerNewGame();
+          }
+          socket.send(JSON.stringify(table.getTableParams()));
+        }
+        break;
+      case 'getTableParams':
+        tableId = message.tableId;
+        table = tables.get(tableId);
+        if (table) {
+          socket.send(JSON.stringify(table.getTableParams()));
+        }
         break;
     }
   }

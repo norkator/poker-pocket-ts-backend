@@ -4,7 +4,7 @@ import {
   ClientResponse,
   HandEvaluationInterface,
   HoldemTableInterface,
-  PlayerData, TableInfoInterface,
+  PlayerData, PlayerInterface, TableInfoInterface,
 } from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
@@ -14,24 +14,25 @@ import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
 import {Bot} from '../../bot';
 import {Hand} from 'pokersolver';
+import {Player} from '../../player';
 
 export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
   tableId: number;
   tableMinBet: number;
   tableName: string;
-  maxSeats: number;
+  public maxSeats: number;
   minPlayers: number;
   turnTimeOut: number;
   currentStage: number;
   holeCardsGiven: boolean;
   totalPot: number;
   bots: any[];
-  players: any[];
-  playersToAppend: any[];
-  playersTemp: any[];
-  spectators: any[];
-  spectatorsTemp: any[];
+  public players: Player[];
+  public playersToAppend: Player[];
+  playersTemp: Player[];
+  spectators: Player[];
+  spectatorsTemp: Player[];
   deck: any | null;
   deckCard: number;
   deckSize: number;
@@ -141,18 +142,18 @@ export class HoldemTable implements HoldemTableInterface {
     if (!this.gameStarted) {
       this.playersTemp = [];
       for (const player of this.players) {
-        if (player && player.connection && player.playerMoney > this.tableMinBet) {
+        if (player && player.socket && player.playerMoney > this.tableMinBet) {
           this.playersTemp.push(player);
         } else if (player && !player.isBot) {
           this.sendClientMessage(player, 'Not enough money to join the game. You are now spectator.');
           this.spectators.push(player);
         }
       }
-      this.players = this.playersTemp.filter(player => player && player.connection);
+      this.players = this.playersTemp.filter(player => player && player.socket);
       this.playersTemp = [];
       if (this.playersToAppend.length > 0) {
         for (const player of this.playersToAppend) {
-          if (player.connection && player.playerMoney > this.tableMinBet) {
+          if (player.socket && player.playerMoney > this.tableMinBet) {
             this.players.push(player);
           } else if (!player.isBot) {
             this.sendClientMessage(player, 'Not enough money to join the game. You are now spectator.');
@@ -185,11 +186,11 @@ export class HoldemTable implements HoldemTableInterface {
   cleanSpectators(): void {
     this.spectatorsTemp = [];
     for (const spectator of this.spectators) {
-      if (spectator && spectator.connection) {
+      if (spectator && spectator.socket) {
         this.spectatorsTemp.push(spectator);
       }
     }
-    this.spectators = this.spectatorsTemp.filter(spectator => spectator && spectator.connection);
+    this.spectators = this.spectatorsTemp.filter(spectator => spectator && spectator.socket);
     this.spectatorsTemp = [];
   }
 
@@ -228,7 +229,7 @@ export class HoldemTable implements HoldemTableInterface {
         playersData: [],
       },
     };
-    response.data.playersData = this.players.map(player => ({
+    response.data.playersData = this.players.map((player: PlayerInterface) => ({
       playerId: player.playerId,
       playerName: player.playerName,
       playerMoney: player.playerMoney,
@@ -604,7 +605,7 @@ export class HoldemTable implements HoldemTableInterface {
         if (this.players[currentPlayerTurn] != null || this.isCallSituation && verifyBets === -1 || !this.smallBlindGiven || !this.bigBlindGiven || !this.bigBlindPlayerHadTurn) { // 07.08.2018, added || !this.bigBlindPlayerHadTurn
           // Forced small and big blinds case
           if (this.currentStage === HoldemStage.TWO_PRE_FLOP && (!this.smallBlindGiven || !this.bigBlindGiven)) {
-            this.playerCheck(this.players[currentPlayerTurn].playerId, this.players[currentPlayerTurn].socketKey);
+            this.playerCheck(this.players[currentPlayerTurn].playerId);
             this.bettingRound(currentPlayerTurn + 1);
           } else {
             if (!this.players[currentPlayerTurn].isFold && !this.players[currentPlayerTurn].isAllIn) {
@@ -658,7 +659,7 @@ export class HoldemTable implements HoldemTableInterface {
     }, 1000);
     this.turnTimeOutObj = setTimeout(() => {
       if (this.players[currentPlayerTurn].playerState === PlayerState.NONE) {
-        this.playerFold(this.players[currentPlayerTurn].playerId, this.players[currentPlayerTurn].socketKey);
+        this.playerFold(this.players[currentPlayerTurn].playerId);
         this.sendStatusUpdate();
       }
       this.clearTimers();
@@ -675,10 +676,10 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  playerFold(connectionId: any, socketKey: any): void {
+  playerFold(connectionId: any): void {
     let playerId = this.getPlayerId(connectionId);
     if (this.players[playerId] !== undefined) {
-      if (this.players[playerId].connection != null && this.players[playerId].socketKey === socketKey || this.players[playerId].isBot) {
+      if (this.players[playerId].socket != null || this.players[playerId].isBot) {
         if (playerId !== -1) {
           if (!this.smallBlindGiven || !this.bigBlindGiven) {
             let blind_amount = 0;
@@ -706,9 +707,9 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  playerCheck(connectionId: any, socketKey: any): void {
+  playerCheck(connectionId: any): void {
     let playerId = this.getPlayerId(connectionId);
-    if (this.players[playerId].connection != null && this.players[playerId].socketKey === socketKey || this.players[playerId].isBot) {
+    if (this.players[playerId].socket != null || this.players[playerId].isBot) {
       if (playerId !== -1) {
         let check_amount = 0;
         if (this.isCallSituation || this.totalPot === 0 || !this.smallBlindGiven || !this.bigBlindGiven) {
@@ -751,7 +752,7 @@ export class HoldemTable implements HoldemTableInterface {
 
   playerRaise(connectionId: any, socketKey: any, amount: number): void {
     let playerId = this.getPlayerId(connectionId);
-    if (this.players[playerId].connection !== null && this.players[playerId].socketKey === socketKey || this.players[playerId].isBot) {
+    if (this.players[playerId].socket !== null || this.players[playerId].isBot) {
       if (playerId !== -1) {
         let playerBetDifference = (this.currentHighestBet - this.players[playerId].totalBet);
         if (amount === 0) {
@@ -795,11 +796,11 @@ export class HoldemTable implements HoldemTableInterface {
 
   sendWebSocketData(player: any, data: any): void {
     if (this.players[player] != null && !this.players[player].isBot) {
-      if (this.players[player].connection != null) {
-        if (this.players[player].connection.readyState === SocketState.OPEN) {
-          this.players[player].connection.sendText(JSON.stringify(data));
+      if (this.players[player].socket != null) {
+        if (this.players[player].socket.readyState === SocketState.OPEN) {
+          this.players[player].socket.send(JSON.stringify(data));
         } else {
-          this.players[player].connection = null;
+          this.players[player].socket = null;
         }
       } else {
         this.players[player].setStateFold();
@@ -809,11 +810,11 @@ export class HoldemTable implements HoldemTableInterface {
 
   sendWaitingPlayerWebSocketData(player: any, data: any): void {
     if (this.playersToAppend[player] != null && !this.playersToAppend[player].isBot) {
-      if (this.playersToAppend[player].connection != null) {
-        if (this.playersToAppend[player].connection.readyState === SocketState.OPEN) {
-          this.playersToAppend[player].connection.sendText(JSON.stringify(data));
+      if (this.playersToAppend[player].socket != null) {
+        if (this.playersToAppend[player].socket.readyState === SocketState.OPEN) {
+          this.playersToAppend[player].socket.send(JSON.stringify(data));
         } else {
-          this.playersToAppend[player].connection = null;
+          this.playersToAppend[player].socket = null;
         }
       }
     }
@@ -821,9 +822,9 @@ export class HoldemTable implements HoldemTableInterface {
 
   sendSpectatorWebSocketData(spectator: any, data: any): void {
     if (this.spectators[spectator] != null) {
-      if (this.spectators[spectator].connection != null) {
-        if (this.spectators[spectator].connection.readyState === SocketState.OPEN) {
-          this.spectators[spectator].connection.sendText(JSON.stringify(data));
+      if (this.spectators[spectator].socket != null) {
+        if (this.spectators[spectator].socket.readyState === SocketState.OPEN) {
+          this.spectators[spectator].socket.send(JSON.stringify(data));
         }
       }
     }
@@ -894,9 +895,9 @@ export class HoldemTable implements HoldemTableInterface {
   sendClientMessage(playerObject: any, message: string): void {
     const response: ClientResponse = {key: 'clientMessage', data: {}};
     response.data.message = message;
-    if (playerObject.connection != null) {
-      if (playerObject.connection.readyState === SocketState.OPEN) {
-        playerObject.connection.sendText(JSON.stringify(response));
+    if (playerObject.socket != null) {
+      if (playerObject.socket.readyState === SocketState.OPEN) {
+        playerObject.socket.sendText(JSON.stringify(response));
       }
     }
   }
@@ -1020,7 +1021,7 @@ export class HoldemTable implements HoldemTableInterface {
   updateLoggedInPlayerDatabaseStatistics(winnerPlayers: any, lastWinnerPlayers: any): void {
     // for (let i = 0; i < this.players.length; i++) {
     //   if (this.players[i] !== null) {
-    //     if (this.players[i].connection !== null) {
+    //     if (this.players[i].socket !== null) {
     //       if (!this.players[i].isBot && this.players[i].isLoggedInPlayer()) {
 //
     //         // this.fancyLogGreen(this.arrayHasValue(winnerPlayers, i));
@@ -1126,23 +1127,23 @@ export class HoldemTable implements HoldemTableInterface {
     let tm = setTimeout(() => {
       switch (resultSet.action) {
         case 'bot_fold':
-          this.playerFold(playerId, null);
+          this.playerFold(playerId);
           break;
         case 'bot_check':
-          this.playerCheck(playerId, null);
+          this.playerCheck(playerId);
           break;
         case 'bot_call':
-          this.playerCheck(playerId, null);
+          this.playerCheck(playerId);
           break;
         case 'bot_raise':
           this.playerRaise(playerId, null, resultSet.amount);
           break;
         case 'remove_bot': // Bot run out of money
-          this.playerFold(playerId, null);
+          this.playerFold(playerId);
           this.removeBotFromTable(currentPlayerTurn);
           break;
         default:
-          this.playerCheck(playerId, null);
+          this.playerCheck(playerId);
           break;
       }
       this.sendStatusUpdate();
@@ -1153,7 +1154,7 @@ export class HoldemTable implements HoldemTableInterface {
 
   removeBotFromTable(currentPlayerTurn: number): void {
     // this.eventEmitter.emit('needNewBot', this.tableId); // Todo fix
-    this.players[currentPlayerTurn].connection = null;
+    this.players[currentPlayerTurn].socket = null;
   }
 
   getTableBotCount(): number {

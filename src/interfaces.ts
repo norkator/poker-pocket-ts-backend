@@ -17,11 +17,12 @@ export interface GameHandlerInterface {
 
 export interface PlayerInterface {
   socket: WebSocket | null;
+  playerId: number;
   isBot: boolean;
   playerMoney: number;
   playerDatabaseId: number;
-  selectedRoomId: number;
-  playerName: string | null;
+  selectedTableId: number;
+  playerName: string;
   playerWinCount: number;
   playerLoseCount: number;
   playerCards: any[];
@@ -34,7 +35,7 @@ export interface PlayerInterface {
   isAllIn: boolean;
   roundPlayed: boolean;
   handValue: number;
-  handName: string;
+  handName: string | null;
   cardsInvolvedOnEvaluation: any[];
 
   resetParams(): void;
@@ -172,7 +173,7 @@ export interface Player {
 }
 
 export interface PlayerData {
-  playerId?: string | number;
+  playerId?: number;
   playerName?: string;
   playerMoney?: number;
   isDealer?: boolean;

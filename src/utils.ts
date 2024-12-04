@@ -1,3 +1,6 @@
+import * as crypto from 'crypto';
+import {WebSocket} from 'ws';
+
 export function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -245,4 +248,10 @@ export function stringCardToAsciiCard(ascii: any) {
     case 'As':
       return 'A♠';
   }
+}
+
+
+export function generatePlayerName(socket: WebSocket): string {
+  const uniqueId = crypto.createHash('md5').update(socket.toString()).digest('hex').slice(0, 8);
+  return `Anon${uniqueId}`;
 }

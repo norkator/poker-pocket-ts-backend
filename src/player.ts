@@ -4,11 +4,12 @@ import WebSocket from 'ws';
 
 class Player implements PlayerInterface {
   socket: WebSocket | null;
+  playerId: number; // this is incremented for each connection or bot, needed for table seat handling
   isBot: boolean;
   playerMoney: number;
   playerDatabaseId: number = -1;
-  selectedRoomId: number = -1;
-  playerName: string | null = null;
+  public selectedTableId: number = -1;
+  playerName: string;
   playerWinCount: number = 0;
   playerLoseCount: number = 0;
   playerCards: any[] = [];
@@ -21,17 +22,21 @@ class Player implements PlayerInterface {
   isAllIn: boolean = false;
   roundPlayed: boolean = false;
   handValue: number = 0;
-  handName: string = '';
+  handName: string | null = null;
   cardsInvolvedOnEvaluation: any[] = [];
 
   constructor(
     socket: WebSocket,
+    playerId: number,
     playerMoney: number,
-    isBot: boolean
+    isBot: boolean,
+    playerName: string,
   ) {
     this.socket = socket;
+    this.playerId = playerId;
     this.isBot = isBot;
     this.playerMoney = playerMoney;
+    this.playerName = playerName;
   }
 
   resetParams(): void {
