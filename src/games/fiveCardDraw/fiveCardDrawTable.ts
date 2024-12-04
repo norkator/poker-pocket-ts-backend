@@ -1,6 +1,7 @@
 import {ClientResponse, PlayerInterface, TableInfoInterface} from '../../interfaces';
 
 export class FiveCardDrawTable {
+  public tableName: string = '';
   players: PlayerInterface[] = [];
   playersToAppend: PlayerInterface[] = [];
   public maxSeats: number = 6;

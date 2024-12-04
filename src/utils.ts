@@ -1,5 +1,9 @@
 import * as crypto from 'crypto';
 import {WebSocket} from 'ws';
+import * as fs from 'fs';
+
+const randomNamesList: string[] = fs.readFileSync('./src/assets/names.txt', 'utf-8').split('\n');
+
 
 export function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -250,8 +254,27 @@ export function stringCardToAsciiCard(ascii: any) {
   }
 }
 
-
 export function generatePlayerName(socket: WebSocket): string {
   const uniqueId = crypto.createHash('md5').update(socket.toString()).digest('hex').slice(0, 8);
   return `Anon${uniqueId}`;
 }
+
+export function createMockWebSocket(): WebSocket {
+  return {
+    send: (data: string | ArrayBufferLike | Blob | ArrayBufferView) => {
+    },
+    close: (code?: number, reason?: string) => {
+    },
+  } as WebSocket;
+}
+
+export function getRandomBotName(currentRoomBotNames: string[]): string {
+  for (let i = 0; i < randomNamesList.length; i++) {
+    const randomName = randomNamesList[getRandomInt(0, randomNamesList.length)];
+    if (!currentRoomBotNames.includes(randomName)) {
+      return randomName;
+    }
+  }
+  return 'Bot';
+}
+

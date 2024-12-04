@@ -6,7 +6,7 @@ import {Player} from '../player';
 import {ClientMessageKey} from '../types';
 import logger from '../logger';
 import {gameConfig} from '../gameConfig';
-import {generatePlayerName} from '../utils';
+import {createMockWebSocket, generatePlayerName, getRandomBotName} from '../utils';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -21,7 +21,7 @@ class GameHandler implements GameHandlerInterface {
   }
 
   onConnection(socket: WebSocket): void {
-    const player = new Player(socket, playerIdIncrement, 10000, false, generatePlayerName(socket));
+    const player = new Player(socket, playerIdIncrement, gameConfig.games.holdEm.startMoney, false, generatePlayerName(socket));
     playerIdIncrement++;
     players.set(socket, player);
     socket.send(JSON.stringify({key: 'connected'} as ClientResponse));
@@ -123,34 +123,26 @@ class GameHandler implements GameHandlerInterface {
 
   // append new bot on selected room
   private onAppendBot(tableIndex: number): void {
-    if (!tables.get(tableIndex)) {
+    const table = tables.get(tableIndex);
+    if (!table) {
       return;
     }
-    // if (
-    //   Number(rooms[roomId].playersToAppend.length + rooms[roomId].players.length)
-    //   < Number(config.games.holdEm.holdEmGames[rooms[roomId].holdemType].max_seats)
-    // ) {
-    //   const connectionId = CONNECTION_ID;
-    //   players.push(new player.Player(-1, null, connectionId, config.games.holdEm.bot.startMoney, true));
-    //   if (config.games.holdEm.bot.giveRealNames) {
-    //     const currentBotNames = rooms[roomId].players
-    //       .filter(player => player.isBot)
-    //       .map(function (playerObj) {
-    //         return playerObj.playerName
-    //       });
-    //     players[connectionId].playerName = utils.getRandomBotName(
-    //       currentBotNames
-    //     );
-    //   } else {
-    //     players[connectionId].playerName = "Bot" + Math.floor(Math.random() * 1000);
-    //   }
-    //   rooms[roomId].playersToAppend.push(players[connectionId]);
-    //   // logger.log("BOT " + players[connectionId].playerName + " selected room " + roomId);
-    //   rooms[roomId].triggerNewGame();
-    //   CONNECTION_ID = CONNECTION_ID + 1;
-    // } else {
-    //   logger.info("Too many players on room " + roomId + " so cannot append more bots from command.");
-    // }
+    if ((table.playersToAppend.length + table.players.length) < table.maxSeats) {
+      const mockSocket = createMockWebSocket();
+      const currentBotNames: string[] = table.players
+        .filter((player: PlayerInterface) => player.isBot)
+        .map((playerObj: PlayerInterface) => {
+          return playerObj.playerName
+        });
+      const player = new Player(mockSocket, playerIdIncrement, gameConfig.games.holdEm.startMoney, true, getRandomBotName(currentBotNames));
+      playerIdIncrement++;
+      players.set(mockSocket, player);
+      table.playersToAppend.push(player);
+      logger.info(`Bot ${player.playerName} added into table ${table.tableName}`);
+      table.triggerNewGame();
+    } else {
+      logger.info(`Too many players on table ${table.tableName} so cannot append more bots`);
+    }
   }
 
 }

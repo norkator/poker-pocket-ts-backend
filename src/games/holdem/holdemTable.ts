@@ -20,7 +20,7 @@ export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
   tableId: number;
   tableMinBet: number;
-  tableName: string;
+  public tableName: string;
   public maxSeats: number;
   minPlayers: number;
   turnTimeOut: number;
@@ -166,11 +166,11 @@ export class HoldemTable implements HoldemTableInterface {
             this.startGame();
           }, gameConfig.common.startGameTimeOut);
         } else {
-          console.log(`* Table ${this.tableName} has not enough players`);
+          logger.info(`Table ${this.tableName} has not enough players`);
         }
       } else {
         if (this.players.length >= this.minPlayers) {
-          console.log('No players to append... starting game');
+          logger.info(`Table ${this.tableName} no new players to append... starting new game`);
           setTimeout(() => {
             this.startGame();
           }, gameConfig.common.startGameTimeOut);
@@ -179,7 +179,7 @@ export class HoldemTable implements HoldemTableInterface {
         }
       }
     } else {
-      logger.info(`* Can't append more players since round is running for table: ${this.tableName}`);
+      logger.warn(`Cant append more players since round is running for table: ${this.tableName}`);
     }
   }
 
