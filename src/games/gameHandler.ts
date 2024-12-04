@@ -50,16 +50,8 @@ class GameHandler implements GameHandlerInterface {
     switch (message.key) {
       case 'getTables':
         break;
-      case 'getSpectateTables':
-        const tableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
-        tables.forEach((table: HoldemTable | FiveCardDrawTable) => {
-          tableParams.data.tables?.push(table.getTableInfo());
-        });
-        logger.info("Sending spectate tables... " + JSON.stringify(tableParams));
-        socket.send(JSON.stringify(tableParams));
-        break;
       case 'selectTable':
-        tableId = message.tableId;
+        tableId = Number(message.tableId);
         table = tables.get(tableId);
         if (table) {
           const player: Player | undefined = players.get(socket);
@@ -72,6 +64,24 @@ class GameHandler implements GameHandlerInterface {
           socket.send(JSON.stringify(table.getTableParams()));
         }
         break;
+      case 'getSpectateTables':
+        const tableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
+        tables.forEach((table: HoldemTable | FiveCardDrawTable) => {
+          tableParams.data.tables?.push(table.getTableInfo());
+        });
+        logger.info("Sending spectate tables... " + JSON.stringify(tableParams));
+        socket.send(JSON.stringify(tableParams));
+        break;
+      case 'selectSpectateTable':
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        const player: Player | undefined = players.get(socket);
+        if (table && player) {
+          player.selectedTableId = tableId;
+          table.spectators.push(player);
+          logger.info(`Player id ${player.playerId} is spectating on table ${table.tableName}`);
+        }
+        break;
       case 'getTableParams':
         tableId = message.tableId;
         table = tables.get(tableId);
@@ -79,6 +89,8 @@ class GameHandler implements GameHandlerInterface {
           socket.send(JSON.stringify(table.getTableParams()));
         }
         break;
+      default:
+        logger.error(`No handler for ${message.key} full message ${JSON.stringify(message)}`);
     }
   }
 
