@@ -183,6 +183,7 @@ export interface PlayerData {
 export interface ClientResponse {
   key: ResponseKey;
   data: {
+    playerId?: number;
     tables?: any[];
     message?: string;
     command?: string;

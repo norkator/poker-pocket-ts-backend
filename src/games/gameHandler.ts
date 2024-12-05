@@ -21,10 +21,11 @@ class GameHandler implements GameHandlerInterface {
   }
 
   onConnection(socket: WebSocket): void {
-    const player = new Player(socket, playerIdIncrement, gameConfig.games.holdEm.startMoney, false, generatePlayerName(socket));
+    const playerId = playerIdIncrement;
+    const player = new Player(socket, playerId, gameConfig.games.holdEm.startMoney, false, generatePlayerName(socket));
     playerIdIncrement++;
     players.set(socket, player);
-    socket.send(JSON.stringify({key: 'connected'} as ClientResponse));
+    socket.send(JSON.stringify({key: 'connected', data: {playerId: playerId}} as ClientResponse));
   }
 
   onMessage(socket: WebSocket, msg: string): void {
