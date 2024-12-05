@@ -4,6 +4,7 @@ export class FiveCardDrawTable {
   public tableName: string = '';
   players: PlayerInterface[] = [];
   playersToAppend: PlayerInterface[] = [];
+  spectators: PlayerInterface[] = [];
   public maxSeats: number = 6;
 
   getTableInfo(): TableInfoInterface {

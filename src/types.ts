@@ -8,7 +8,8 @@ export type ResponseKey =
   | 'audioCommand'
   | 'clientMessage'
   | 'getSpectateTables'
-  | 'tableParams';
+  | 'tableParams'
+  | 'autoPlayActionResult';
 export type ClientMessageKey = 'getTables' | 'getSpectateTables';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD';
 export type PokerCards = { [key: number]: string };

@@ -47,7 +47,8 @@ class GameHandler implements GameHandlerInterface {
 
   private messageHandler(socket: WebSocket, message: { key: ClientMessageKey; tableId: number; } | any): void {
     let tableId: number = -1;
-    let table: any = undefined;
+    let table: FiveCardDrawTable | HoldemTable | undefined = undefined;
+    let player: Player | undefined = undefined;
     switch (message.key) {
       case 'getTables':
         break;
@@ -76,7 +77,7 @@ class GameHandler implements GameHandlerInterface {
       case 'selectSpectateTable':
         tableId = Number(message.tableId);
         table = tables.get(tableId);
-        const player: Player | undefined = players.get(socket);
+        player = players.get(socket);
         if (table && player) {
           player.selectedTableId = tableId;
           table.spectators.push(player);
@@ -88,6 +89,39 @@ class GameHandler implements GameHandlerInterface {
         table = tables.get(tableId);
         if (table) {
           socket.send(JSON.stringify(table.getTableParams()));
+        }
+        break;
+      case 'setFold':
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        player = players.get(socket);
+        if (table && player && table instanceof HoldemTable) {
+          table.playerFold(player.playerId);
+          table.sendStatusUpdate();
+        }
+        break;
+      case 'setCheck':
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        player = players.get(socket);
+        if (table && player && table instanceof HoldemTable) {
+          table.playerCheck(player.playerId);
+          table.sendStatusUpdate();
+        }
+        break;
+      case 'setRaise':
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        player = players.get(socket);
+        if (table && player && table instanceof HoldemTable) {
+          table.playerRaise(player.playerId, Number(message.amount));
+          table.sendStatusUpdate();
+        }
+        break;
+      case 'autoPlayAction':
+        player = players.get(socket);
+        if (player) {
+          this.autoPlayAction(player);
         }
         break;
       default:
@@ -155,6 +189,38 @@ class GameHandler implements GameHandlerInterface {
       table.triggerNewGame();
     } else {
       logger.info(`Too many players on table ${table.tableName} so cannot append more bots`);
+    }
+  }
+
+  private autoPlayAction(player: Player) {
+    if (!player.isFold) {
+      const table = tables.get(player.selectedTableId);
+      if (table instanceof HoldemTable) {
+        const check_amount = table.currentHighestBet === 0 ?
+          table.tableMinBet : (table.currentHighestBet - player.totalBet);
+        // const autoplay = new AutoPlay(
+        //   table.holdemType,
+        //   player.playerName,
+        //   player.playerMoney,
+        //   player.playerCards,
+        //   table.middleCards,
+        //   table.isCallSituation,
+        //   table.tableMinBet,
+        //   check_amount,
+        //   table.smallBlindGiven,
+        //   table.bigBlindGiven,
+        //   table.evaluatePlayerCards(table.current_player_turn).value,
+        //   table.currentStage,
+        //   player.totalBet
+        // );
+        // const responseArray: ClientResponse = {key: 'autoPlayActionResult', data: {}};
+        // const action = autoplay.performAction();
+        // responseArray.data.action = action.action;
+        // responseArray.data.amount = action.amount;
+        // player.socket?.send(JSON.stringify(responseArray));
+      } else {
+        logger.warn('No auto play handler defined for other than HoldemTable instance');
+      }
     }
   }
 

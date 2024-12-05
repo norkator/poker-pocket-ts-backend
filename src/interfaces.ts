@@ -101,11 +101,11 @@ export interface HoldemTableInterface {
 
   sendStatusUpdate(): void;
 
-  playerFold(connectionId: any, socketKey: any): void; // Remember that if small or big blind is not given, folding player must still pay blind
+  playerFold(playerId: number): void; // Remember that if small or big blind is not given, folding player must still pay blind
 
-  playerCheck(connectionId: any, socketKey: any): void; // Player checks but also Call goes through this function
+  playerCheck(playerId: number): void; // Player checks but also Call goes through this function
 
-  playerRaise(connectionId: any, socketKey: any, amount: number): void;
+  playerRaise(playerId: number, amount: number): void;
 
   burnCard(): void; // Burn one card before dealing
 
@@ -129,7 +129,7 @@ export interface HoldemTableInterface {
 
   sendAudioCommand(action: string): void; // Needed to be able to play other players command audio on client side
 
-  sendLastPlayerAction(connectionId: any, playerAction: PlayerAction): void; // Animated last user action text command
+  sendLastPlayerAction(playerId: number, playerAction: PlayerAction): void; // Animated last user action text command
 
   collectChipsToPotAndSendAction(): boolean; // Collect chips to pot action, collects and clears user total pots for this round
 
@@ -137,7 +137,7 @@ export interface HoldemTableInterface {
 
   getNextDeckCard(): number;
 
-  getPlayerId(connectionId: any): number;
+  getPlayerIndex(playerId: number): number;
 
   hasActivePlayers(): boolean;
 
@@ -193,6 +193,8 @@ export interface ClientResponse {
     tableMinBet?: number;
     middleCards?: any[];
     playersData?: PlayerData[];
+    action?: string;
+    amount?: number;
   };
 }
 

@@ -676,11 +676,11 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  playerFold(connectionId: any): void {
-    let playerId = this.getPlayerId(connectionId);
-    if (this.players[playerId] !== undefined) {
-      if (this.players[playerId].socket != null || this.players[playerId].isBot) {
-        if (playerId !== -1) {
+  playerFold(playerId: number): void {
+    let playerIndex = this.getPlayerIndex(playerId);
+    if (this.players[playerIndex] !== undefined) {
+      if (this.players[playerIndex].socket != null || this.players[playerIndex].isBot) {
+        if (playerIndex !== -1) {
           if (!this.smallBlindGiven || !this.bigBlindGiven) {
             let blind_amount = 0;
             if (!this.smallBlindGiven && !this.bigBlindGiven) {
@@ -690,55 +690,55 @@ export class HoldemTable implements HoldemTableInterface {
               blind_amount = this.tableMinBet;
               this.bigBlindGiven = true;
             }
-            if (blind_amount <= this.players[playerId].playerMoney) {
-              if (blind_amount === this.players[playerId].playerMoney || this.someOneHasAllIn()) {
-                this.players[playerId].isAllIn = true;
+            if (blind_amount <= this.players[playerIndex].playerMoney) {
+              if (blind_amount === this.players[playerIndex].playerMoney || this.someOneHasAllIn()) {
+                this.players[playerIndex].isAllIn = true;
               }
-              this.players[playerId].totalBet = this.players[playerId].totalBet + blind_amount;
-              this.players[playerId].playerMoney = this.players[playerId].playerMoney - blind_amount;
+              this.players[playerIndex].totalBet = this.players[playerIndex].totalBet + blind_amount;
+              this.players[playerIndex].playerMoney = this.players[playerIndex].playerMoney - blind_amount;
             }
           }
-          this.players[playerId].setStateFold();
+          this.players[playerIndex].setStateFold();
           this.checkHighestBet();
-          this.sendLastPlayerAction(connectionId, PlayerActions.FOLD);
+          this.sendLastPlayerAction(playerId, PlayerActions.FOLD);
           this.sendAudioCommand('fold');
         }
       }
     }
   }
 
-  playerCheck(connectionId: any): void {
-    let playerId = this.getPlayerId(connectionId);
-    if (this.players[playerId].socket != null || this.players[playerId].isBot) {
-      if (playerId !== -1) {
+  playerCheck(playerId: number): void {
+    let playerIndex = this.getPlayerIndex(playerId);
+    if (this.players[playerIndex].socket != null || this.players[playerIndex].isBot) {
+      if (playerIndex !== -1) {
         let check_amount = 0;
         if (this.isCallSituation || this.totalPot === 0 || !this.smallBlindGiven || !this.bigBlindGiven) {
           if (this.smallBlindGiven && this.bigBlindGiven) {
-            check_amount = this.currentHighestBet === 0 ? this.tableMinBet : (this.currentHighestBet - this.players[playerId].totalBet);
+            check_amount = this.currentHighestBet === 0 ? this.tableMinBet : (this.currentHighestBet - this.players[playerIndex].totalBet);
           } else {
             if (this.smallBlindGiven && !this.bigBlindGiven) {
               check_amount = this.tableMinBet;
               this.bigBlindGiven = true;
-              this.players[playerId].roundPlayed = false;
+              this.players[playerIndex].roundPlayed = false;
             } else {
               check_amount = this.tableMinBet / 2;
               this.smallBlindGiven = true;
             }
           }
-          if (check_amount <= this.players[playerId].playerMoney) {
-            this.players[playerId].setStateCheck();
-            if (check_amount === this.players[playerId].playerMoney || this.someOneHasAllIn()) {
-              this.players[playerId].isAllIn = true;
+          if (check_amount <= this.players[playerIndex].playerMoney) {
+            this.players[playerIndex].setStateCheck();
+            if (check_amount === this.players[playerIndex].playerMoney || this.someOneHasAllIn()) {
+              this.players[playerIndex].isAllIn = true;
             }
-            this.players[playerId].totalBet = this.players[playerId].totalBet + check_amount;
-            this.players[playerId].playerMoney = this.players[playerId].playerMoney - check_amount;
+            this.players[playerIndex].totalBet = this.players[playerIndex].totalBet + check_amount;
+            this.players[playerIndex].playerMoney = this.players[playerIndex].playerMoney - check_amount;
           }
           if (this.isCallSituation) {
-            this.sendLastPlayerAction(connectionId, PlayerActions.CALL);
+            this.sendLastPlayerAction(playerId, PlayerActions.CALL);
           }
         } else {
-          this.players[playerId].setStateCheck();
-          this.sendLastPlayerAction(connectionId, PlayerActions.CHECK);
+          this.players[playerIndex].setStateCheck();
+          this.sendLastPlayerAction(playerId, PlayerActions.CHECK);
         }
         if (this.isCallSituation || check_amount > 0) {
           this.sendAudioCommand('call');
@@ -750,24 +750,24 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  playerRaise(connectionId: any, socketKey: any, amount: number): void {
-    let playerId = this.getPlayerId(connectionId);
-    if (this.players[playerId].socket !== null || this.players[playerId].isBot) {
-      if (playerId !== -1) {
-        let playerBetDifference = (this.currentHighestBet - this.players[playerId].totalBet);
+  playerRaise(playerId: number, amount: number): void {
+    let playerIndex = this.getPlayerIndex(playerId);
+    if (this.players[playerIndex].socket !== null || this.players[playerIndex].isBot) {
+      if (playerIndex !== -1) {
+        let playerBetDifference = (this.currentHighestBet - this.players[playerIndex].totalBet);
         if (amount === 0) {
           amount = playerBetDifference;
         }
         if (amount < playerBetDifference) {
           amount = (playerBetDifference + amount);
         }
-        if (amount <= this.players[playerId].playerMoney) {
-          if (amount === this.players[playerId].playerMoney || this.someOneHasAllIn()) {
-            this.players[playerId].isAllIn = true;
+        if (amount <= this.players[playerIndex].playerMoney) {
+          if (amount === this.players[playerIndex].playerMoney || this.someOneHasAllIn()) {
+            this.players[playerIndex].isAllIn = true;
           }
-          this.players[playerId].setStateRaise();
-          this.players[playerId].totalBet = this.players[playerId].totalBet + amount;
-          this.players[playerId].playerMoney = this.players[playerId].playerMoney - amount;
+          this.players[playerIndex].setStateRaise();
+          this.players[playerIndex].totalBet = this.players[playerIndex].totalBet + amount;
+          this.players[playerIndex].playerMoney = this.players[playerIndex].playerMoney - amount;
           this.isCallSituation = true;
           if (!this.smallBlindGiven || !this.bigBlindGiven) {
             if (amount >= (this.tableMinBet / 2)) {
@@ -778,7 +778,7 @@ export class HoldemTable implements HoldemTableInterface {
             }
           }
         }
-        this.sendLastPlayerAction(connectionId, PlayerActions.RAISE);
+        this.sendLastPlayerAction(playerId, PlayerActions.RAISE);
         this.sendAudioCommand('raise');
         this.checkHighestBet();
         //this.calculateTotalPot();
@@ -845,10 +845,10 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  sendLastPlayerAction(connectionId: any, playerAction: PlayerAction): void {
+  sendLastPlayerAction(playerId: number, playerAction: PlayerAction): void {
     let response = {key: '', data: {}};
     response.key = 'lastUserAction';
-    this.lastUserAction.playerId = connectionId;
+    this.lastUserAction.playerId = playerId;
     this.lastUserAction.actionText = playerAction;
     response.data = this.lastUserAction;
     for (let i = 0; i < this.players.length; i++) {
@@ -908,8 +908,8 @@ export class HoldemTable implements HoldemTableInterface {
     return nextCard;
   }
 
-  getPlayerId(connectionId: any): number {
-    return this.players.findIndex(player => player.playerId === connectionId);
+  getPlayerIndex(playerId: number): number {
+    return this.players.findIndex(player => player.playerId === playerId);
   }
 
   hasActivePlayers(): boolean {
@@ -1136,7 +1136,7 @@ export class HoldemTable implements HoldemTableInterface {
           this.playerCheck(playerId);
           break;
         case 'bot_raise':
-          this.playerRaise(playerId, null, resultSet.amount);
+          this.playerRaise(playerId, resultSet.amount);
           break;
         case 'remove_bot': // Bot run out of money
           this.playerFold(playerId);
