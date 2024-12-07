@@ -20,6 +20,7 @@
   "homepage": "https://github.com/norkator/poker-pocket-ts-backend#readme",
   "dependencies": {
     "pino": "9.5.0",
+    "poker-odds": "1.0.1",
     "pokersolver": "2.1.4",
     "seedrandom": "3.0.5",
     "ws": "8.18.0"

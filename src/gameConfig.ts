@@ -7,7 +7,7 @@ export const gameConfig = {
       startingTables: 1, // default 4, how many tables to create at start
       startMoney: 10000,
       bot: {
-        botCounts: [2,3,2,4,2,2], // add count for each starting table assuming you want bots in every table
+        botCounts: [1,3,2,4,2,2], // add count for each starting table assuming you want bots in every table
         turnTimes: [1000, 1500, 2000, 2500, 3000],
         minMoney: [
           50,     // Low bet game

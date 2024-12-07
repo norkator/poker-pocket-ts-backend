@@ -7,6 +7,7 @@ import {ClientMessageKey} from '../types';
 import logger from '../logger';
 import {gameConfig} from '../gameConfig';
 import {createMockWebSocket, generatePlayerName, getRandomBotName} from '../utils';
+import {AutoPlay} from '../autoPlay';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -198,26 +199,23 @@ class GameHandler implements GameHandlerInterface {
       if (table instanceof HoldemTable) {
         const check_amount = table.currentHighestBet === 0 ?
           table.tableMinBet : (table.currentHighestBet - player.totalBet);
-        // const autoplay = new AutoPlay(
-        //   table.holdemType,
-        //   player.playerName,
-        //   player.playerMoney,
-        //   player.playerCards,
-        //   table.middleCards,
-        //   table.isCallSituation,
-        //   table.tableMinBet,
-        //   check_amount,
-        //   table.smallBlindGiven,
-        //   table.bigBlindGiven,
-        //   table.evaluatePlayerCards(table.current_player_turn).value,
-        //   table.currentStage,
-        //   player.totalBet
-        // );
-        // const responseArray: ClientResponse = {key: 'autoPlayActionResult', data: {}};
-        // const action = autoplay.performAction();
-        // responseArray.data.action = action.action;
-        // responseArray.data.amount = action.amount;
-        // player.socket?.send(JSON.stringify(responseArray));
+        const autoplay = new AutoPlay(
+          player.playerName,
+          player.playerMoney,
+          player.playerCards,
+          table.middleCards,
+          table.isCallSituation,
+          table.tableMinBet,
+          check_amount,
+          table.evaluatePlayerCards(table.current_player_turn).value,
+          table.currentStage,
+          player.totalBet
+        );
+        const responseArray: ClientResponse = {key: 'autoPlayActionResult', data: {}};
+        const action = autoplay.performAction();
+        responseArray.data.action = action.action;
+        responseArray.data.amount = action.amount;
+        player.socket?.send(JSON.stringify(responseArray));
       } else {
         logger.warn('No auto play handler defined for other than HoldemTable instance');
       }
