@@ -7,6 +7,7 @@ export type ResponseKey =
   | 'allPlayersCards'
   | 'audioCommand'
   | 'clientMessage'
+  | 'getTables'
   | 'getSpectateTables'
   | 'tableParams'
   | 'autoPlayActionResult';

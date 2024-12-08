@@ -43,12 +43,18 @@ class GameHandler implements GameHandlerInterface {
     throw new Error("Method not implemented.");
   }
 
-  private messageHandler(socket: WebSocket, message: { key: ClientMessageKey; tableId: number; } | any): void {
+  private messageHandler(socket: WebSocket, message: { key: ClientMessageKey; tableId: number; tableSortParam: string; } | any): void {
     let tableId: number = -1;
     let table: FiveCardDrawTable | HoldemTable | undefined = undefined;
     let player: Player | undefined = undefined;
     switch (message.key) {
       case 'getTables':
+        const tableSortParam: string = message.tableSortParam || 'all';
+        const tableParams: ClientResponse = {key: 'getTables', data: {tables: []}}
+        tables.forEach((table: HoldemTable | FiveCardDrawTable) => {
+          tableParams.data.tables?.push(table.getTableInfo());
+        });
+        socket.send(JSON.stringify(tableParams));
         break;
       case 'selectTable':
         tableId = Number(message.tableId);
@@ -65,12 +71,12 @@ class GameHandler implements GameHandlerInterface {
         }
         break;
       case 'getSpectateTables':
-        const tableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
+        const spectateTableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
         tables.forEach((table: HoldemTable | FiveCardDrawTable) => {
-          tableParams.data.tables?.push(table.getTableInfo());
+          spectateTableParams.data.tables?.push(table.getTableInfo());
         });
-        logger.info("Sending spectate tables... " + JSON.stringify(tableParams));
-        socket.send(JSON.stringify(tableParams));
+        logger.info("Sending spectate tables... " + JSON.stringify(spectateTableParams));
+        socket.send(JSON.stringify(spectateTableParams));
         break;
       case 'selectSpectateTable':
         tableId = Number(message.tableId);
