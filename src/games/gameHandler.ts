@@ -27,6 +27,7 @@ class GameHandler implements GameHandlerInterface {
     playerIdIncrement++;
     players.set(socket, player);
     socket.send(JSON.stringify({key: 'connected', data: {playerId: playerId}} as ClientResponse));
+    logger.info(`New client connection player id ${playerId} and name ${player.playerName}`);
   }
 
   onMessage(socket: WebSocket, msg: string): void {
@@ -39,10 +40,6 @@ class GameHandler implements GameHandlerInterface {
   }
 
   onClose(): void {
-    throw new Error("Method not implemented.");
-  }
-
-  connection(): void {
     throw new Error("Method not implemented.");
   }
 
