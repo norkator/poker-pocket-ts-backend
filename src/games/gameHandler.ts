@@ -23,7 +23,7 @@ class GameHandler implements GameHandlerInterface {
 
   onConnection(socket: WebSocket): void {
     const playerId = playerIdIncrement;
-    const player = new Player(socket, playerId, gameConfig.games.holdEm.startMoney, false, generatePlayerName(socket));
+    const player = new Player(socket, playerId, gameConfig.games.holdEm.startMoney, false, generatePlayerName(playerId));
     playerIdIncrement++;
     players.set(socket, player);
     socket.send(JSON.stringify({key: 'connected', data: {playerId: playerId}} as ClientResponse));
@@ -218,6 +218,7 @@ class GameHandler implements GameHandlerInterface {
         const action = autoplay.performAction();
         responseArray.data.action = action.action;
         responseArray.data.amount = action.amount;
+        logger.info(`Sending player ${player.playerId} auto play action ${action.action}`);
         player.socket?.send(JSON.stringify(responseArray));
       } else {
         logger.warn('No auto play handler defined for other than HoldemTable instance');

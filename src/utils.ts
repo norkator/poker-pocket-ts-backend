@@ -254,10 +254,15 @@ export function stringCardToAsciiCard(ascii: any) {
   }
 }
 
-export function generatePlayerName(socket: WebSocket): string {
-  const uniqueId = crypto.createHash('md5').update(socket.toString()).digest('hex').slice(0, 8);
+export function generatePlayerName(playerId: number): string {
+  const playerIdStr = playerId.toString();
+  const digestHex = crypto.createHash('md5')
+    .update(playerIdStr + playerIdStr)
+    .digest('hex');
+  const uniqueId = digestHex.slice(digestHex.length - 8, digestHex.length);
   return `Anon${uniqueId}`;
 }
+
 
 export function createMockWebSocket(): WebSocket {
   return {
