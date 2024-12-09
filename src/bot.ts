@@ -98,17 +98,17 @@ export class Bot implements BotInterface {
   }
 
   private handleFirstStage(): void {
-    if (this.hasBadHoleCardsHand()) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+    //if (this.hasBadHoleCardsHand()) {
+    //  this.resultsSet.action = Bot.BOT_FOLD;
+    //} else {
+    const hasSameCards = this.myHand[0][0] === this.myHand[1][0];
+    if (hasSameCards && !this.isCallSituation) {
+      this.resultsSet.action = Bot.BOT_RAISE;
+      this.resultsSet.amount = this.getCalculatedRaiseAmount();
     } else {
-      const hasSameCards = this.myHand[0][0] === this.myHand[1][0];
-      if (hasSameCards && !this.isCallSituation) {
-        this.resultsSet.action = Bot.BOT_RAISE;
-        this.resultsSet.amount = this.getCalculatedRaiseAmount();
-      } else {
-        this.BOT_CHECK_CALL();
-      }
+      this.BOT_CHECK_CALL();
     }
+    //}
   }
 
   private handleSecondStage(): void {
