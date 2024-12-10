@@ -332,6 +332,7 @@ export class HoldemTable implements HoldemTableInterface {
       key: 'statusUpdate',
       data: {
         totalPot: this.totalPot,
+        tableMinBet: this.tableMinBet,
         currentStatus: this.currentStatusText,
         currentTurnText: this.currentTurnText,
         middleCards: this.middleCards,
