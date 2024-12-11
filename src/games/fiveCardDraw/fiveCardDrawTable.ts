@@ -1,6 +1,8 @@
 import {ClientResponse, PlayerInterface, TableInfoInterface} from '../../interfaces';
+import {Game} from '../../types';
 
 export class FiveCardDrawTable {
+  game: Game = 'FIVE_CARD_DRAW';
   public tableName: string = '';
   players: PlayerInterface[] = [];
   playersToAppend: PlayerInterface[] = [];
@@ -9,6 +11,7 @@ export class FiveCardDrawTable {
 
   getTableInfo(): TableInfoInterface {
     return {
+      game: this.game,
       tableId: 0,
       tableName: '',
       tableMinBet: 0,

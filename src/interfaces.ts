@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import {PlayerState} from './enums';
-import {PlayerAction, ResponseKey} from './types';
+import {Game, PlayerAction, ResponseKey} from './types';
 
 export interface GameHandlerInterface {
   createStartingTables(): void;
@@ -56,6 +56,7 @@ export interface PlayerInterface {
 }
 
 export interface TableInfoInterface {
+  game: Game;
   tableId: number;
   tableName: string;
   tableMinBet: number;

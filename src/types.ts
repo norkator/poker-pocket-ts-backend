@@ -1,3 +1,4 @@
+export type Game = 'HOLDEM' | 'FIVE_CARD_DRAW';
 export type ResponseKey =
   'connected'
   | 'holeCards'

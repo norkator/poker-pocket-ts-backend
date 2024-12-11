@@ -8,7 +8,7 @@ import {
 } from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
-import {PlayerAction} from '../../types';
+import {Game, PlayerAction} from '../../types';
 import {asciiToStringCardsArray, getRandomInt, stringToAsciiCardsArray} from '../../utils';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
@@ -17,6 +17,7 @@ import {Hand} from 'pokersolver';
 import {Player} from '../../player';
 
 export class HoldemTable implements HoldemTableInterface {
+  game: Game = 'HOLDEM';
   holdemType: number;
   tableId: number;
   tableMinBet: number;
@@ -129,6 +130,7 @@ export class HoldemTable implements HoldemTableInterface {
 
   getTableInfo(): TableInfoInterface {
     return {
+      game: this.game,
       tableId: this.tableId,
       tableName: this.tableName,
       tableMinBet: this.tableMinBet,
