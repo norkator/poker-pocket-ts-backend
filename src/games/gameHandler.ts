@@ -41,6 +41,11 @@ class GameHandler implements GameHandlerInterface {
     this.messageHandler(socket, message);
   }
 
+  onClientDisconnected(socket: WebSocket) {
+    players.delete(socket);
+    logger.info('Client disconnected');
+  }
+
   onError(): void {
     throw new Error("Method not implemented.");
   }

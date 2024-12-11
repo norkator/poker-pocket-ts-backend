@@ -7,6 +7,8 @@ export interface GameHandlerInterface {
 
   onConnection(socket: WebSocket): void;
 
+  onClientDisconnected(socket: WebSocket): void;
+
   onMessage(socket: WebSocket, message: string): void;
 
   onError(): void;

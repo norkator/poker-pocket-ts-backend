@@ -18,7 +18,7 @@ server.on('connection', (socket: WebSocket) => {
   socket.on('error', console.error);
 
   socket.on('close', () => {
-    logger.info('Client disconnected');
+    gameHandler.onClientDisconnected(socket);
   });
 });
 
