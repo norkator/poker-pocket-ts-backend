@@ -6,7 +6,13 @@ import {Player} from '../player';
 import {ClientMessageKey} from '../types';
 import logger from '../logger';
 import {gameConfig} from '../gameConfig';
-import {createMockWebSocket, generatePlayerName, getRandomBotName, isPlayerInTable} from '../utils';
+import {
+  createMockWebSocket,
+  generatePlayerName,
+  getRandomBotName,
+  isPlayerInTable,
+  sendClientNotification,
+} from '../utils';
 import {AutoPlay} from '../autoPlay';
 
 let playerIdIncrement = 0;
@@ -74,6 +80,7 @@ class GameHandler implements GameHandlerInterface {
               socket.send(JSON.stringify(table.getTableParams()));
             } else {
               logger.error(`Player ${player.playerId} somehow was able to try join table ${tableId} again while being already in it!`);
+              sendClientNotification(player.socket, 'error', 'Player already in table', 'ERROR_PLAYER_ALREADY_IN_TABLE');
             }
           } else {
             logger.warn(`Table ${tableId} is already full!`);
