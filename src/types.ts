@@ -11,7 +11,8 @@ export type ResponseKey =
   | 'getTables'
   | 'getSpectateTables'
   | 'tableParams'
-  | 'autoPlayActionResult';
+  | 'autoPlayActionResult'
+  | 'errorMessage';
 export type ClientMessageKey = 'getTables' | 'getSpectateTables';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD';
 export type PokerCards = { [key: number]: string };

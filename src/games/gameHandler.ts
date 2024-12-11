@@ -6,7 +6,7 @@ import {Player} from '../player';
 import {ClientMessageKey} from '../types';
 import logger from '../logger';
 import {gameConfig} from '../gameConfig';
-import {createMockWebSocket, generatePlayerName, getRandomBotName} from '../utils';
+import {createMockWebSocket, generatePlayerName, getRandomBotName, isPlayerInTable} from '../utils';
 import {AutoPlay} from '../autoPlay';
 
 let playerIdIncrement = 0;
@@ -43,7 +43,11 @@ class GameHandler implements GameHandlerInterface {
     throw new Error("Method not implemented.");
   }
 
-  private messageHandler(socket: WebSocket, message: { key: ClientMessageKey; tableId: number; tableSortParam: string; } | any): void {
+  private messageHandler(socket: WebSocket, message: {
+    key: ClientMessageKey;
+    tableId: number;
+    tableSortParam: string;
+  } | any): void {
     let tableId: number = -1;
     let table: FiveCardDrawTable | HoldemTable | undefined = undefined;
     let player: Player | undefined = undefined;
@@ -62,12 +66,18 @@ class GameHandler implements GameHandlerInterface {
         if (table) {
           const player: Player | undefined = players.get(socket);
           if (player && (table.players.length + table.playersToAppend.length) < table.maxSeats) {
-            player.selectedTableId = tableId;
-            table.playersToAppend.push(player);
-            logger.info(`${player.playerName} selected room ${tableId}`);
-            table.triggerNewGame();
+            if (!isPlayerInTable(player, table.players, table.playersToAppend)) {
+              player.selectedTableId = tableId;
+              table.playersToAppend.push(player);
+              logger.info(`${player.playerName} selected table ${tableId}`);
+              table.triggerNewGame();
+              socket.send(JSON.stringify(table.getTableParams()));
+            } else {
+              logger.error(`Player ${player.playerId} somehow was able to try join table ${tableId} again while being already in it!`);
+            }
+          } else {
+            logger.warn(`Table ${tableId} is already full!`);
           }
-          socket.send(JSON.stringify(table.getTableParams()));
         }
         break;
       case 'getSpectateTables':
@@ -225,6 +235,7 @@ class GameHandler implements GameHandlerInterface {
       }
     }
   }
+
 
 }
 

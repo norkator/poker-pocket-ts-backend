@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import {WebSocket} from 'ws';
 import * as fs from 'fs';
+import {Player} from './player';
 
 const randomNamesList: string[] = fs.readFileSync('./src/assets/names.txt', 'utf-8').split('\n');
 
@@ -281,5 +282,15 @@ export function getRandomBotName(currentRoomBotNames: string[]): string {
     }
   }
   return 'Bot';
+}
+
+export function isPlayerInTable(
+  player: Player,
+  tablePlayers: Player[],
+  tablePlayersToAppend: Player[]
+): boolean {
+  const isInPlayers = tablePlayers.some(p => p.playerId === player.playerId);
+  const isInPlayersToAppend = tablePlayersToAppend.some(p => p.playerId === player.playerId);
+  return isInPlayers || isInPlayersToAppend;
 }
 
