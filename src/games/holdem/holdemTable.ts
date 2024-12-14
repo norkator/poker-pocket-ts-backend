@@ -375,9 +375,12 @@ export class HoldemTable implements HoldemTableInterface {
 
   holeCards(): void {
     this.currentStage = HoldemStage.TWO_PRE_FLOP;
-    for (let i = 0; i < this.players.length; i++) {
-      this.players[i].playerCards[0] = this.getNextDeckCard();
-      this.players[i].playerCards[1] = this.getNextDeckCard();
+    for (let cardIndex = 0; cardIndex < 2; cardIndex++) {
+      for (let i = 0; i < this.players.length; i++) {
+        const c = this.getNextDeckCard();
+        logger.debug(`Player ${this.players[i].playerName} got card ${c}`);
+        this.players[i].playerCards[cardIndex] = c;
+      }
     }
     let response: ClientResponse = {key: 'holeCards', data: {}};
     for (let i = 0; i < this.players.length; i++) {

@@ -376,12 +376,12 @@ export class FiveCardDrawTable {
 
 
   dealHoleCards(): void {
-    for (let i = 0; i < this.players.length; i++) {
-      this.players[i].playerCards[0] = this.getNextDeckCard();
-      this.players[i].playerCards[1] = this.getNextDeckCard();
-      this.players[i].playerCards[2] = this.getNextDeckCard();
-      this.players[i].playerCards[3] = this.getNextDeckCard();
-      this.players[i].playerCards[4] = this.getNextDeckCard();
+    for (let cardIndex = 0; cardIndex < 5; cardIndex++) {
+      for (let i = 0; i < this.players.length; i++) {
+        const c = this.getNextDeckCard();
+        logger.debug(`Player ${this.players[i].playerName} got card ${c}`);
+        this.players[i].playerCards[cardIndex] = c;
+      }
     }
     let response: ClientResponse = {key: 'dealHoleCards', data: {}};
     for (let i = 0; i < this.players.length; i++) {
