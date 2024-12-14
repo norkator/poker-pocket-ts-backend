@@ -92,6 +92,13 @@ class Player implements PlayerInterface {
     this.roundPlayed = true;
   }
 
+  setStateDiscardAndDraw(): void {
+    this.playerState = PlayerState.DISCARD_AND_DRAW;
+    this.playerTimeLeft = 0;
+    this.isPlayerTurn = false;
+    this.roundPlayed = true;
+  }
+
 }
 
 export {Player};

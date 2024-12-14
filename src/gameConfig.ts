@@ -75,7 +75,8 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 10,
-          afterRoundCountdown: 10
+          afterRoundCountdown: 10,
+          discardAndDrawTimeout: 20,
         },
       ],
     },

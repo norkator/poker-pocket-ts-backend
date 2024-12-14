@@ -58,10 +58,12 @@ class GameHandler implements GameHandlerInterface {
     key: ClientMessageKey;
     tableId: number;
     tableSortParam: string;
+    cardsToDiscard: string[];
   } | any): void {
     let tableId: number = -1;
     let table: FiveCardDrawTable | HoldemTable | undefined = undefined;
     let player: Player | undefined = undefined;
+    let cardsToDiscard: string[] = [];
     switch (message.key) {
       case 'getTables':
         const tableSortParam: string = message.tableSortParam || 'all';
@@ -148,6 +150,16 @@ class GameHandler implements GameHandlerInterface {
         player = players.get(socket);
         if (player) {
           this.autoPlayAction(player);
+        }
+        break;
+      case 'discardAndDraw':
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        player = players.get(socket);
+        cardsToDiscard = message.cardsToDiscard;
+        if (table && player && table instanceof FiveCardDrawTable) {
+          table.playerDiscardAndDraw(player.playerId, cardsToDiscard);
+          table.sendStatusUpdate();
         }
         break;
       default:

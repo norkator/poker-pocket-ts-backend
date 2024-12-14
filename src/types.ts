@@ -15,7 +15,8 @@ export type ResponseKey =
   | 'autoPlayActionResult'
   | 'errorMessage'
   | 'warningMessage'
-  | 'infoMessage';
+  | 'infoMessage'
+  | 'discardAndDraw';
 export type ClientMessageKey = 'getTables' | 'getSpectateTables';
-export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD';
+export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
