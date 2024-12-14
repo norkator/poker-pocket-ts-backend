@@ -802,16 +802,17 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  sendWebSocketData(player: any, data: any): void {
-    if (this.players[player] != null && !this.players[player].isBot) {
-      if (this.players[player].socket != null) {
-        if (this.players[player].socket.readyState === SocketState.OPEN) {
-          this.players[player].socket.send(JSON.stringify(data));
+  sendWebSocketData(playerIndex: number, data: any): void {
+    const player = this.players[playerIndex];
+    if (player != null && !player.isBot) {
+      if (player.socket != null) {
+        if (player.socket.readyState === SocketState.OPEN) {
+          player.socket.send(JSON.stringify(data));
         } else {
-          this.players[player].socket = null;
+          player.socket = null;
         }
       } else {
-        this.players[player].setStateFold();
+        player.setStateFold();
       }
     }
   }
