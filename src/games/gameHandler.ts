@@ -13,7 +13,7 @@ import {
   isPlayerInTable,
   sendClientNotification,
 } from '../utils';
-import {AutoPlay} from '../autoPlay';
+import {AutoPlay} from './holdem/autoPlay';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();

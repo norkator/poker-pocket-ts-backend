@@ -1,15 +1,15 @@
-import logger from './logger';
-import {HoldemStage} from './enums';
-import {getRandomInt} from './utils';
-import {BotInterface} from './interfaces';
+import logger from '../../logger';
+import {HoldemStage} from '../../enums';
+import {getRandomInt} from '../../utils';
+import {BotInterface} from '../../interfaces';
 
-export class Bot implements BotInterface {
+export class HoldemBot implements BotInterface {
 
-  static BOT_FOLD = 'bot_fold';
-  static BOT_CHECK = 'bot_check';
-  static BOT_CALL = 'bot_call';
-  static BOT_RAISE = 'bot_raise';
-  static REMOVE_BOT = 'remove_bot';
+  static HOLDEM_BOT_FOLD = 'HOLDEM_BOT_fold';
+  static HOLDEM_BOT_CHECK = 'HOLDEM_BOT_check';
+  static HOLDEM_BOT_CALL = 'HOLDEM_BOT_call';
+  static HOLDEM_BOT_RAISE = 'HOLDEM_BOT_raise';
+  static REMOVE_HOLDEM_BOT = 'remove_bot';
 
   holdemType: number;
   name: string;
@@ -64,9 +64,9 @@ export class Bot implements BotInterface {
 
   performAction(): { action: string; amount: number } {
     if (this.playerMoney <= this.tableMinBet + 500) {
-      this.resultsSet.action = Bot.REMOVE_BOT;
+      this.resultsSet.action = HoldemBot.REMOVE_HOLDEM_BOT;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
     } else {
       this.handleGameStages();
     }
@@ -99,14 +99,14 @@ export class Bot implements BotInterface {
 
   private handleFirstStage(): void {
     //if (this.hasBadHoleCardsHand()) {
-    //  this.resultsSet.action = Bot.BOT_FOLD;
+    //  this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
     //} else {
     const hasSameCards = this.myHand[0][0] === this.myHand[1][0];
     if (hasSameCards && !this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_RAISE;
+      this.resultsSet.action = HoldemBot.HOLDEM_BOT_RAISE;
       this.resultsSet.amount = this.getCalculatedRaiseAmount();
     } else {
-      this.BOT_CHECK_CALL();
+      this.HOLDEM_BOT_CHECK_CALL();
     }
     //}
   }
@@ -114,16 +114,16 @@ export class Bot implements BotInterface {
   private handleSecondStage(): void {
     // Here we have hole cards and three middle cards => 5 cards
     if (this.handValue < 4300 && this.isCallSituation) { // never fold if have nothing to call against (no money to lose on checks)
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
     } else {
       if (this.handValue > 10000 && !this.isCallSituation) {
-        this.resultsSet.action = Bot.BOT_RAISE;
+        this.resultsSet.action = HoldemBot.HOLDEM_BOT_RAISE;
         this.resultsSet.amount = this.getCalculatedRaiseAmount();
       } else {
         if (this.handValue < 7000 && this.isCallSituation) { // 02.08.2018 - added case to fold if call situation and bad cards
-          this.resultsSet.action = Bot.BOT_FOLD;
+          this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
         } else {
-          this.BOT_CHECK_CALL();
+          this.HOLDEM_BOT_CHECK_CALL();
         }
       }
     }
@@ -132,16 +132,16 @@ export class Bot implements BotInterface {
   private handleThirdStage(): void {
     // Hole cards + four cards in the middle
     if (this.handValue < 4500 && this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
     } else {
       if (this.handValue > 15000 && !this.isCallSituation) {
-        this.resultsSet.action = Bot.BOT_RAISE;
+        this.resultsSet.action = HoldemBot.HOLDEM_BOT_RAISE;
         this.resultsSet.amount = this.getCalculatedRaiseAmount();
       } else {
         if (this.handValue < 9000 && this.isCallSituation) { // 02.08.2018 - added case to fold if call situation and bad cards
-          this.resultsSet.action = Bot.BOT_FOLD;
+          this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
         } else {
-          this.BOT_CHECK_CALL();
+          this.HOLDEM_BOT_CHECK_CALL();
         }
       }
     }
@@ -149,13 +149,13 @@ export class Bot implements BotInterface {
 
   private handleFourthStage(): void {
     if (this.handValue > 20000 && !this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_RAISE;
+      this.resultsSet.action = HoldemBot.HOLDEM_BOT_RAISE;
       this.resultsSet.amount = this.getCalculatedRaiseAmount();
     } else {
       if (this.handValue < 9000 && this.isCallSituation) {
-        this.resultsSet.action = Bot.BOT_FOLD;
+        this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
       } else {
-        this.BOT_CHECK_CALL();
+        this.HOLDEM_BOT_CHECK_CALL();
       }
     }
   }
@@ -168,8 +168,8 @@ export class Bot implements BotInterface {
     return Math.min(v, this.playerMoney);
   }
 
-  private BOT_CHECK_CALL(): void {
-    this.resultsSet.action = this.isCallSituation ? Bot.BOT_CALL : Bot.BOT_CHECK;
+  private HOLDEM_BOT_CHECK_CALL(): void {
+    this.resultsSet.action = this.isCallSituation ? HoldemBot.HOLDEM_BOT_CALL : HoldemBot.HOLDEM_BOT_CHECK;
   }
 
   private hasBadHoleCardsHand(): boolean {

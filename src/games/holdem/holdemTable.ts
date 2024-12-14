@@ -12,7 +12,7 @@ import {Game, PlayerAction} from '../../types';
 import {asciiToStringCardsArray, getRandomInt, stringToAsciiCardsArray} from '../../utils';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
-import {Bot} from '../../bot';
+import {HoldemBot} from './holdemBot';
 import {Hand} from 'pokersolver';
 import {Player} from '../../player';
 
@@ -1112,7 +1112,7 @@ export class HoldemTable implements HoldemTableInterface {
     let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
       (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
     let playerId = this.players[currentPlayerTurn].playerId;
-    let botObj = new Bot(
+    let botObj = new HoldemBot(
       this.holdemType,
       this.players[currentPlayerTurn].playerName,
       this.players[currentPlayerTurn].playerMoney,
@@ -1141,7 +1141,7 @@ export class HoldemTable implements HoldemTableInterface {
         case 'bot_raise':
           this.playerRaise(playerId, resultSet.amount);
           break;
-        case 'remove_bot': // Bot run out of money
+        case 'remove_bot': // HoldemBot run out of money
           this.playerFold(playerId);
           this.removeBotFromTable(currentPlayerTurn);
           break;

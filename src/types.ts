@@ -15,5 +15,4 @@ export type ResponseKey =
   | 'errorMessage';
 export type ClientMessageKey = 'getTables' | 'getSpectateTables';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD';
-export type PokerCards = { [key: number]: string };
 export type ClientMessageType = 'warning' | 'error' | 'info';

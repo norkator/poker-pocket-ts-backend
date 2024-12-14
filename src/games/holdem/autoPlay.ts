@@ -1,8 +1,8 @@
-import logger from './logger';
-import {BotInterface} from './interfaces';
-import {Bot} from './bot';
-import {HoldemStage} from './enums';
-import {asciiCardToStringCard, getRandomInt} from './utils';
+import logger from '../../logger';
+import {BotInterface} from '../../interfaces';
+import {HoldemBot} from './holdemBot';
+import {HoldemStage} from '../../enums';
+import {asciiCardToStringCard, getRandomInt} from '../../utils';
 import { calculateEquity } from 'poker-odds';
 
 export class AutoPlay implements BotInterface {
@@ -45,14 +45,14 @@ export class AutoPlay implements BotInterface {
 
   performAction(): { action: string, amount: number } {
     if (!this.myHand || !this.myHand[0]) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
       return this.resultsSet;
     }
 
     if (this.playerMoney <= this.roomMinBet + 500) {
-      this.resultsSet.action = Bot.REMOVE_BOT;
+      this.resultsSet.action = HoldemBot.REMOVE_BOT;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
     } else {
       switch (this.currentStage) {
         case HoldemStage.TWO_PRE_FLOP:
@@ -81,15 +81,15 @@ export class AutoPlay implements BotInterface {
 
   private handlePreFlop(): void {
     if (this.hasBadHoleCardsHand()) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
     } else {
       const hasSameCards = this.myHand[0].charAt(0) === this.myHand[1].charAt(0);
       if (hasSameCards && !this.isCallSituation) {
-        this.resultsSet.action = Bot.BOT_RAISE;
+        this.resultsSet.action = HoldemBot.BOT_RAISE;
         this.resultsSet.amount = this.getCalculatedRaiseAmount();
       } else {
         if (this.isCallSituation && !hasSameCards && getRandomInt(0, 4) === 4) {
-          this.resultsSet.action = Bot.BOT_FOLD;
+          this.resultsSet.action = HoldemBot.BOT_FOLD;
         } else {
           this.BOT_CHECK_CALL();
         }
@@ -99,12 +99,12 @@ export class AutoPlay implements BotInterface {
 
   private handlePostFlop(): void {
     if (this.handValue < 4300 && this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
     } else if ((this.handValue > 10000 || this.hasGoodOdds()) && !this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_RAISE;
+      this.resultsSet.action = HoldemBot.BOT_RAISE;
       this.resultsSet.amount = this.getCalculatedRaiseAmount();
     } else if (this.handValue < 7000 && this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
     } else {
       this.BOT_CHECK_CALL();
     }
@@ -112,12 +112,12 @@ export class AutoPlay implements BotInterface {
 
   private handlePostTurn(): void {
     if (this.handValue < 4500 && this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
     } else if ((this.handValue > 15000 || this.hasGoodOdds()) && !this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_RAISE;
+      this.resultsSet.action = HoldemBot.BOT_RAISE;
       this.resultsSet.amount = this.getCalculatedRaiseAmount();
     } else if (this.handValue < 9000 && this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
     } else {
       this.BOT_CHECK_CALL();
     }
@@ -125,10 +125,10 @@ export class AutoPlay implements BotInterface {
 
   private handleShowDown(): void {
     if ((this.handValue > 20000 || this.hasGoodOdds()) && !this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_RAISE;
+      this.resultsSet.action = HoldemBot.BOT_RAISE;
       this.resultsSet.amount = this.getCalculatedRaiseAmount();
     } else if ((this.handValue < 9000 || !this.hasGoodOdds()) && this.isCallSituation) {
-      this.resultsSet.action = Bot.BOT_FOLD;
+      this.resultsSet.action = HoldemBot.BOT_FOLD;
     } else {
       this.BOT_CHECK_CALL();
     }
@@ -143,7 +143,7 @@ export class AutoPlay implements BotInterface {
   }
 
   private BOT_CHECK_CALL(): void {
-    this.resultsSet.action = this.isCallSituation ? Bot.BOT_CALL : Bot.BOT_CHECK;
+    this.resultsSet.action = this.isCallSituation ? HoldemBot.BOT_CALL : HoldemBot.BOT_CHECK;
   }
 
   private hasBadHoleCardsHand(): boolean {
