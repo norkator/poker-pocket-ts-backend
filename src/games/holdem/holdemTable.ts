@@ -67,11 +67,11 @@ export class HoldemTable implements HoldemTableInterface {
   ) {
     this.holdemType = holdemType;
     this.tableId = tableId;
-    this.tableMinBet = gameConfig.games.holdEm.holdEmGames[holdemType].minBet;
+    this.tableMinBet = gameConfig.games.holdEm.games[holdemType].minBet;
     this.tableName = 'Table ' + tableId;
-    this.maxSeats = gameConfig.games.holdEm.holdEmGames[holdemType].max_seats;
-    this.minPlayers = gameConfig.games.holdEm.holdEmGames[holdemType].minPlayers;
-    this.turnTimeOut = gameConfig.games.holdEm.holdEmGames[holdemType].turnCountdown * 1000;
+    this.maxSeats = gameConfig.games.holdEm.games[holdemType].max_seats;
+    this.minPlayers = gameConfig.games.holdEm.games[holdemType].minPlayers;
+    this.turnTimeOut = gameConfig.games.holdEm.games[holdemType].turnCountdown * 1000;
     this.currentStage = HoldemStage.ONE_HOLE_CARDS;
     this.holeCardsGiven = false;
     this.totalPot = 0;
@@ -538,7 +538,7 @@ export class HoldemTable implements HoldemTableInterface {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.holdEm.holdEmGames[this.holdemType].afterRoundCountdown * 1000);
+    }, gameConfig.games.holdEm.games[this.holdemType].afterRoundCountdown * 1000);
   }
 
   roundResultsMiddleOfTheGame(): void {
@@ -564,7 +564,7 @@ export class HoldemTable implements HoldemTableInterface {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.holdEm.holdEmGames[this.holdemType].afterRoundCountdown * 1000);
+    }, gameConfig.games.holdEm.games[this.holdemType].afterRoundCountdown * 1000);
   }
 
   bettingRound(currentPlayerTurn: number): void {

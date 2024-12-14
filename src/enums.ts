@@ -24,3 +24,13 @@ export enum PlayerState {
   CHECK = 2,
   RAISE = 3,
 }
+
+export enum FiveCardDrawStage {
+  ONE_HOLE_CARDS = 0,
+  TWO_FIRST_BETTING_ROUND = 1,
+  THREE_DRAW_PHASE = 2,
+  FOUR_SECOND_BETTING_ROUND = 3,
+  FIVE_THE_SHOW_DOWN = 4,
+  SIX_SEND_ALL_PLAYERS_CARDS = 5,
+  SEVEN_RESULTS = 6,
+}
