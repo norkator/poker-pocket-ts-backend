@@ -136,8 +136,6 @@ export interface HoldemTableInterface {
 
   collectChipsToPotAndSendAction(): boolean; // Collect chips to pot action, collects and clears user total pots for this round
 
-  sendClientMessage(playerObject: any, message: string): void; // Custom message to send to a playing client before object is moved
-
   getNextDeckCard(): number;
 
   getPlayerIndex(playerId: number): number;
@@ -198,7 +196,6 @@ export interface ClientResponse {
     playersData?: PlayerData[];
     action?: string;
     amount?: number;
-    msg?: string;
     translationKey?: string;
     clientMessageType?: ClientMessageType;
   };

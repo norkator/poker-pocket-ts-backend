@@ -2,8 +2,9 @@ import * as crypto from 'crypto';
 import {WebSocket} from 'ws';
 import * as fs from 'fs';
 import {Player} from './player';
-import {ClientResponse} from './interfaces';
+import {ClientResponse, PlayerInterface} from './interfaces';
 import {ClientMessageType} from './types';
+import {SocketState} from "./enums";
 
 const randomNamesList: string[] = fs.readFileSync('./src/assets/names.txt', 'utf-8').split('\n');
 
@@ -296,21 +297,32 @@ export function isPlayerInTable(
   return isInPlayers || isInPlayersToAppend;
 }
 
+export function sendClientMessage(socket: WebSocket | null, message: string, translationKey: string): void {
+  if (socket === null || socket.readyState !== SocketState.OPEN) {
+    return;
+  }
+  const response: ClientResponse = {
+    key: 'clientMessage',
+    data: {
+      message: message,
+      translationKey: translationKey,
+    }
+  };
+  socket.send(JSON.stringify(response));
+}
 
 export function sendClientNotification(
   socket: WebSocket | null, clientMessageType: ClientMessageType, msg: string, translationKey: string
 ): void {
-  if (socket === null) {
+  if (socket === null || socket.readyState !== SocketState.OPEN) {
     return;
   }
   const response: ClientResponse = {
-    key: 'errorMessage',
+    key: clientMessageType,
     data: {
-      msg: msg,
+      message: msg,
       translationKey: translationKey,
-      clientMessageType: clientMessageType,
     }
   }
   socket.send(JSON.stringify(response));
 }
-

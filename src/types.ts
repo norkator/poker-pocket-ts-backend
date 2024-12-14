@@ -12,7 +12,9 @@ export type ResponseKey =
   | 'getSpectateTables'
   | 'tableParams'
   | 'autoPlayActionResult'
-  | 'errorMessage';
+  | 'errorMessage'
+  | 'warningMessage'
+  | 'infoMessage';
 export type ClientMessageKey = 'getTables' | 'getSpectateTables';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD';
-export type ClientMessageType = 'warning' | 'error' | 'info';
+export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';

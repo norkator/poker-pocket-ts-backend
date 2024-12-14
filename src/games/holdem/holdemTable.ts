@@ -9,7 +9,7 @@ import {
 import logger from '../../logger';
 import {Poker} from '../../poker';
 import {Game, PlayerAction} from '../../types';
-import {asciiToStringCardsArray, getRandomInt, stringToAsciiCardsArray} from '../../utils';
+import {asciiToStringCardsArray, getRandomInt, sendClientMessage, stringToAsciiCardsArray} from '../../utils';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
 import {HoldemBot} from './holdemBot';
@@ -57,7 +57,6 @@ export class HoldemTable implements HoldemTableInterface {
   smallBlindGiven: boolean;
   bigBlindGiven: boolean;
   bigBlindPlayerHadTurn: boolean;
-  stackCall: number;
   lastWinnerPlayers: any[];
   collectingPot: boolean;
 
@@ -104,7 +103,6 @@ export class HoldemTable implements HoldemTableInterface {
     this.smallBlindGiven = false;
     this.bigBlindGiven = false;
     this.bigBlindPlayerHadTurn = false;
-    this.stackCall = 0;
     this.lastWinnerPlayers = [];
     this.collectingPot = false;
   }
@@ -147,7 +145,9 @@ export class HoldemTable implements HoldemTableInterface {
         if (player && player.socket && player.playerMoney > this.tableMinBet) {
           this.playersTemp.push(player);
         } else if (player && !player.isBot) {
-          this.sendClientMessage(player, 'Not enough money to join the game. You are now spectator.');
+          sendClientMessage(
+            player.socket, 'Not enough money to join the game. You are now spectator.', 'NO_MONEY_CHANGED_TO_SPECTATOR'
+          );
           this.spectators.push(player);
         }
       }
@@ -158,7 +158,9 @@ export class HoldemTable implements HoldemTableInterface {
           if (player.socket && player.playerMoney > this.tableMinBet) {
             this.players.push(player);
           } else if (!player.isBot) {
-            this.sendClientMessage(player, 'Not enough money to join the game. You are now spectator.');
+            sendClientMessage(
+              player.socket, 'Not enough money to join the game. You are now spectator.', 'NO_MONEY_CHANGED_TO_SPECTATOR'
+            );
             this.spectators.push(player);
           }
         }
@@ -893,16 +895,6 @@ export class HoldemTable implements HoldemTableInterface {
       return true; // Money to collect, wait before continuing to staging
     }
     return false; // No money to collect, continue staging without delay
-  }
-
-  sendClientMessage(playerObject: any, message: string): void {
-    const response: ClientResponse = {key: 'clientMessage', data: {}};
-    response.data.message = message;
-    if (playerObject.socket != null) {
-      if (playerObject.socket.readyState === SocketState.OPEN) {
-        playerObject.socket.sendText(JSON.stringify(response));
-      }
-    }
   }
 
   getNextDeckCard(): number {
