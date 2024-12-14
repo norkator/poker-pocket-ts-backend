@@ -12,7 +12,7 @@ class Player implements PlayerInterface {
   playerName: string;
   playerWinCount: number = 0;
   playerLoseCount: number = 0;
-  playerCards: any[] = [];
+  playerCards: string[] = [];
   playerState: PlayerState = PlayerState.NONE;
   totalBet: number = 0;
   isDealer: boolean = false;
@@ -23,7 +23,7 @@ class Player implements PlayerInterface {
   roundPlayed: boolean = false;
   handValue: number = 0;
   handName: string | null = null;
-  cardsInvolvedOnEvaluation: any[] = [];
+  cardsInvolvedOnEvaluation: { value: string; suit: string; }[] = [];
 
   constructor(
     socket: WebSocket,

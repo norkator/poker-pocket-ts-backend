@@ -27,7 +27,7 @@ export interface PlayerInterface {
   playerName: string;
   playerWinCount: number;
   playerLoseCount: number;
-  playerCards: any[];
+  playerCards: string[];
   playerState: PlayerState;
   totalBet: number;
   isDealer: boolean;
@@ -38,7 +38,7 @@ export interface PlayerInterface {
   roundPlayed: boolean;
   handValue: number;
   handName: string | null;
-  cardsInvolvedOnEvaluation: any[];
+  cardsInvolvedOnEvaluation: { value: string; suit: string; }[];
 
   resetParams(): void;
 
@@ -136,7 +136,7 @@ export interface HoldemTableInterface {
 
   collectChipsToPotAndSendAction(): boolean; // Collect chips to pot action, collects and clears user total pots for this round
 
-  getNextDeckCard(): number;
+  getNextDeckCard(): string;
 
   getPlayerIndex(playerId: number): number;
 

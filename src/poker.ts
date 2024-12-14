@@ -56,7 +56,7 @@ class Poker {
     }
   }
 
-  static visualize(cards: number | number[]): string | string[] {
+  static visualize(cards: number | number[]): string[] {
     if (typeof cards === 'number') return POKER_CARDS[cards];
     return cards.map((card) => POKER_CARDS[card]);
   }

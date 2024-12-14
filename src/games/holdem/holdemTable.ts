@@ -34,7 +34,7 @@ export class HoldemTable implements HoldemTableInterface {
   playersTemp: Player[];
   spectators: Player[];
   spectatorsTemp: Player[];
-  deck: any | null;
+  deck: string[] = [];
   deckCard: number;
   deckSize: number;
   deckCardsBurned: number;
@@ -80,7 +80,7 @@ export class HoldemTable implements HoldemTableInterface {
     this.playersTemp = [];
     this.spectators = [];
     this.spectatorsTemp = [];
-    this.deck = null;
+    this.deck = [];
     this.deckCard = 0;
     this.deckSize = 52;
     this.deckCardsBurned = 0;
@@ -897,7 +897,7 @@ export class HoldemTable implements HoldemTableInterface {
     return false; // No money to collect, continue staging without delay
   }
 
-  getNextDeckCard(): number {
+  getNextDeckCard(): string {
     let nextCard = this.deck[this.deckCard];
     this.deckCard = this.deckCard + 1;
     return nextCard;

@@ -131,14 +131,15 @@ export function asciiCardToStringCard(ascii: string): string {
       return 'Ks';
     case 'A♠':
       return 'As';
+
     default:
       return '';
   }
 }
 
 // Returns array of ascii cards
-export function stringToAsciiCardsArray(stringCardsArray: { value: string; suit: string; }[]) {
-  let asciiCardsArray = [];
+export function stringToAsciiCardsArray(stringCardsArray: { value: string; suit: string; }[]): string[] {
+  let asciiCardsArray: string[] = [];
   for (let i = 0; i < stringCardsArray.length; i++) {
     asciiCardsArray.push(stringCardToAsciiCard(stringCardsArray[i].value + stringCardsArray[i].suit));
   }
@@ -146,7 +147,7 @@ export function stringToAsciiCardsArray(stringCardsArray: { value: string; suit:
 }
 
 // For example convert Ad to A♦
-export function stringCardToAsciiCard(ascii: any) {
+export function stringCardToAsciiCard(ascii: string): string {
   switch (ascii) {
     case '2c':
       return '2♣';
@@ -255,6 +256,9 @@ export function stringCardToAsciiCard(ascii: any) {
       return 'K♠';
     case 'As':
       return 'A♠';
+
+    default:
+      return '';
   }
 }
 
