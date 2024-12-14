@@ -226,7 +226,7 @@ export class FiveCardDrawTable {
     const response: ClientResponse = {
       key: 'tableParams',
       data: {
-        gameStarted: this.currentStage >= FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND && this.holeCardsGiven,
+        gameStarted: this.currentStage >= FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND,
         playerCount: this.players.length,
         tableMinBet: this.tableMinBet,
         middleCards: this.middleCards,
@@ -376,10 +376,12 @@ export class FiveCardDrawTable {
 
 
   dealHoleCards(): void {
-    this.currentStage = FiveCardDrawStage.TWO_DEAL_HOLE_CARDS;
     for (let i = 0; i < this.players.length; i++) {
       this.players[i].playerCards[0] = this.getNextDeckCard();
       this.players[i].playerCards[1] = this.getNextDeckCard();
+      this.players[i].playerCards[2] = this.getNextDeckCard();
+      this.players[i].playerCards[3] = this.getNextDeckCard();
+      this.players[i].playerCards[4] = this.getNextDeckCard();
     }
     let response: ClientResponse = {key: 'dealHoleCards', data: {}};
     for (let i = 0; i < this.players.length; i++) {
@@ -404,6 +406,7 @@ export class FiveCardDrawTable {
       this.sendSpectatorWebSocketData(i, response);
     }
     this.holeCardsGiven = true;
+    this.currentStage = FiveCardDrawStage.THREE_FIRST_BETTING_ROUND;
     setTimeout(() => {
       this.staging();
     }, 3000);
@@ -609,7 +612,7 @@ export class FiveCardDrawTable {
           this.bettingRound(verifyBets);
         }
       } else {
-        if (this.players[currentPlayerTurn] != null || this.isCallSituation && verifyBets === -1 || !this.smallBlindGiven || !this.bigBlindGiven || !this.bigBlindPlayerHadTurn) { // 07.08.2018, added || !this.bigBlindPlayerHadTurn
+        if (this.players[currentPlayerTurn] != null || this.isCallSituation && verifyBets === -1 || !this.smallBlindGiven || !this.bigBlindGiven || !this.bigBlindPlayerHadTurn) {
           // Forced small and big blinds case
           if (this.currentStage === FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND && (!this.smallBlindGiven || !this.bigBlindGiven)) {
             this.playerCheck(this.players[currentPlayerTurn].playerId);
