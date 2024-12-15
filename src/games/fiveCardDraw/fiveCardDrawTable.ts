@@ -113,7 +113,6 @@ export class FiveCardDrawTable {
     this.currentStage = FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND;
     this.holeCardsGiven = false;
     this.totalPot = 0;
-    this.middleCards = [];
     this.currentHighestBet = 0;
     this.updateJsonTemp = null;
     this.current_player_turn = 0;
@@ -232,7 +231,6 @@ export class FiveCardDrawTable {
         gameStarted: this.currentStage >= FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND,
         playerCount: this.players.length,
         tableMinBet: this.tableMinBet,
-        middleCards: this.middleCards,
         playersData: [],
       },
     };
@@ -329,7 +327,6 @@ export class FiveCardDrawTable {
         tableMinBet: this.tableMinBet,
         currentStatus: this.currentStatusText,
         currentTurnText: this.currentTurnText,
-        middleCards: this.middleCards,
         playersData: [] as any[],
         isCallSituation: this.isCallSituation,
         isResultsCall: this.isResultsCall,
@@ -431,8 +428,11 @@ export class FiveCardDrawTable {
       if (!this.players[i].isFold) {
         // Use poker solver to get hand used in evaluation
         let hand = Hand.solve(asciiToStringCardsArray([
-          this.middleCards[0], this.middleCards[1], this.middleCards[2], this.middleCards[3], this.middleCards[4],
-          this.players[i].playerCards[0], this.players[i].playerCards[1]
+          this.players[i].playerCards[0],
+          this.players[i].playerCards[1],
+          this.players[i].playerCards[2],
+          this.players[i].playerCards[3],
+          this.players[i].playerCards[4],
         ]));
         this.players[i].cardsInvolvedOnEvaluation = hand.cards;
         // Use Hand ranks to get value and hand name
@@ -992,32 +992,18 @@ export class FiveCardDrawTable {
   }
 
   evaluatePlayerCards(currentPlayer: number): HandEvaluationInterface {
-    let cardsToEvaluate = [];
-    let ml = this.middleCards.length;
-    // Push available middle cards
-    for (let i = 0; i < ml; i++) {
-      if (this.middleCards[i] !== void 0) { // Index is not 'undefined'
-        cardsToEvaluate.push(this.middleCards[i]);
-      }
-    }
-    // Push player hole cards
-    if (this.players[currentPlayer] === undefined) {
+    const player = this.players[currentPlayer];
+    if (!player || !player.playerCards || player.playerCards.length < 5) {
       return {value: 0, handName: null};
-    } else {
-      if (this.players[currentPlayer].playerCards == null || this.players[currentPlayer].playerCards === undefined) {
-        return {value: 0, handName: null};
-      } else {
-        cardsToEvaluate.push(this.players[currentPlayer].playerCards[0]);
-        cardsToEvaluate.push(this.players[currentPlayer].playerCards[1]);
-        let cl = cardsToEvaluate.length;
-        if (cl === 3 || cl === 5 || cl === 6 || cl === 7) {
-          return evaluator.evalHand(cardsToEvaluate);
-        } else {
-          return {value: 0, handName: null};
-        }
-      }
     }
+    const cardsToEvaluate = player.playerCards.slice(0, 5);
+    const validCardCounts = [3, 5, 6, 7];
+    if (validCardCounts.includes(cardsToEvaluate.length)) {
+      return evaluator.evalHand(cardsToEvaluate);
+    }
+    return {value: 0, handName: null};
   }
+
 
   burnCard() {
     this.deckCard = this.deckCard + 1;
