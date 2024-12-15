@@ -462,7 +462,7 @@ export class FiveCardDrawTable {
       this.roundWinnerPlayerIds.push(this.players[winnerPlayers[i]].playerId);
       this.roundWinnerPlayerCards.push(stringToAsciiCardsArray(this.players[winnerPlayers[i]].cardsInvolvedOnEvaluation));
     }
-    logger.info(`table ${this.tableName} winners are ${winnerNames}`);
+    logger.info(`${this.tableName} winners are ${winnerNames}`);
     this.currentStatusText = `${winnerNames} got ${this.players[winnerPlayers[0]].handName}`;
 
     // this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);

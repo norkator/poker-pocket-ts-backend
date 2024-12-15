@@ -22,12 +22,15 @@ const tables = new Map<number, FiveCardDrawTable | HoldemTable>();
 class GameHandler implements GameHandlerInterface {
 
   createStartingTables(): void {
-    Array.from({length: gameConfig.games.holdEm.startingTables}).forEach((_, index: number) => {
+    const holdEmCount = gameConfig.games.holdEm.startingTables;
+    Array.from({ length: holdEmCount }).forEach((_, index: number) => {
       this.createHoldEmTable(index);
     });
-    Array.from({length: gameConfig.games.fiveCardDraw.startingTables}).forEach((_, index: number) => {
-      this.createFiveCardDrawTable(index);
+    Array.from({ length: gameConfig.games.fiveCardDraw.startingTables }).forEach((_, index: number) => {
+      const roomNumber = holdEmCount + index;
+      this.createFiveCardDrawTable(roomNumber);
     });
+
   }
 
   onConnection(socket: WebSocket): void {
