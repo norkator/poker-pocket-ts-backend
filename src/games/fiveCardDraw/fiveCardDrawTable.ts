@@ -40,7 +40,6 @@ export class FiveCardDrawTable {
   deckCard: number;
   deckSize: number;
   deckCardsBurned: number;
-  middleCards: any[];
   gameStarted: boolean;
   turnTimeOutObj: NodeJS.Timeout | null;
   turnIntervalObj: NodeJS.Timeout | null;
@@ -87,7 +86,6 @@ export class FiveCardDrawTable {
     this.deckCard = 0;
     this.deckSize = 52;
     this.deckCardsBurned = 0;
-    this.middleCards = [];
     this.gameStarted = false;
     this.turnTimeOutObj = null;
     this.turnIntervalObj = null;
@@ -261,6 +259,7 @@ export class FiveCardDrawTable {
   staging(): void {
     switch (this.currentStage) {
       case FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND: // Small blind and big blind are posted (small blind left of dealer, big blind second left of dealer)
+        logger.debug('FCD stage ONE_SMALL_AND_BIG_BLIND');
         this.currentStatusText = 'Small blind & big blind';
         this.isCallSituation = false; // table related reset
         this.resetPlayerStates();
@@ -271,12 +270,14 @@ export class FiveCardDrawTable {
         this.smallAndBigBlinds(this.smallBlindPlayerArrayIndex);
         break;
       case FiveCardDrawStage.TWO_DEAL_HOLE_CARDS: // Dealer will deal five hole cards for each player starting from the player to the left of the big blind
+        logger.debug('FCD stage TWO_DEAL_HOLE_CARDS');
         this.currentStatusText = 'Deal hole cards';
         this.currentTurnText = '';
         this.burnCard(); // Burn one card before dealing cards
         this.dealHoleCards();
         break;
       case FiveCardDrawStage.THREE_FIRST_BETTING_ROUND: // Starting with the player to the left of the big blind
+        logger.debug('FCD stage THREE_FIRST_BETTING_ROUND');
         this.currentStatusText = 'First betting round';
         this.currentTurnText = '';
         this.isCallSituation = false; // table related reset
@@ -287,6 +288,7 @@ export class FiveCardDrawTable {
         this.bettingRound(this.current_player_turn);
         break;
       case FiveCardDrawStage.FOUR_DRAW_PHASE: // Players may discard and draw new cards (optional, up to five|all cards)
+        logger.debug('FCD stage FOUR_DRAW_PHASE');
         this.currentStatusText = 'Discard any cards and draw new ones';
         this.currentTurnText = '';
         this.isCallSituation = false; // table related reset
@@ -295,6 +297,7 @@ export class FiveCardDrawTable {
         this.discardAndDraw();
         break;
       case FiveCardDrawStage.FIVE_SECOND_BETTING_ROUND:
+        logger.debug('FCD stage FIVE_SECOND_BETTING_ROUND');
         this.currentStatusText = 'Second betting round';
         this.currentTurnText = '';
         this.isCallSituation = false; // table related reset
@@ -305,9 +308,11 @@ export class FiveCardDrawTable {
         this.bettingRound(this.current_player_turn);
         break;
       case FiveCardDrawStage.SIX_THE_SHOWDOWN: // Send all players cards here before results to all players and spectators
+        logger.debug('FCD stage SIX_THE_SHOWDOWN');
         this.sendAllPlayersCards(); // Avoiding cheating with this
         break;
       case FiveCardDrawStage.SEVEN_RESULTS:
+        logger.debug('FCD stage SEVEN_RESULTS');
         this.roundResultsEnd();
         break;
       default:
@@ -750,15 +755,19 @@ export class FiveCardDrawTable {
           player.playerTimeLeft = discardAndDrawTimeout * 1000;
         }
         let response: ClientResponse = {key: 'discardAndDraw', data: {}};
-        for (let p = 0; p < this.players.length; p++) {
-          this.sendWebSocketData(p, response);
-        }
-        for (let w = 0; w < this.playersToAppend.length; w++) {
-          this.sendWaitingPlayerWebSocketData(w, response);
-        }
-        for (let s = 0; s < this.spectators.length; s++) {
-          this.sendSpectatorWebSocketData(s, response);
-        }
+        this.players.forEach((player, index) => {
+          if (player.isBot) {
+            this.botActionHandler(index);
+          } else {
+            this.sendWebSocketData(index, response);
+          }
+        });
+        this.playersToAppend.forEach((_, index) => {
+          this.sendWaitingPlayerWebSocketData(index, response);
+        });
+        this.spectators.forEach((_, index) => {
+          this.sendSpectatorWebSocketData(index, response);
+        });
         this.discardAndDrawInitiated = true;
         this.sendStatusUpdate();
         this.discardAndDrawTimer();
@@ -783,6 +792,7 @@ export class FiveCardDrawTable {
     this.turnTimeOutObj = setTimeout(() => {
       this.clearTimers();
       this.discardAndDraw();
+      logger.debug('FCD discardAndDrawTimer timeout reached');
     }, gameConfig.games.fiveCardDraw.games[this.gameType].discardAndDrawTimeout * 1000);
   }
 
@@ -1071,19 +1081,22 @@ export class FiveCardDrawTable {
     let resultSet = botObj.performAction();
     let tm = setTimeout(() => {
       switch (resultSet.action) {
-        case 'bot_fold':
+        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_DISCARD_AND_DRAW:
+          this.playerDiscardAndDraw(playerId, resultSet.cardsToDiscard);
+          break;
+        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_FOLD:
           this.playerFold(playerId);
           break;
-        case 'bot_check':
+        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CHECK:
           this.playerCheck(playerId);
           break;
-        case 'bot_call':
+        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CALL:
           this.playerCheck(playerId);
           break;
-        case 'bot_raise':
+        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_RAISE:
           this.playerRaise(playerId, resultSet.amount);
           break;
-        case 'remove_bot':
+        case FiveCardDrawBot.REMOVE_FIVE_CARD_DRAW_BOT:
           this.playerFold(playerId);
           this.removeBotFromTable(currentPlayerTurn);
           break;

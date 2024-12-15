@@ -5,10 +5,11 @@ import {BotInterface} from '../../interfaces';
 
 export class FiveCardDrawBot implements BotInterface {
 
-  static FIVE_CARD_DRAW_BOT_FOLD = 'FIVE_CARD_DRAW_BOT_fold';
-  static FIVE_CARD_DRAW_BOT_CHECK = 'FIVE_CARD_DRAW_BOT_check';
-  static FIVE_CARD_DRAW_BOT_CALL = 'FIVE_CARD_DRAW_BOT_call';
-  static FIVE_CARD_DRAW_BOT_RAISE = 'FIVE_CARD_DRAW_BOT_raise';
+  static FIVE_CARD_DRAW_BOT_DISCARD_AND_DRAW = 'five_card_draw_bot_discard_and_draw';
+  static FIVE_CARD_DRAW_BOT_FOLD = 'five_card_draw_bot_fold';
+  static FIVE_CARD_DRAW_BOT_CHECK = 'five_card_draw_bot_check';
+  static FIVE_CARD_DRAW_BOT_CALL = 'five_card_draw_bot_call';
+  static FIVE_CARD_DRAW_BOT_RAISE = 'five_card_draw_bot_raise';
   static REMOVE_FIVE_CARD_DRAW_BOT = 'remove_bot';
 
   holdemType: number;
@@ -23,7 +24,7 @@ export class FiveCardDrawBot implements BotInterface {
   handValue: number;
   currentStage: FiveCardDrawStage;
   myTotalBet: number;
-  resultsSet: { action: string; amount: number };
+  resultsSet: { action: string; amount: number; cardsToDiscard: string[] };
 
   constructor(
     holdemType: number,
@@ -51,10 +52,10 @@ export class FiveCardDrawBot implements BotInterface {
     this.handValue = handValue;
     this.currentStage = currentStage;
     this.myTotalBet = myTotalBet;
-    this.resultsSet = {action: "", amount: 0};
+    this.resultsSet = {action: "", amount: 0, cardsToDiscard: []};
   }
 
-  performAction(): { action: string; amount: number } {
+  performAction(): { action: string; amount: number; cardsToDiscard: string[] } {
     if (this.playerMoney <= this.tableMinBet + 500) {
       this.resultsSet.action = FiveCardDrawBot.REMOVE_FIVE_CARD_DRAW_BOT;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {

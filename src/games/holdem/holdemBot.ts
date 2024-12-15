@@ -5,10 +5,10 @@ import {BotInterface} from '../../interfaces';
 
 export class HoldemBot implements BotInterface {
 
-  static HOLDEM_BOT_FOLD = 'HOLDEM_BOT_fold';
-  static HOLDEM_BOT_CHECK = 'HOLDEM_BOT_check';
-  static HOLDEM_BOT_CALL = 'HOLDEM_BOT_call';
-  static HOLDEM_BOT_RAISE = 'HOLDEM_BOT_raise';
+  static HOLDEM_BOT_FOLD = 'holdem_bot_fold';
+  static HOLDEM_BOT_CHECK = 'holdem_bot_check';
+  static HOLDEM_BOT_CALL = 'holdem_bot_call';
+  static HOLDEM_BOT_RAISE = 'holdem_bot_raise';
   static REMOVE_HOLDEM_BOT = 'remove_bot';
 
   holdemType: number;

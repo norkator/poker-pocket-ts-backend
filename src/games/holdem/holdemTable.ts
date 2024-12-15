@@ -1126,19 +1126,19 @@ export class HoldemTable implements HoldemTableInterface {
     let resultSet = botObj.performAction();
     let tm = setTimeout(() => {
       switch (resultSet.action) {
-        case 'bot_fold':
+        case HoldemBot.HOLDEM_BOT_FOLD:
           this.playerFold(playerId);
           break;
-        case 'bot_check':
+        case HoldemBot.HOLDEM_BOT_CHECK:
           this.playerCheck(playerId);
           break;
-        case 'bot_call':
+        case HoldemBot.HOLDEM_BOT_CALL:
           this.playerCheck(playerId);
           break;
-        case 'bot_raise':
+        case HoldemBot.HOLDEM_BOT_RAISE:
           this.playerRaise(playerId, resultSet.amount);
           break;
-        case 'remove_bot': // HoldemBot run out of money
+        case HoldemBot.REMOVE_HOLDEM_BOT: // HoldemBot run out of money
           this.playerFold(playerId);
           this.removeBotFromTable(currentPlayerTurn);
           break;
