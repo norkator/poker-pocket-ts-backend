@@ -74,23 +74,33 @@ export class FiveCardDrawBot implements BotInterface {
 
   private handleGameStages(): void {
     this.resultsSet.action = FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CHECK;
-    // switch (this.currentStage) {
-    //   case FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND:
-    //     this.handleFirstStage();
-    //     break;
-    //   case FiveCardDrawStage.TWO_DEAL_HOLE_CARDS:
-    //     break;
-    //   case FiveCardDrawStage.THREE_FIRST_BETTING_ROUND:
-    //     // this.handleThirdStage();
-    //     break;
-    //   case FiveCardDrawStage.FOUR_DRAW_PHASE:
-    //     break;
-    //   case FiveCardDrawStage.FIVE_SECOND_BETTING_ROUND:
-    //     // this.handleFourthStage();
-    //     break;
-    //   case FiveCardDrawStage.SIX_THE_SHOWDOWN:
-    //     break;
-    // }
+    switch (this.currentStage) {
+      case FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND:
+        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
+        // this.handleFirstStage();
+        break;
+      case FiveCardDrawStage.TWO_DEAL_HOLE_CARDS:
+        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
+        break;
+      case FiveCardDrawStage.THREE_FIRST_BETTING_ROUND:
+        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
+        // this.handleThirdStage();
+        break;
+      case FiveCardDrawStage.FOUR_DRAW_PHASE:
+        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
+        break;
+      case FiveCardDrawStage.FIVE_SECOND_BETTING_ROUND:
+        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
+        // this.handleFourthStage();
+        break;
+      case FiveCardDrawStage.SIX_THE_SHOWDOWN:
+        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
+        break;
+    }
+  }
+
+  private FIVE_CARD_DRAW_BOT_CHECK_CALL(): void {
+    this.resultsSet.action = this.isCallSituation ? FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CALL : FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CHECK;
   }
 
   // private handleFirstStage(): void {

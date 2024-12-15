@@ -25,6 +25,9 @@ class GameHandler implements GameHandlerInterface {
     Array.from({length: gameConfig.games.holdEm.startingTables}).forEach((_, index: number) => {
       this.createHoldEmTable(index);
     });
+    Array.from({length: gameConfig.games.fiveCardDraw.startingTables}).forEach((_, index: number) => {
+      this.createFiveCardDrawTable(index);
+    });
   }
 
   onConnection(socket: WebSocket): void {
@@ -202,12 +205,51 @@ class GameHandler implements GameHandlerInterface {
     tables.set(index, new HoldemTable(type, index));
     logger.info(`Created starting holdEm table id ${index} with type ${type}`);
     Array.from({length: gameConfig.games.holdEm.bot.botCounts[index]}).forEach((_, botIndex: number) => {
-      this.onAppendBot(index);
+      this.onAppendBot(index, gameConfig.games.holdEm.startMoney);
+    });
+  }
+
+  private createFiveCardDrawTable(index: number) {
+    let betTypeCount = {lowBets: 0, mediumBets: 0, highBets: 0};
+    tables.forEach((table) => {
+      if (table instanceof FiveCardDrawTable) {
+        switch (table.gameType) {
+          case 0:
+            betTypeCount.lowBets++;
+            break;
+          case 1:
+            betTypeCount.mediumBets++;
+            break;
+          case 2:
+            betTypeCount.highBets++;
+            break;
+        }
+      }
+    });
+    let tableType = Object.entries(betTypeCount)
+      .sort(([, countA], [, countB]) => countA - countB)
+      .map(([key]) => key);
+    let type: number = 0;
+    switch (tableType[0]) {
+      case 'lowBets':
+        type = 0;
+        break;
+      case 'mediumBets':
+        type = 1;
+        break;
+      case 'highBets':
+        type = 2;
+        break;
+    }
+    tables.set(index, new FiveCardDrawTable(type, index));
+    logger.info(`Created starting five card draw table id ${index} with type ${type}`);
+    Array.from({length: gameConfig.games.fiveCardDraw.bot.botCounts[index]}).forEach((_, botIndex: number) => {
+      this.onAppendBot(index, gameConfig.games.fiveCardDraw.startMoney);
     });
   }
 
   // append new bot on selected room
-  private onAppendBot(tableIndex: number): void {
+  private onAppendBot(tableIndex: number, botStartingMoney: number): void {
     const table = tables.get(tableIndex);
     if (!table) {
       return;
@@ -219,7 +261,7 @@ class GameHandler implements GameHandlerInterface {
         .map((playerObj: PlayerInterface) => {
           return playerObj.playerName
         });
-      const player = new Player(mockSocket, playerIdIncrement, gameConfig.games.holdEm.startMoney, true, getRandomBotName(currentBotNames));
+      const player = new Player(mockSocket, playerIdIncrement, botStartingMoney, true, getRandomBotName(currentBotNames));
       playerIdIncrement++;
       players.set(mockSocket, player);
       table.playersToAppend.push(player);
