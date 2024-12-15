@@ -16,6 +16,7 @@ import {HoldemBot} from './holdemBot';
 import {Hand} from 'pokersolver';
 import {Player} from '../../player';
 
+// noinspection DuplicatedCode
 export class HoldemTable implements HoldemTableInterface {
   game: Game = 'HOLDEM';
   holdemType: number;

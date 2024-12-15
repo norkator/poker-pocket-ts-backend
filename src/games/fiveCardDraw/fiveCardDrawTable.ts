@@ -16,6 +16,7 @@ import {Hand} from 'pokersolver';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
 
+// noinspection DuplicatedCode
 export class FiveCardDrawTable {
   game: Game = 'FIVE_CARD_DRAW';
   gameType: number;
@@ -266,7 +267,7 @@ export class FiveCardDrawTable {
         this.current_player_turn = this.smallBlindPlayerArrayIndex;
         this.currentTurnText = '';
         this.currentHighestBet = 0;
-        this.bettingRound(this.smallBlindPlayerArrayIndex); // todo change to actual small and big blind
+        this.smallAndBigBlinds(this.smallBlindPlayerArrayIndex);
         break;
       case FiveCardDrawStage.TWO_DEAL_HOLE_CARDS: // Dealer will deal five hole cards for each player starting from the player to the left of the big blind
         this.currentStatusText = 'Deal hole cards';
@@ -355,7 +356,6 @@ export class FiveCardDrawTable {
     }
   }
 
-
   dealHoleCards(): void {
     for (let cardIndex = 0; cardIndex < 5; cardIndex++) {
       for (let i = 0; i < this.players.length; i++) {
@@ -393,67 +393,7 @@ export class FiveCardDrawTable {
     }, 3000);
   }
 
-  // theFlop(): void {
-  //   this.currentStage = FiveCardDrawStage.FOUR_POST_FLOP;
-  //   this.middleCards[0] = this.getNextDeckCard();
-  //   this.middleCards[1] = this.getNextDeckCard();
-  //   this.middleCards[2] = this.getNextDeckCard();
-  //   let response: ClientResponse = {key: 'theFlop', data: {}};
-  //   response.data.middleCards = this.middleCards;
-  //   for (let p = 0; p < this.players.length; p++) {
-  //     this.sendWebSocketData(p, response);
-  //   }
-  //   for (let w = 0; w < this.playersToAppend.length; w++) {
-  //     this.sendWaitingPlayerWebSocketData(w, response);
-  //   }
-  //   for (let s = 0; s < this.spectators.length; s++) {
-  //     this.sendSpectatorWebSocketData(s, response);
-  //   }
-  //   setTimeout(() => {
-  //     this.staging();
-  //   }, 3000);
-  // }
-
-  // theTurn(): void {
-  //   this.currentStage = FiveCardDrawStage.SIX_THE_POST_TURN;
-  //   this.middleCards[3] = this.getNextDeckCard();
-  //   let response: ClientResponse = {key: 'theTurn', data: {}};
-  //   response.data.middleCards = this.middleCards;
-  //   for (let p = 0; p < this.players.length; p++) {
-  //     this.sendWebSocketData(p, response);
-  //   }
-  //   for (let w = 0; w < this.playersToAppend.length; w++) {
-  //     this.sendWaitingPlayerWebSocketData(w, response);
-  //   }
-  //   for (let s = 0; s < this.spectators.length; s++) {
-  //     this.sendSpectatorWebSocketData(s, response);
-  //   }
-  //   setTimeout(() => {
-  //     this.staging();
-  //   }, 2000);
-  // }
-
-  // theRiver(): void {
-  //   this.currentStage = FiveCardDrawStage.EIGHT_THE_SHOW_DOWN;
-  //   this.middleCards[4] = this.getNextDeckCard();
-  //   let response: ClientResponse = {key: 'theRiver', data: {}};
-  //   response.data.middleCards = this.middleCards;
-  //   for (let p = 0; p < this.players.length; p++) {
-  //     this.sendWebSocketData(p, response);
-  //   }
-  //   for (let w = 0; w < this.playersToAppend.length; w++) {
-  //     this.sendWaitingPlayerWebSocketData(w, response);
-  //   }
-  //   for (let s = 0; s < this.spectators.length; s++) {
-  //     this.sendSpectatorWebSocketData(s, response);
-  //   }
-  //   setTimeout(() => {
-  //     this.staging();
-  //   }, 2000);
-  // }
-
   sendAllPlayersCards(): void {
-    this.currentStage = FiveCardDrawStage.SIX_THE_SHOWDOWN;
     let response: ClientResponse = {key: 'allPlayersCards', data: {}};
     response.data.players = [];
     for (let i = 0; i < this.players.length; i++) {
@@ -471,6 +411,7 @@ export class FiveCardDrawTable {
     for (let s = 0; s < this.spectators.length; s++) {
       this.sendSpectatorWebSocketData(s, response);
     }
+    this.currentStage = FiveCardDrawStage.SEVEN_RESULTS;
     setTimeout(() => {
       this.staging();
     }, 3000);
@@ -518,7 +459,7 @@ export class FiveCardDrawTable {
     logger.info(`table ${this.tableName} winners are ${winnerNames}`);
     this.currentStatusText = `${winnerNames} got ${this.players[winnerPlayers[0]].handName}`;
 
-    this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
+    // this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
     this.lastWinnerPlayers = winnerPlayers; // Take new reference of winner players
     this.totalPot = 0;
     this.isResultsCall = true;
@@ -546,13 +487,17 @@ export class FiveCardDrawTable {
       this.currentStatusText = this.players[winnerPlayer].playerName + ' is only standing player!';
       this.currentTurnText = '';
       this.isResultsCall = true;
-      this.updateLoggedInPlayerDatabaseStatistics([winnerPlayer], this.lastWinnerPlayers);
+      // this.updateLoggedInPlayerDatabaseStatistics([winnerPlayer], this.lastWinnerPlayers);
       this.lastWinnerPlayers = [winnerPlayer]; // Take new reference of winner player
     }
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
     }, gameConfig.games.holdEm.games[this.gameType].afterRoundCountdown * 1000);
+  }
+
+  smallAndBigBlinds(currentPlayerTurn: number): void {
+    this.bettingRound(currentPlayerTurn); // todo implement correct process later
   }
 
   bettingRound(currentPlayerTurn: number): void {
@@ -575,18 +520,15 @@ export class FiveCardDrawTable {
               }, 1000);
             }
           } else {
-            //this.bettingRound(noRoundPlayedPlayer);
-            // --- going into testing ---
             this.players[noRoundPlayedPlayer].isPlayerTurn = true;
             this.players[noRoundPlayedPlayer].playerTimeLeft = this.turnTimeOut;
             this.currentTurnText = '' + this.players[noRoundPlayedPlayer].playerName + ' Turn';
             this.sendStatusUpdate();
 
             if (this.players[noRoundPlayedPlayer].isBot) {
-              // this.botActionHandler(noRoundPlayedPlayer);
+              this.botActionHandler(noRoundPlayedPlayer);
             }
             this.bettingRoundTimer(noRoundPlayedPlayer);
-            // --- going into testing ---
           }
         } else {
           this.isCallSituation = true;
@@ -610,7 +552,7 @@ export class FiveCardDrawTable {
               this.sendStatusUpdate();
 
               if (this.players[currentPlayerTurn].isBot) {
-                // this.botActionHandler(currentPlayerTurn);
+                this.botActionHandler(currentPlayerTurn);
               }
               this.bettingRoundTimer(currentPlayerTurn);
             } else {
@@ -801,6 +743,11 @@ export class FiveCardDrawTable {
   discardAndDraw(): void {
     if (this.hasActivePlayers()) { // Checks that game has active players (not fold ones)
       if (!this.discardAndDrawInitiated) {
+        const {discardAndDrawTimeout} = gameConfig.games.fiveCardDraw.games[this.gameType];
+        for (const player of this.players) {
+          player.isPlayerTurn = true;
+          player.playerTimeLeft = discardAndDrawTimeout * 1000;
+        }
         let response: ClientResponse = {key: 'discardAndDraw', data: {}};
         for (let p = 0; p < this.players.length; p++) {
           this.sendWebSocketData(p, response);
@@ -815,15 +762,16 @@ export class FiveCardDrawTable {
         this.sendStatusUpdate();
         this.discardAndDrawTimer();
       } else {
-
-        // if () {
-        //   setTimeout(() => {
-        //     this.staging();
-        //   }, 1000);
-        // } else {
-        // }
-
+        for (const player of this.players) {
+          if (player.playerState !== PlayerState.DISCARD_AND_DRAW) {
+            player.setStateFold();
+          }
+        }
+        this.currentStage = FiveCardDrawStage.FIVE_SECOND_BETTING_ROUND;
         this.sendStatusUpdate();
+        setTimeout(() => {
+          this.staging();
+        }, 1000);
       }
     } else {
       this.roundResultsMiddleOfTheGame();
@@ -1060,47 +1008,6 @@ export class FiveCardDrawTable {
     }
   }
 
-  updateLoggedInPlayerDatabaseStatistics(winnerPlayers: any, lastWinnerPlayers: any): void {
-    // for (let i = 0; i < this.players.length; i++) {
-    //   if (this.players[i] !== null) {
-    //     if (this.players[i].socket !== null) {
-    //       if (!this.players[i].isBot && this.players[i].isLoggedInPlayer()) {
-//
-    //         // this.fancyLogGreen(this.arrayHasValue(winnerPlayers, i));
-    //         if (this.arrayHasValue(winnerPlayers, i)) { // Update win count
-    //           let winStreak = this.arrayHasValue(lastWinnerPlayers, i);
-    //           dbUtils.UpdatePlayerWinCountPromise(this.sequelizeObjects, this.eventEmitter, this.players[i].playerId, this.players[i].playerDatabaseId, winStreak).then(() => {
-    //           });
-    //           this.players[i].playerWinCount = this.players[i].playerWinCount + 1;
-//
-    //         } else {
-//
-    //           // Update lose count (update only if money is raised up from small and big blinds)
-    //           if (this.totalPot > (this.tableMinBet * this.players.length)) {
-    //             this.players[i].playerLoseCount = this.players[i].playerLoseCount + 1;
-    //             dbUtils.UpdatePlayerLoseCountPromise(this.sequelizeObjects, this.players[i].playerDatabaseId).then(() => {
-    //             });
-    //           }
-    //         }
-//
-    //         // Update player funds
-    //         dbUtils.UpdatePlayerMoneyPromise(this.sequelizeObjects, this.players[i].playerDatabaseId, this.players[i].playerMoney).then(() => {
-    //         });
-    //         dbUtils.InsertPlayerStatisticPromise(
-    //           this.sequelizeObjects, this.players[i].playerDatabaseId,
-    //           this.players[i].playerMoney, this.players[i].playerWinCount,
-    //           this.players[i].playerLoseCount
-    //         ).then(() => {
-    //           logger.log('Updated player ' + this.players[i].playerName + ' statistics.', logger.LOG_GREEN);
-    //         }).catch(error => {
-    //           logger.log(error, logger.LOG_RED);
-    //         });
-    //       }
-    //     }
-    //   }
-    // }
-  }
-
   burnCard() {
     this.deckCard = this.deckCard + 1;
     this.deckCardsBurned = this.deckCardsBurned + 1;
@@ -1123,75 +1030,70 @@ export class FiveCardDrawTable {
 
   verifyPlayersBets(): number {
     let highestBet = 0;
-    for (let i = 0; i < this.players.length; i++) { // Get the highest bet
-      if (this.players[i] != null) {
-        if (!this.players[i].isFold) {
-          if (highestBet === 0) {
-            highestBet = this.players[i].totalBet;
-          }
-          if (this.players[i].totalBet > highestBet) {
-            highestBet = this.players[i].totalBet;
-          }
+    let lowestBetPlayerIndex = -1;
+    for (let i = 0; i < this.players.length; i++) {
+      const player = this.players[i];
+      if (player != null && !player.isFold) {
+        // Find the highest bet
+        if (player.totalBet > highestBet) {
+          highestBet = player.totalBet;
+        }
+        if (!player.isAllIn && player.totalBet < highestBet) {
+          lowestBetPlayerIndex = i;
         }
       }
     }
-    for (let i = 0; i < this.players.length; i++) { // Find someone with lower bet
-      if (this.players[i] != null) {
-        if (!this.players[i].isFold && !this.players[i].isAllIn) {
-          if (this.players[i].totalBet < highestBet) {
-            return i;
-          }
-        }
-      }
+    if (lowestBetPlayerIndex !== -1) {
+      return lowestBetPlayerIndex;
     }
     return !this.smallBlindGiven || !this.bigBlindGiven ? 0 : -1;
   }
 
-  // botActionHandler(currentPlayerTurn: number): void {
-  //   let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
-  //     (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
-  //   let playerId = this.players[currentPlayerTurn].playerId;
-  //   let botObj = new HoldemBot(
-  //     this.holdemType,
-  //     this.players[currentPlayerTurn].playerName,
-  //     this.players[currentPlayerTurn].playerMoney,
-  //     this.players[currentPlayerTurn].playerCards,
-  //     this.isCallSituation,
-  //     this.tableMinBet,
-  //     check_amount,
-  //     this.smallBlindGiven,
-  //     this.bigBlindGiven,
-  //     this.evaluatePlayerCards(currentPlayerTurn).value,
-  //     this.currentStage,
-  //     this.players[currentPlayerTurn].totalBet
-  //   );
-  //   let resultSet = botObj.performAction();
-  //   let tm = setTimeout(() => {
-  //     switch (resultSet.action) {
-  //       case 'bot_fold':
-  //         this.playerFold(playerId);
-  //         break;
-  //       case 'bot_check':
-  //         this.playerCheck(playerId);
-  //         break;
-  //       case 'bot_call':
-  //         this.playerCheck(playerId);
-  //         break;
-  //       case 'bot_raise':
-  //         this.playerRaise(playerId, resultSet.amount);
-  //         break;
-  //       case 'remove_bot': // HoldemBot run out of money
-  //         this.playerFold(playerId);
-  //         this.removeBotFromTable(currentPlayerTurn);
-  //         break;
-  //       default:
-  //         this.playerCheck(playerId);
-  //         break;
-  //     }
-  //     this.sendStatusUpdate();
-  //     clearTimeout(tm);
-  //   }, gameConfig.games.holdEm.bot.turnTimes[getRandomInt(1, 4)]);
-  // }
+  botActionHandler(currentPlayerTurn: number): void {
+    //   let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
+    //     (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
+    //   let playerId = this.players[currentPlayerTurn].playerId;
+    //   let botObj = new HoldemBot(
+    //     this.holdemType,
+    //     this.players[currentPlayerTurn].playerName,
+    //     this.players[currentPlayerTurn].playerMoney,
+    //     this.players[currentPlayerTurn].playerCards,
+    //     this.isCallSituation,
+    //     this.tableMinBet,
+    //     check_amount,
+    //     this.smallBlindGiven,
+    //     this.bigBlindGiven,
+    //     this.evaluatePlayerCards(currentPlayerTurn).value,
+    //     this.currentStage,
+    //     this.players[currentPlayerTurn].totalBet
+    //   );
+    //   let resultSet = botObj.performAction();
+    //   let tm = setTimeout(() => {
+    //     switch (resultSet.action) {
+    //       case 'bot_fold':
+    //         this.playerFold(playerId);
+    //         break;
+    //       case 'bot_check':
+    //         this.playerCheck(playerId);
+    //         break;
+    //       case 'bot_call':
+    //         this.playerCheck(playerId);
+    //         break;
+    //       case 'bot_raise':
+    //         this.playerRaise(playerId, resultSet.amount);
+    //         break;
+    //       case 'remove_bot': // HoldemBot run out of money
+    //         this.playerFold(playerId);
+    //         this.removeBotFromTable(currentPlayerTurn);
+    //         break;
+    //       default:
+    //         this.playerCheck(playerId);
+    //         break;
+    //     }
+    //     this.sendStatusUpdate();
+    //     clearTimeout(tm);
+    //   }, gameConfig.games.holdEm.bot.turnTimes[getRandomInt(1, 4)]);
+  }
 
   removeBotFromTable(currentPlayerTurn: number): void {
     // this.eventEmitter.emit('needNewBot', this.tableId); // Todo fix
