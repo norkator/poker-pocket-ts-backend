@@ -1,6 +1,5 @@
 import logger from '../../logger';
 import {FiveCardDrawStage} from '../../enums';
-import {getRandomInt} from '../../utils';
 import {BotInterface} from '../../interfaces';
 
 export class FiveCardDrawBot implements BotInterface {
@@ -78,23 +77,15 @@ export class FiveCardDrawBot implements BotInterface {
     switch (this.currentStage) {
       case FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND:
         this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
-        // this.handleFirstStage();
-        break;
-      case FiveCardDrawStage.TWO_DEAL_HOLE_CARDS:
-        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
         break;
       case FiveCardDrawStage.THREE_FIRST_BETTING_ROUND:
         this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
-        // this.handleThirdStage();
         break;
       case FiveCardDrawStage.FOUR_DRAW_PHASE:
-        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
+        this.resultsSet.action = FiveCardDrawBot.FIVE_CARD_DRAW_BOT_DISCARD_AND_DRAW;
+        this.resultsSet.cardsToDiscard = []; // todo implement later proper logic
         break;
       case FiveCardDrawStage.FIVE_SECOND_BETTING_ROUND:
-        this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
-        // this.handleFourthStage();
-        break;
-      case FiveCardDrawStage.SIX_THE_SHOWDOWN:
         this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
         break;
     }
@@ -103,15 +94,5 @@ export class FiveCardDrawBot implements BotInterface {
   private FIVE_CARD_DRAW_BOT_CHECK_CALL(): void {
     this.resultsSet.action = this.isCallSituation ? FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CALL : FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CHECK;
   }
-
-  // private handleFirstStage(): void {
-  //   const hasSameCards = this.myHand[0][0] === this.myHand[1][0];
-  //   if (hasSameCards && !this.isCallSituation) {
-  //     this.resultsSet.action = FiveCardDrawBot.FIVE_CARD_DRAW_BOT_RAISE;
-  //     this.resultsSet.amount = this.getCalculatedRaiseAmount();
-  //   } else {
-  //     this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
-  //   }
-  // }
 
 }
