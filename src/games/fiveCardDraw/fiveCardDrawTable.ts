@@ -10,11 +10,12 @@ import {Player} from '../../player';
 import {gameConfig} from '../../gameConfig';
 import {FiveCardDrawStage, PlayerState, SocketState} from '../../enums';
 import logger from '../../logger';
-import {asciiToStringCardsArray, sendClientMessage, stringToAsciiCardsArray} from '../../utils';
+import {asciiToStringCardsArray, getRandomInt, sendClientMessage, stringToAsciiCardsArray} from '../../utils';
 import {Poker} from '../../poker';
 import {Hand} from 'pokersolver';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
+import {FiveCardDrawBot} from './fiveCardDrawBot';
 
 // noinspection DuplicatedCode
 export class FiveCardDrawTable {
@@ -467,7 +468,7 @@ export class FiveCardDrawTable {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.holdEm.games[this.gameType].afterRoundCountdown * 1000);
+    }, gameConfig.games.fiveCardDraw.games[this.gameType].afterRoundCountdown * 1000);
   }
 
   roundResultsMiddleOfTheGame(): void {
@@ -493,7 +494,7 @@ export class FiveCardDrawTable {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.holdEm.games[this.gameType].afterRoundCountdown * 1000);
+    }, gameConfig.games.fiveCardDraw.games[this.gameType].afterRoundCountdown * 1000);
   }
 
   smallAndBigBlinds(currentPlayerTurn: number): void {
@@ -1050,49 +1051,49 @@ export class FiveCardDrawTable {
   }
 
   botActionHandler(currentPlayerTurn: number): void {
-    //   let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
-    //     (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
-    //   let playerId = this.players[currentPlayerTurn].playerId;
-    //   let botObj = new HoldemBot(
-    //     this.holdemType,
-    //     this.players[currentPlayerTurn].playerName,
-    //     this.players[currentPlayerTurn].playerMoney,
-    //     this.players[currentPlayerTurn].playerCards,
-    //     this.isCallSituation,
-    //     this.tableMinBet,
-    //     check_amount,
-    //     this.smallBlindGiven,
-    //     this.bigBlindGiven,
-    //     this.evaluatePlayerCards(currentPlayerTurn).value,
-    //     this.currentStage,
-    //     this.players[currentPlayerTurn].totalBet
-    //   );
-    //   let resultSet = botObj.performAction();
-    //   let tm = setTimeout(() => {
-    //     switch (resultSet.action) {
-    //       case 'bot_fold':
-    //         this.playerFold(playerId);
-    //         break;
-    //       case 'bot_check':
-    //         this.playerCheck(playerId);
-    //         break;
-    //       case 'bot_call':
-    //         this.playerCheck(playerId);
-    //         break;
-    //       case 'bot_raise':
-    //         this.playerRaise(playerId, resultSet.amount);
-    //         break;
-    //       case 'remove_bot': // HoldemBot run out of money
-    //         this.playerFold(playerId);
-    //         this.removeBotFromTable(currentPlayerTurn);
-    //         break;
-    //       default:
-    //         this.playerCheck(playerId);
-    //         break;
-    //     }
-    //     this.sendStatusUpdate();
-    //     clearTimeout(tm);
-    //   }, gameConfig.games.holdEm.bot.turnTimes[getRandomInt(1, 4)]);
+    let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
+      (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
+    let playerId = this.players[currentPlayerTurn].playerId;
+    let botObj = new FiveCardDrawBot(
+      this.gameType,
+      this.players[currentPlayerTurn].playerName,
+      this.players[currentPlayerTurn].playerMoney,
+      this.players[currentPlayerTurn].playerCards,
+      this.isCallSituation,
+      this.tableMinBet,
+      check_amount,
+      this.smallBlindGiven,
+      this.bigBlindGiven,
+      this.evaluatePlayerCards(currentPlayerTurn).value,
+      this.currentStage,
+      this.players[currentPlayerTurn].totalBet
+    );
+    let resultSet = botObj.performAction();
+    let tm = setTimeout(() => {
+      switch (resultSet.action) {
+        case 'bot_fold':
+          this.playerFold(playerId);
+          break;
+        case 'bot_check':
+          this.playerCheck(playerId);
+          break;
+        case 'bot_call':
+          this.playerCheck(playerId);
+          break;
+        case 'bot_raise':
+          this.playerRaise(playerId, resultSet.amount);
+          break;
+        case 'remove_bot':
+          this.playerFold(playerId);
+          this.removeBotFromTable(currentPlayerTurn);
+          break;
+        default:
+          this.playerCheck(playerId);
+          break;
+      }
+      this.sendStatusUpdate();
+      clearTimeout(tm);
+    }, gameConfig.games.fiveCardDraw.bot.turnTimes[getRandomInt(1, 4)]);
   }
 
   removeBotFromTable(currentPlayerTurn: number): void {
