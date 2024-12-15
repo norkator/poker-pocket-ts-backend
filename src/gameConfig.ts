@@ -96,7 +96,18 @@ export const gameConfig = {
           [125, 150, 200, 250],       // Medium bet game
           [1100, 1200, 1500, 2000]    // High bet game
         ]
-      }
+      },
+      games: [
+        {
+          name: 'Bottle Spin with low bets',
+          typeName: 'Low bets',
+          max_seats: 6,
+          minPlayers: 2,
+          turnCountdown: 20,
+          minBet: 10,
+          afterRoundCountdown: 10,
+        },
+      ],
     },
     blackJack: {},
     dices: {}

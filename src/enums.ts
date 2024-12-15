@@ -19,10 +19,10 @@ export enum HoldemStage {
 }
 
 export enum PlayerState {
-  NONE = 0,               // used in holdem and five card draw
-  FOLD = 1,               // used in holdem and five card draw
-  CHECK = 2,              // used in holdem and five card draw
-  RAISE = 3,              // used in holdem and five card draw
+  NONE = 0,               // used in holdem, five card draw, bottle spin
+  FOLD = 1,               // used in holdem, five card draw, bottle spin
+  CHECK = 2,              // used in holdem, five card draw, bottle spin
+  RAISE = 3,              // used in holdem, five card draw, bottle spin
   DISCARD_AND_DRAW = 4,   // used in five card draw
 }
 
@@ -34,4 +34,11 @@ export enum FiveCardDrawStage {
   FIVE_SECOND_BETTING_ROUND = 4,
   SIX_THE_SHOWDOWN = 5,
   SEVEN_RESULTS = 6,
+}
+
+export enum BottleSpinStage {
+  ONE_SMALL_AND_BIG_BLIND = 0,
+  TWO_BETTING_ROUND = 1,
+  THREE_BOTTLE_SPIN = 2,
+  FOUR_RESULTS = 3,
 }

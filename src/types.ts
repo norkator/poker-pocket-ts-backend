@@ -1,4 +1,4 @@
-export type Game = 'HOLDEM' | 'FIVE_CARD_DRAW';
+export type Game = 'HOLDEM' | 'FIVE_CARD_DRAW' | 'BOTTLE_SPIN';
 export type ResponseKey =
   'connected'
   | 'holeCards'
