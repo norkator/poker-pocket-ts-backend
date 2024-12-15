@@ -6,5 +6,5 @@
   "ignore": [
     "dist"
   ],
-  "exec": "ts-node ./src/index.ts"
+  "exec": "LOG_LEVEL=debug ts-node ./src/index.ts"
 }
