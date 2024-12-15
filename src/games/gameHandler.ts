@@ -2,6 +2,7 @@ import {ClientResponse, GameHandlerInterface, PlayerInterface} from '../interfac
 import WebSocket from 'ws';
 import {HoldemTable} from './holdem/holdemTable';
 import {FiveCardDrawTable} from './fiveCardDraw/fiveCardDrawTable';
+import {BottleSpinTable} from './bottleSpin/bottleSpinTable';
 import {Player} from '../player';
 import {ClientMessageKey} from '../types';
 import logger from '../logger';
@@ -17,20 +18,26 @@ import {AutoPlay} from './holdem/autoPlay';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
-const tables = new Map<number, FiveCardDrawTable | HoldemTable>();
+const tables = new Map<number, FiveCardDrawTable | HoldemTable | BottleSpinTable>();
 
 class GameHandler implements GameHandlerInterface {
 
   createStartingTables(): void {
     const holdEmCount = gameConfig.games.holdEm.startingTables;
-    Array.from({ length: holdEmCount }).forEach((_, index: number) => {
+    Array.from({length: holdEmCount}).forEach((_, index: number) => {
       this.createHoldEmTable(index);
     });
-    Array.from({ length: gameConfig.games.fiveCardDraw.startingTables }).forEach((_, index: number) => {
+    const fiveCardDrawCount = gameConfig.games.fiveCardDraw.startingTables;
+    Array.from({length: fiveCardDrawCount}).forEach((_, index: number) => {
       const roomNumber = holdEmCount + index;
       this.createFiveCardDrawTable(roomNumber);
     });
-
+    // Todo implement all table creation logic behind same function
+    // const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
+    // Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
+    //   const roomNumber = holdEmCount + fiveCardDrawCount + index;
+    //   this.createFiveCardDrawTable(roomNumber);
+    // });
   }
 
   onConnection(socket: WebSocket): void {
@@ -67,14 +74,14 @@ class GameHandler implements GameHandlerInterface {
     cardsToDiscard: string[];
   } | any): void {
     let tableId: number = -1;
-    let table: FiveCardDrawTable | HoldemTable | undefined = undefined;
+    let table: FiveCardDrawTable | HoldemTable | BottleSpinTable | undefined = undefined;
     let player: Player | undefined = undefined;
     let cardsToDiscard: string[] = [];
     switch (message.key) {
       case 'getTables':
         const tableSortParam: string = message.tableSortParam || 'all';
         const tableParams: ClientResponse = {key: 'getTables', data: {tables: []}}
-        tables.forEach((table: HoldemTable | FiveCardDrawTable) => {
+        tables.forEach((table: HoldemTable | FiveCardDrawTable | BottleSpinTable) => {
           tableParams.data.tables?.push(table.getTableInfo());
         });
         socket.send(JSON.stringify(tableParams));
@@ -102,7 +109,7 @@ class GameHandler implements GameHandlerInterface {
         break;
       case 'getSpectateTables':
         const spectateTableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
-        tables.forEach((table: HoldemTable | FiveCardDrawTable) => {
+        tables.forEach((table: HoldemTable | FiveCardDrawTable | BottleSpinTable) => {
           spectateTableParams.data.tables?.push(table.getTableInfo());
         });
         logger.info("Sending spectate tables... " + JSON.stringify(spectateTableParams));
