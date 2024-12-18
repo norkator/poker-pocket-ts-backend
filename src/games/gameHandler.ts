@@ -25,12 +25,12 @@ class GameHandler implements GameHandlerInterface {
   createStartingTables(): void {
     const holdEmCount = gameConfig.games.holdEm.startingTables;
     Array.from({length: holdEmCount}).forEach((_, index: number) => {
-      this.createHoldEmTable(index);
+      this.createHoldEmTable(index, index);
     });
     const fiveCardDrawCount = gameConfig.games.fiveCardDraw.startingTables;
     Array.from({length: fiveCardDrawCount}).forEach((_, index: number) => {
       const roomNumber = holdEmCount + index;
-      this.createFiveCardDrawTable(roomNumber);
+      this.createFiveCardDrawTable(roomNumber, index);
     });
     // Todo implement all table creation logic behind same function
     // const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
@@ -126,8 +126,9 @@ class GameHandler implements GameHandlerInterface {
         }
         break;
       case 'getTableParams':
-        tableId = message.tableId;
+        tableId = Number(message.tableId);
         table = tables.get(tableId);
+        console.log(table?.tableId);
         if (table) {
           socket.send(JSON.stringify(table.getTableParams()));
         }
@@ -180,7 +181,7 @@ class GameHandler implements GameHandlerInterface {
     }
   }
 
-  private createHoldEmTable(index: number) {
+  private createHoldEmTable(tableNumber: number, index: number) {
     let betTypeCount = {lowBets: 0, mediumBets: 0, highBets: 0};
     tables.forEach((table) => {
       if (table instanceof HoldemTable) {
@@ -212,14 +213,14 @@ class GameHandler implements GameHandlerInterface {
         type = 2;
         break;
     }
-    tables.set(index, new HoldemTable(type, index));
-    logger.info(`Created starting holdEm table id ${index} with type ${type}`);
+    tables.set(tableNumber, new HoldemTable(type, tableNumber));
+    logger.info(`Created starting holdEm table id ${tableNumber} with type ${type}`);
     Array.from({length: gameConfig.games.holdEm.bot.botCounts[index]}).forEach((_, botIndex: number) => {
-      this.onAppendBot(index, gameConfig.games.holdEm.startMoney);
+      this.onAppendBot(tableNumber, gameConfig.games.holdEm.startMoney);
     });
   }
 
-  private createFiveCardDrawTable(index: number) {
+  private createFiveCardDrawTable(tableNumber: number, index: number) {
     let betTypeCount = {lowBets: 0, mediumBets: 0, highBets: 0};
     tables.forEach((table) => {
       if (table instanceof FiveCardDrawTable) {
@@ -251,16 +252,16 @@ class GameHandler implements GameHandlerInterface {
         type = 2;
         break;
     }
-    tables.set(index, new FiveCardDrawTable(type, index));
-    logger.info(`Created starting five card draw table id ${index} with type ${type}`);
+    tables.set(tableNumber, new FiveCardDrawTable(type, tableNumber));
+    logger.info(`Created starting five card draw table id ${tableNumber} with type ${type}`);
     Array.from({length: gameConfig.games.fiveCardDraw.bot.botCounts[index]}).forEach((_, botIndex: number) => {
-      this.onAppendBot(index, gameConfig.games.fiveCardDraw.startMoney);
+      this.onAppendBot(tableNumber, gameConfig.games.fiveCardDraw.startMoney);
     });
   }
 
   // append new bot on selected room
-  private onAppendBot(tableIndex: number, botStartingMoney: number): void {
-    const table = tables.get(tableIndex);
+  private onAppendBot(tableNumber: number, botStartingMoney: number): void {
+    const table = tables.get(tableNumber);
     if (!table) {
       return;
     }
