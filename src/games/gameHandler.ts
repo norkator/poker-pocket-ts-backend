@@ -120,6 +120,15 @@ class GameHandler implements GameHandlerInterface {
         table = tables.get(tableId);
         player = players.get(socket);
         if (table && player) {
+          if (player.selectedTableId > -1) {
+            const previousTable = tables.get(player.selectedTableId);
+            if (previousTable) {
+              previousTable.spectators = previousTable.spectators.filter(
+                spectator => spectator !== player
+              );
+              logger.info(`Spectating player id ${player.playerId} is removed from table ${previousTable.tableName}`);
+            }
+          }
           player.selectedTableId = tableId;
           table.spectators.push(player);
           logger.info(`Player id ${player.playerId} is spectating on table ${table.tableName}`);
@@ -128,7 +137,6 @@ class GameHandler implements GameHandlerInterface {
       case 'getTableParams':
         tableId = Number(message.tableId);
         table = tables.get(tableId);
-        console.log(table?.tableId);
         if (table) {
           socket.send(JSON.stringify(table.getTableParams()));
         }
