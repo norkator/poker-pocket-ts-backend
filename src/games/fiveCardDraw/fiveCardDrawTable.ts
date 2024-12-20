@@ -735,11 +735,10 @@ export class FiveCardDrawTable {
             this.players[playerIndex].playerCards[index] = this.getNextDeckCard();
           }
         });
-        const playerData: PlayerData = {};
-        playerData.playerId = this.players[playerIndex].playerId;
-        playerData.playerName = this.players[playerIndex].playerName;
-        playerData.cards = this.players[playerIndex].playerCards;
-        this.sendWebSocketData(playerIndex, playerData);
+        let response: ClientResponse = {key: 'newCards', data: {
+          cards: this.players[playerIndex].playerCards
+        }};
+        this.sendWebSocketData(playerIndex, response);
         this.sendLastPlayerAction(playerId, PlayerActions.DISCARD_AND_DRAW);
         this.sendAudioCommand('playerDiscardAndDraw');
       }
@@ -759,7 +758,11 @@ export class FiveCardDrawTable {
           if (player.isBot) {
             this.botActionHandler(index);
           } else {
-            this.sendWebSocketData(index, response);
+            const playerResponse: ClientResponse = {
+              ...response,
+              data: { ...response.data, cards: player.playerCards }
+            };
+            this.sendWebSocketData(index, playerResponse);
           }
         });
         this.playersToAppend.forEach((_, index) => {

@@ -16,7 +16,8 @@ export type ResponseKey =
   | 'errorMessage'
   | 'warningMessage'
   | 'infoMessage'
-  | 'discardAndDraw';
+  | 'discardAndDraw'
+  | 'newCards';
 export type ClientMessageKey = 'getTables' | 'getSpectateTables';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';

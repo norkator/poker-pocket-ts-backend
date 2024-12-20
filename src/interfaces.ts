@@ -198,6 +198,7 @@ export interface ClientResponse {
     amount?: number;
     translationKey?: string;
     clientMessageType?: ClientMessageType;
+    cards?: string[];
   };
 }
 
