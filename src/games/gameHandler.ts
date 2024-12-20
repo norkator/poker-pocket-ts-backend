@@ -145,27 +145,48 @@ class GameHandler implements GameHandlerInterface {
         tableId = Number(message.tableId);
         table = tables.get(tableId);
         player = players.get(socket);
-        if (table && player && table instanceof HoldemTable) {
-          table.playerFold(player.playerId);
-          table.sendStatusUpdate();
+        if (table && player) {
+          if (table instanceof HoldemTable) {
+            table.playerFold(player.playerId);
+            table.sendStatusUpdate();
+          } else if (table instanceof FiveCardDrawTable) {
+            table.playerFold(player.playerId);
+            table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
         }
         break;
       case 'setCheck':
         tableId = Number(message.tableId);
         table = tables.get(tableId);
         player = players.get(socket);
-        if (table && player && table instanceof HoldemTable) {
-          table.playerCheck(player.playerId);
-          table.sendStatusUpdate();
+        if (table && player) {
+          if (table instanceof HoldemTable) {
+            table.playerCheck(player.playerId);
+            table.sendStatusUpdate();
+          } else if (table instanceof FiveCardDrawTable) {
+            table.playerCheck(player.playerId);
+            table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
         }
         break;
       case 'setRaise':
         tableId = Number(message.tableId);
         table = tables.get(tableId);
         player = players.get(socket);
-        if (table && player && table instanceof HoldemTable) {
-          table.playerRaise(player.playerId, Number(message.amount));
-          table.sendStatusUpdate();
+        if (table && player) {
+          if (table instanceof HoldemTable) {
+            table.playerRaise(player.playerId, Number(message.amount));
+            table.sendStatusUpdate();
+          } else if (table instanceof FiveCardDrawTable) {
+            table.playerRaise(player.playerId, Number(message.amount));
+            table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
         }
         break;
       case 'autoPlayAction':
