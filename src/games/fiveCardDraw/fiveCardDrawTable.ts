@@ -750,7 +750,7 @@ export class FiveCardDrawTable {
       if (!this.discardAndDrawInitiated) {
         const {discardAndDrawTimeout} = gameConfig.games.fiveCardDraw.games[this.gameType];
         for (const player of this.players) {
-          player.isPlayerTurn = true;
+          // player.isPlayerTurn = true;
           player.playerTimeLeft = discardAndDrawTimeout * 1000;
         }
         let response: ClientResponse = {key: 'discardAndDraw', data: {}};

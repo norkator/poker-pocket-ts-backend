@@ -201,7 +201,7 @@ class GameHandler implements GameHandlerInterface {
         player = players.get(socket);
         cardsToDiscard = message.cardsToDiscard;
         if (table && player && table instanceof FiveCardDrawTable) {
-          logger.error(`Player ${player.playerId} discarded fcd cards ${message.cardsToDiscard}`);
+          logger.info(`Player ${player.playerId} discarded fcd cards ${message.cardsToDiscard}`);
           table.playerDiscardAndDraw(player.playerId, cardsToDiscard);
           table.sendStatusUpdate();
         }
