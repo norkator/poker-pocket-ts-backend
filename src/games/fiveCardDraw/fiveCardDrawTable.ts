@@ -745,6 +745,12 @@ export class FiveCardDrawTable {
         this.sendAudioCommand('playerDiscardAndDraw');
       }
     }
+    const stateNonePlayers = this.players.filter((player: Player) => player.playerState === PlayerState.NONE);
+    if (stateNonePlayers.length === 0) {
+      this.clearTimers();
+      this.discardAndDraw();
+      logger.debug('FCD playerDiscardAndDraw no more players left in NONE state to discard and draw cards');
+    }
   }
 
   discardAndDraw(): void {
