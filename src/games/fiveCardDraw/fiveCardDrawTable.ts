@@ -766,18 +766,14 @@ export class FiveCardDrawTable {
           if (player.isBot) {
             this.botActionHandler(index);
           } else {
-            const playerResponse: ClientResponse = {
-              ...response,
-              data: { ...response.data, cards: player.playerCards, timeLeft: discardAndDrawTimeout * 1000 }
-            };
-            this.sendWebSocketData(index, playerResponse);
+            if (!player.isFold) {
+              const playerResponse: ClientResponse = {
+                ...response,
+                data: {...response.data, cards: player.playerCards, timeLeft: discardAndDrawTimeout * 1000}
+              };
+              this.sendWebSocketData(index, playerResponse);
+            }
           }
-        });
-        this.playersToAppend.forEach((_, index) => {
-          this.sendWaitingPlayerWebSocketData(index, response);
-        });
-        this.spectators.forEach((_, index) => {
-          this.sendSpectatorWebSocketData(index, response);
         });
         this.discardAndDrawInitiated = true;
         this.sendStatusUpdate();
