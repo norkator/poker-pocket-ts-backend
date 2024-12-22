@@ -736,6 +736,7 @@ export class FiveCardDrawTable {
           }
         });
         let response: ClientResponse = {key: 'newCards', data: {
+          playerId: this.players[playerIndex].playerId,
           cards: this.players[playerIndex].playerCards
         }};
         this.sendWebSocketData(playerIndex, response);
