@@ -228,6 +228,7 @@ export class FiveCardDrawTable {
     const response: ClientResponse = {
       key: 'tableParams',
       data: {
+        game: this.game,
         gameStarted: this.currentStage >= FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND,
         playerCount: this.players.length,
         tableMinBet: this.tableMinBet,

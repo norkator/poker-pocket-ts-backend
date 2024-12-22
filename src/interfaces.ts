@@ -184,6 +184,7 @@ export interface PlayerData {
 export interface ClientResponse {
   key: ResponseKey;
   data: {
+    game?: Game;
     playerId?: number;
     tables?: any[];
     message?: string;

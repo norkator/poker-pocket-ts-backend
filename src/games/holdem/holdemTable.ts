@@ -227,6 +227,7 @@ export class HoldemTable implements HoldemTableInterface {
     const response: ClientResponse = {
       key: 'tableParams',
       data: {
+        game: this.game,
         gameStarted: this.currentStage >= HoldemStage.ONE_HOLE_CARDS && this.holeCardsGiven,
         playerCount: this.players.length,
         tableMinBet: this.tableMinBet,
