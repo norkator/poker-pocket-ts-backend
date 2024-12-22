@@ -768,7 +768,7 @@ export class FiveCardDrawTable {
           } else {
             const playerResponse: ClientResponse = {
               ...response,
-              data: { ...response.data, cards: player.playerCards }
+              data: { ...response.data, cards: player.playerCards, timeLeft: discardAndDrawTimeout * 1000 }
             };
             this.sendWebSocketData(index, playerResponse);
           }

@@ -200,6 +200,7 @@ export interface ClientResponse {
     translationKey?: string;
     clientMessageType?: ClientMessageType;
     cards?: string[];
+    timeLeft?: number;
   };
 }
 
