@@ -166,7 +166,7 @@ export interface HoldemTableInterface {
 
   handleChatMessage(playerId: number, message: string): void;
 
-  getMessages(): ChatMessage[];
+  getChatMessages(playerId: number): void;
 
 }
 
@@ -192,6 +192,7 @@ export interface ClientResponse {
     playerId?: number;
     tables?: any[];
     message?: string;
+    messages?: ChatMessage[];
     command?: string;
     players?: PlayerData[];
     gameStarted?: boolean;

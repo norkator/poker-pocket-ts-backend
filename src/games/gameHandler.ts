@@ -213,10 +213,21 @@ class GameHandler implements GameHandlerInterface {
           tableId = Number(player.selectedTableId);
           table = tables.get(tableId);
           if (table && table instanceof HoldemTable) {
+            logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
           }
         }
         break;
+      }
+      case 'getChatMessages': {
+        player = players.get(socket);
+        if (player) {
+          tableId = Number(player.selectedTableId);
+          table = tables.get(tableId);
+          if (table && table instanceof HoldemTable) {
+            table.getChatMessages(player.playerId);
+          }
+        }
       }
       default:
         logger.error(`No handler for ${message.key} full message ${JSON.stringify(message)}`);

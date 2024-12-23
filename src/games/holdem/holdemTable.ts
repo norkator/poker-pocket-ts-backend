@@ -1177,8 +1177,16 @@ export class HoldemTable implements HoldemTableInterface {
     return c;
   }
 
-  getMessages(): ChatMessage[] {
-    return [...this.chatMessages];
+  getChatMessages(playerId: number): void {
+    const player: Player | null = findPlayerById(playerId, this.players, this.playersToAppend, this.spectators);
+    if (player && player.socket) {
+      const response: ClientResponse = {key: 'getChatMessages', data: {
+        messages: [...this.chatMessages],
+      }};
+      if (player.socket.readyState === SocketState.OPEN) {
+        player.socket.send(JSON.stringify(response));
+      }
+    }
   }
 
   handleChatMessage(playerId: number, message: string): void {
