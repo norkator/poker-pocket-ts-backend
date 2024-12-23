@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import {PlayerState} from './enums';
-import {ClientMessageType, Game, PlayerAction, ResponseKey} from './types';
+import {ChatMessage, ClientMessageType, Game, PlayerAction, ResponseKey} from './types';
 
 export interface GameHandlerInterface {
   createStartingTables(): void;
@@ -163,6 +163,10 @@ export interface HoldemTableInterface {
   removeBotFromTable(currentPlayerTurn: number): void;
 
   getTableBotCount(): number;
+
+  handleChatMessage(playerId: number, message: string): void;
+
+  getMessages(): ChatMessage[];
 
 }
 

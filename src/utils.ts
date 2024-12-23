@@ -330,3 +330,18 @@ export function sendClientNotification(
   }
   socket.send(JSON.stringify(response));
 }
+
+export function findPlayerById(
+  playerId: number,
+  players: Player[],
+  playersToAppend: Player[],
+  spectators: Player[]
+): Player | null {
+  const findInArray = (arr: Player[]): Player | null =>
+    arr.find((player) => player.playerId === playerId) || null;
+  return (
+    findInArray(players) ||
+    findInArray(playersToAppend) ||
+    findInArray(spectators)
+  );
+}

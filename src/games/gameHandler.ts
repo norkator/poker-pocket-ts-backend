@@ -206,6 +206,18 @@ class GameHandler implements GameHandlerInterface {
           table.sendStatusUpdate();
         }
         break;
+      case 'chatMessage': {
+        player = players.get(socket);
+        const chatMsg = message.message;
+        if (player) {
+          tableId = Number(player.selectedTableId);
+          table = tables.get(tableId);
+          if (table && table instanceof HoldemTable) {
+            table.handleChatMessage(player.playerId, chatMsg)
+          }
+        }
+        break;
+      }
       default:
         logger.error(`No handler for ${message.key} full message ${JSON.stringify(message)}`);
     }

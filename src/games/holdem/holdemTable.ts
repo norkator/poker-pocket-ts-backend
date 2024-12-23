@@ -8,8 +8,14 @@ import {
 } from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
-import {Game, PlayerAction} from '../../types';
-import {asciiToStringCardsArray, getRandomInt, sendClientMessage, stringToAsciiCardsArray} from '../../utils';
+import {ChatMessage, Game, PlayerAction} from '../../types';
+import {
+  asciiToStringCardsArray,
+  findPlayerById,
+  getRandomInt,
+  sendClientMessage,
+  stringToAsciiCardsArray
+} from '../../utils';
 import {PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
 import {HoldemBot} from './holdemBot';
@@ -22,16 +28,16 @@ export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
   tableId: number;
   tableMinBet: number;
-  public tableName: string;
-  public maxSeats: number;
+  tableName: string;
+  maxSeats: number;
   minPlayers: number;
   turnTimeOut: number;
   currentStage: number;
   holeCardsGiven: boolean;
   totalPot: number;
   bots: any[];
-  public players: Player[];
-  public playersToAppend: Player[];
+  players: Player[];
+  playersToAppend: Player[];
   playersTemp: Player[];
   spectators: Player[];
   spectatorsTemp: Player[];
@@ -60,6 +66,8 @@ export class HoldemTable implements HoldemTableInterface {
   bigBlindPlayerHadTurn: boolean;
   lastWinnerPlayers: any[];
   collectingPot: boolean;
+  chatMessages: ChatMessage[] = [];
+  chatMaxSize: number = 50;
 
   constructor(
     holdemType: number,
@@ -1167,6 +1175,32 @@ export class HoldemTable implements HoldemTableInterface {
       }
     }
     return c;
+  }
+
+  getMessages(): ChatMessage[] {
+    return [...this.chatMessages];
+  }
+
+  handleChatMessage(playerId: number, message: string): void {
+    const player: Player | null = findPlayerById(playerId, this.players, this.playersToAppend, this.spectators);
+    if (player) {
+      if (this.chatMessages.length >= this.chatMaxSize) {
+        this.chatMessages.shift();
+      }
+      this.chatMessages.push({playerName: player.playerName, message: message});
+      let response: ClientResponse = {key: 'chatMessage', data: {
+        message: message
+      }};
+      for (let i = 0; i < this.players.length; i++) {
+        this.sendWebSocketData(i, response);
+      }
+      for (let w = 0; w < this.playersToAppend.length; w++) {
+        this.sendWaitingPlayerWebSocketData(w, response);
+      }
+      for (let s = 0; s < this.spectators.length; s++) {
+        this.sendSpectatorWebSocketData(s, response);
+      }
+    }
   }
 
 }

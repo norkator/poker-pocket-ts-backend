@@ -17,7 +17,12 @@ export type ResponseKey =
   | 'warningMessage'
   | 'infoMessage'
   | 'discardAndDraw'
-  | 'newCards';
+  | 'newCards'
+  | 'chatMessage';
 export type ClientMessageKey = 'getTables' | 'getSpectateTables';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
+export type ChatMessage = {
+  playerName: string;
+  message: string;
+};
