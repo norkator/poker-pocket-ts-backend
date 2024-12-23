@@ -228,6 +228,7 @@ class GameHandler implements GameHandlerInterface {
             table.getChatMessages(player.playerId);
           }
         }
+        break;
       }
       default:
         logger.error(`No handler for ${message.key} full message ${JSON.stringify(message)}`);
