@@ -1,26 +1,36 @@
-FROM node:20-alpine
-
+# Build Stage
+FROM node:20-alpine AS build
 RUN apk --no-cache add curl
 
-# Create app directory
 WORKDIR /usr/src/app
 
-# Install app dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install
 
-# Copy app sources
 COPY . .
 
 # Download HandRanks.dat
 RUN curl -LJO https://github.com/christophschmalhofer/poker/raw/master/XPokerEval/XPokerEval.TwoPlusTwo/HandRanks.dat
 RUN mv -f HandRanks.dat ./src/
 
-# Replace config with prod
-RUN mv -f config-prod.js config.js
 
-EXPOSE 8001
+RUN npm run build
 
-# define the command to run your app using CMD which defines your runtime
-CMD [ "node", "holdem.js"]
+# Copy assets
+RUN mkdir -p ./dist/assets && cp ./src/assets/names.txt ./dist/assets/
+RUN cp ./src/HandRanks.dat ./dist/HandRanks.dat
 
+# Clean Image Stage
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+# Copy only the necessary files from the build stage
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/package*.json ./
+
+RUN npm install --production
+
+EXPOSE 8000
+
+CMD [ "node", "dist/index.js" ]
