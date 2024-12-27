@@ -16,7 +16,7 @@ import {
   sendClientNotification,
 } from '../utils';
 import {AutoPlay} from './holdem/autoPlay';
-import User from '../database/models/user';
+import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
 
 let playerIdIncrement = 0;

@@ -1,6 +1,7 @@
 import {Sequelize} from 'sequelize-typescript';
 import logger from '../logger';
 import * as dotenv from 'dotenv';
+import {User} from './models/user';
 
 dotenv.config();
 
@@ -9,8 +10,26 @@ const sequelize = new Sequelize({
   host: process.env.DB_HOST || 'localhost',
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
-  database: process.env.DB_NAME || 'poker-pocket-ts-db',
+  database: process.env.DB_NAME || 'poker-pocket-ts',
   logging: (msg: string) => logger.info(msg),
+  models: [User],
+  define: {
+    schema: 'poker',
+  },
 });
 
-export {sequelize};
+
+const initializeDatabase = async () => {
+  try {
+    await sequelize.authenticate();
+    logger.info('Database connection established successfully.');
+
+    await sequelize.sync(/*{alter: true}*/); // `alter: true` for updates without data loss
+    // logger.info('All models were synchronized successfully.');
+  } catch (error) {
+    logger.error('Unable to connect to the database:', error);
+    process.exit(1);
+  }
+};
+
+export {sequelize, initializeDatabase};

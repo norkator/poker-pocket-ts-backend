@@ -30,10 +30,21 @@ Todo...
 
 ### Basic setup
 
-1. Run `npm install`
-2. Run `npm run start:dev` on development environment (uses nodemon)
-3. Backend is now running.
-4. Set up frontend https://github.com/norkator/poker-pocket-react-client
+1. Create database named `poker-pocket-ts` or define your own db name by setting env var `DB_NAME`
+2. Add new schema into database called `poker`
+3. Define and fill rest of env vars
+
+```
+DB_HOST=<value>
+DB_USER=<value>
+DB_PASS=<value>
+```
+
+4. Define env var `PW_SECRET=<value>` and get value using `npm run secret`
+5. Run `npm install`
+6. Run `npm run start:dev` on development environment (uses nodemon)
+7. Backend is now running.
+8. Set up frontend https://github.com/norkator/poker-pocket-react-client
     * Or open https://pokerpocket.nitramite.com/ and use connection switch set as `dev` to open connection
       to localhost web socket.
 

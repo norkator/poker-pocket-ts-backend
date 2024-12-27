@@ -1,25 +1,36 @@
 import WebSocket, {WebSocketServer} from 'ws';
 import logger from './logger';
 import {GameHandler} from './games/gameHandler';
+import {initializeDatabase} from './database/database';
 
 const port = 8000;
 const server = new WebSocketServer({port});
 const gameHandler = new GameHandler();
 
-gameHandler.createStartingTables();
 
-server.on('connection', (socket: WebSocket) => {
-  gameHandler.onConnection(socket);
+const launch = async () => {
+  await initializeDatabase();
 
-  socket.on('message', (message: string) => {
-    gameHandler.onMessage(socket, message);
+  gameHandler.createStartingTables();
+
+  server.on('connection', (socket: WebSocket) => {
+    gameHandler.onConnection(socket);
+
+    socket.on('message', (message: string) => {
+      gameHandler.onMessage(socket, message);
+    });
+
+    socket.on('error', logger.error);
+
+    socket.on('close', () => {
+      gameHandler.onClientDisconnected(socket);
+    });
   });
 
-  socket.on('error', logger.error);
+  logger.info(`WebSocket server is running on ws://localhost:${port}`);
+};
 
-  socket.on('close', () => {
-    gameHandler.onClientDisconnected(socket);
-  });
+launch().catch((error: any) => {
+  logger.error('Error starting the application:', error);
 });
 
-logger.info(`WebSocket server is running on ws://localhost:${port}`);
