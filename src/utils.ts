@@ -20,6 +20,36 @@ export const verifyToken = (token: string) => {
   return jwt.verify(token, process.env.PW_SECRET as string);
 };
 
+export const authenticate = (socket: WebSocket, message: any) => {
+  const token = message.token;
+  if (!token) {
+    const response: ClientResponse = {
+      key: 'authenticationError',
+      data: {
+        message: 'Authentication required',
+        translationKey: 'AUTHENTICATION_REQUIRED',
+      }
+    };
+    socket.send(JSON.stringify(response));
+    return false;
+  }
+
+  try {
+    const payload = verifyToken(token);
+    return true;
+  } catch (error) {
+    const response: ClientResponse = {
+      key: 'authenticationError',
+      data: {
+        message: 'Invalid token',
+        translationKey: 'INVALID_TOKEN',
+      }
+    };
+    socket.send(JSON.stringify(response));
+    return false;
+  }
+};
+
 export function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
