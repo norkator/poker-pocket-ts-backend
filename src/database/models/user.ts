@@ -1,65 +1,48 @@
-import {DataTypes, Model, Optional} from 'sequelize';
-import {sequelize} from '../database';
 import bcrypt from 'bcrypt';
+import {
+  AllowNull,
+  AutoIncrement,
+  BeforeCreate,
+  BeforeUpdate,
+  Column,
+  DataType,
+  Model,
+  PrimaryKey,
+  Table,
+  Unique
+} from 'sequelize-typescript';
 
-interface UserAttributes {
-  id: number;
-  username: string;
-  password: string;
-  email: string;
-}
+@Table({
+  tableName: 'users',
+  timestamps: true,
+})
+export class User extends Model {
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {
-}
+  @PrimaryKey
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  id!: number;
 
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public id!: number;
-  public username!: string;
-  public password!: string;
-  public email!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-}
+  @Unique
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  username!: string;
 
-User.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true,
-      },
-    },
-  },
-  {
-    sequelize,
-    modelName: 'User',
-    tableName: 'users',
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  password!: string;
+
+  @Unique
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  email!: string;
+
+  @BeforeCreate
+  @BeforeUpdate
+  static async hashPassword(user: User) {
+    if (user.changed('password')) {
+      user.password = await bcrypt.hash(user.password, 10); // salt rounds = 10
+    }
   }
-);
 
-User.beforeCreate(async (user) => {
-  user.password = await bcrypt.hash(user.password, 10); // salt rounds = 10
-});
-
-User.beforeUpdate(async (user) => {
-  if (user.changed('password')) {
-    user.password = await bcrypt.hash(user.password, 10);
-  }
-});
-
-export default User;
+}
