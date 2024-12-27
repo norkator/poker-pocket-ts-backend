@@ -1,10 +1,11 @@
 import {DataTypes, Model, Optional} from 'sequelize';
 import {sequelize} from '../database';
+import bcrypt from 'bcrypt';
 
 interface UserAttributes {
   id: number;
-  firstName: string;
-  lastName: string;
+  username: string;
+  password: string;
   email: string;
 }
 
@@ -13,8 +14,8 @@ interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;
-  public firstName!: string;
-  public lastName!: string;
+  public username!: string;
+  public password!: string;
   public email!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -27,11 +28,11 @@ User.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    firstName: {
+    username: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    lastName: {
+    password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -51,5 +52,14 @@ User.init(
   }
 );
 
+User.beforeCreate(async (user) => {
+  user.password = await bcrypt.hash(user.password, 10); // salt rounds = 10
+});
+
+User.beforeUpdate(async (user) => {
+  if (user.changed('password')) {
+    user.password = await bcrypt.hash(user.password, 10);
+  }
+});
 
 export default User;
