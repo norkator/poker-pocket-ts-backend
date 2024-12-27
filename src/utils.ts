@@ -2,12 +2,23 @@ import * as crypto from 'crypto';
 import {WebSocket} from 'ws';
 import * as fs from 'fs';
 import {Player} from './player';
-import {ClientResponse, PlayerInterface} from './interfaces';
+import {ClientResponse} from './interfaces';
 import {ClientMessageType} from './types';
-import {SocketState} from "./enums";
+import {SocketState} from './enums';
+import jwt from 'jsonwebtoken';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const randomNamesList: string[] = fs.readFileSync('./src/assets/names.txt', 'utf-8').split('\n');
 
+export const generateToken = (userId: number) => {
+  return jwt.sign({userId}, process.env.PW_SECRET as string, {expiresIn: '12h'});
+};
+
+export const verifyToken = (token: string) => {
+  return jwt.verify(token, process.env.PW_SECRET as string);
+};
 
 export function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
