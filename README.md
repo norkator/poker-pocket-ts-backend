@@ -1,3 +1,5 @@
+# ⚠️ WORK  IN PROGRESS ⚠️
+
 ![poker_pocket_promo](./poker_pocket.png)
 
 # Poker Pocket Typescript Backend
@@ -6,17 +8,19 @@ Nitramite Poker Pocket back end server was developed to run poker games. It's po
 [Nitramite Poker Pocket game](https://pokerpocket.nitramite.com/). This back end is pretty lightweight
 and can run thousands of rooms easily.
 
-This ts version replaced old js version https://github.com/norkator/poker-pocket-backend.
+This ts version replaces old js version https://github.com/norkator/poker-pocket-backend.
 
 ### Testing it out
 
-Here's list of different front end clients. You may want to take a look at them to
-see what it's all about.
+Todo...
 
-* React Web UI: https://pokerpocket.nitramite.com/
-    * React Web UI source code: https://github.com/norkator/poker-pocket-react-client
-        * Based on old UI https://github.com/norkator/poker-pocket-web-client
-        * React version is originally developed by [linus2code](https://github.com/linus2code)
+[comment]: <> (Here's list of different front end clients. You may want to take a look at them to
+[comment]: <> (see what it's all about.
+[comment]: <> (
+[comment]: <> (* React Web UI: https://pokerpocket.nitramite.com/
+[comment]: <> (    * React Web UI source code: https://github.com/norkator/poker-pocket-react-client
+[comment]: <> (        * Based on old UI https://github.com/norkator/poker-pocket-web-client
+[comment]: <> (        * React version is originally developed by [linus2code](https://github.com/linus2code)
 
 ### Prerequisites
 
