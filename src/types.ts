@@ -20,7 +20,9 @@ export type ResponseKey =
   | 'newCards'
   | 'chatMessage'
   | 'getChatMessages'
-  | 'authenticationError';
+  | 'authenticationError'
+  | 'createAccount'
+  | 'login';
 export type ClientMessageKey =
   'getTables'
   | 'getSpectateTables'

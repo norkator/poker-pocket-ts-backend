@@ -10,11 +10,14 @@ import {gameConfig} from '../gameConfig';
 import {
   createMockWebSocket,
   generatePlayerName,
+  generateToken,
   getRandomBotName,
   isPlayerInTable,
   sendClientNotification,
 } from '../utils';
 import {AutoPlay} from './holdem/autoPlay';
+import User from '../database/models/user';
+import bcrypt from 'bcrypt';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -51,6 +54,7 @@ class GameHandler implements GameHandlerInterface {
 
   onMessage(socket: WebSocket, msg: string): void {
     const message = JSON.parse(msg.toString());
+    // noinspection JSIgnoredPromiseFromCall
     this.messageHandler(socket, message);
   }
 
@@ -67,12 +71,15 @@ class GameHandler implements GameHandlerInterface {
     throw new Error("Method not implemented.");
   }
 
-  private messageHandler(socket: WebSocket, message: {
+  private async messageHandler(socket: WebSocket, message: {
     key: ClientMessageKey;
     tableId: number;
     tableSortParam: string;
     cardsToDiscard: string[];
-  } | any): void {
+    username: string;
+    email: string;
+    password: string;
+  } | any): Promise<void> {
     let tableId: number = -1;
     let table: FiveCardDrawTable | HoldemTable | BottleSpinTable | undefined = undefined;
     let player: Player | undefined = undefined;
@@ -231,9 +238,76 @@ class GameHandler implements GameHandlerInterface {
         break;
       }
       case 'createAccount': {
+        const {username, email, password} = message;
+        if (!username || !email || !password) {
+          const response: ClientResponse = {
+            key: 'createAccount',
+            data: {
+              message: 'Username, email and password are required',
+              translationKey: 'USERNAME_EMAIL_PASSWORD_REQUIRED',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
+          return;
+        }
+        try {
+          const user = await User.create({username, email, password});
+          logger.info(`New user account created with id ${user.id}`);
+          const response: ClientResponse = {
+            key: 'createAccount',
+            data: {
+              success: true,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        } catch (error: any) {
+          logger.error(error.message);
+          const response: ClientResponse = {
+            key: 'authenticationError',
+            data: {
+              message: error.message,
+              translationKey: 'ACCOUNT_CREATE_ERROR',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        }
         break;
       }
       case 'login': {
+        const {username, password} = message;
+        if (!username || !password) {
+          socket.send(JSON.stringify({error: 'Email and password are required.'}));
+          return;
+        }
+        try {
+          const user = await User.findOne({where: {username}});
+          if (!user || !(await bcrypt.compare(password, user.password))) {
+            socket.send(JSON.stringify({error: 'Invalid email or password.'}));
+            return;
+          }
+          const token = generateToken(user.id);
+          const response: ClientResponse = {
+            key: 'login',
+            data: {
+              token: token,
+              success: true,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        } catch (error: any) {
+          logger.error(error.message);
+          const response: ClientResponse = {
+            key: 'login',
+            data: {
+              message: error.message,
+              translationKey: 'LOGIN_ERROR',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        }
         break;
       }
       default:

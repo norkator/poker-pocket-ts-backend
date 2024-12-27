@@ -206,6 +206,8 @@ export interface ClientResponse {
     clientMessageType?: ClientMessageType;
     cards?: string[];
     timeLeft?: number;
+    success?: boolean;
+    token?: string;
   };
 }
 
