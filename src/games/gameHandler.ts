@@ -77,7 +77,7 @@ class GameHandler implements GameHandlerInterface {
     let table: FiveCardDrawTable | HoldemTable | BottleSpinTable | undefined = undefined;
     let player: Player | undefined = undefined;
     let cardsToDiscard: string[] = [];
-    switch (message.key) {
+    switch (message.key as ClientMessageKey) {
       case 'getTables':
         const tableSortParam: string = message.tableSortParam || 'all';
         const tableParams: ClientResponse = {key: 'getTables', data: {tables: []}}
@@ -228,6 +228,12 @@ class GameHandler implements GameHandlerInterface {
             table.getChatMessages(player.playerId);
           }
         }
+        break;
+      }
+      case 'createAccount': {
+        break;
+      }
+      case 'login': {
         break;
       }
       default:

@@ -21,7 +21,21 @@ export type ResponseKey =
   | 'chatMessage'
   | 'getChatMessages'
   | 'authenticationError';
-export type ClientMessageKey = 'getTables' | 'getSpectateTables';
+export type ClientMessageKey =
+  'getTables'
+  | 'getSpectateTables'
+  | 'selectTable'
+  | 'selectSpectateTable'
+  | 'getTableParams'
+  | 'setFold'
+  | 'setCheck'
+  | 'setRaise'
+  | 'autoPlayAction'
+  | 'discardAndDraw'
+  | 'chatMessage'
+  | 'getChatMessages'
+  | 'createAccount'
+  | 'login';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
 export type ChatMessage = {
