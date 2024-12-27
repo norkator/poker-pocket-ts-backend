@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/norkator/poker-pocket-ts-backend#readme",
   "dependencies": {
+    "dotenv": "16.4.7",
     "pg": "8.13.1",
     "pg-hstore": "2.3.4",
     "pino": "9.5.0",

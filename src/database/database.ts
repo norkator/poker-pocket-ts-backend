@@ -1,5 +1,8 @@
 import {Sequelize} from 'sequelize-typescript';
 import logger from '../logger';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const sequelize = new Sequelize({
   dialect: 'postgres',
