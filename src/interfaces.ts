@@ -208,6 +208,7 @@ export interface ClientResponse {
     timeLeft?: number;
     success?: boolean;
     token?: string;
+    stats?: StatsInterface;
   };
 }
 
@@ -220,4 +221,10 @@ export interface HandEvaluationInterface {
 
 export interface BotInterface {
   performAction(): { action: string; amount: number };
+}
+
+export interface StatsInterface {
+  totalGames: number;
+  totalBots: number;
+  totalPlayers: number;
 }

@@ -11,6 +11,7 @@ import {
   createMockWebSocket,
   generatePlayerName,
   generateToken,
+  getPlayerCount,
   getRandomBotName,
   isPlayerInTable,
   sendClientNotification,
@@ -91,6 +92,11 @@ class GameHandler implements GameHandlerInterface {
         tables.forEach((table: HoldemTable | FiveCardDrawTable | BottleSpinTable) => {
           tableParams.data.tables?.push(table.getTableInfo());
         });
+        tableParams.data.stats = {
+          totalGames: tables.size,
+          totalBots: getPlayerCount(players, true),
+          totalPlayers: getPlayerCount(players),
+        }
         socket.send(JSON.stringify(tableParams));
         break;
       case 'selectTable':

@@ -386,3 +386,18 @@ export function findPlayerById(
     findInArray(spectators)
   );
 }
+
+export function getPlayerCount(players: Map<WebSocket, Player>, isBot?: boolean): number {
+  let count = 0;
+  for (const player of players.values()) {
+    if (isBot === undefined) {
+      if (!player.isBot) {
+        count++;
+      }
+    } else if (player.isBot === isBot) {
+      count++;
+    }
+  }
+  return count;
+}
+
