@@ -284,13 +284,29 @@ class GameHandler implements GameHandlerInterface {
       case 'login': {
         const {username, password} = message;
         if (!username || !password) {
-          socket.send(JSON.stringify({error: 'Email and password are required.'}));
+          const response: ClientResponse = {
+            key: 'login',
+            data: {
+              message: 'Username and password are required',
+              translationKey: 'USERNAME_PASSWORD_REQUIRED',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
           return;
         }
         try {
           const user = await User.findOne({where: {username}});
           if (!user || !(await bcrypt.compare(password, user.password))) {
-            socket.send(JSON.stringify({error: 'Invalid email or password.'}));
+            const response: ClientResponse = {
+              key: 'login',
+              data: {
+                message: 'Invalid username or password',
+                translationKey: 'INVALID_USERNAME_OR_PASSWORD',
+                success: false,
+              }
+            };
+            socket.send(JSON.stringify(response));
             return;
           }
           const token = generateToken(user.id);
