@@ -270,7 +270,7 @@ class GameHandler implements GameHandlerInterface {
         } catch (error: any) {
           logger.error(error.message);
           const response: ClientResponse = {
-            key: 'authenticationError',
+            key: 'createAccount',
             data: {
               message: error.message,
               translationKey: 'ACCOUNT_CREATE_ERROR',
