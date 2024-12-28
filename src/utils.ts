@@ -2,10 +2,10 @@ import * as crypto from 'crypto';
 import {WebSocket} from 'ws';
 import * as fs from 'fs';
 import {Player} from './player';
-import {ClientResponse} from './interfaces';
+import {AuthInterface, ClientResponse} from './interfaces';
 import {ClientMessageType} from './types';
 import {SocketState} from './enums';
-import jwt from 'jsonwebtoken';
+import jwt, {JwtPayload} from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -20,7 +20,7 @@ export const verifyToken = (token: string) => {
   return jwt.verify(token, process.env.PW_SECRET as string);
 };
 
-export const authenticate = (socket: WebSocket, message: any) => {
+export const authenticate = (socket: WebSocket, message: any): AuthInterface => {
   const token = message.token;
   if (!token) {
     const response: ClientResponse = {
@@ -31,12 +31,12 @@ export const authenticate = (socket: WebSocket, message: any) => {
       }
     };
     socket.send(JSON.stringify(response));
-    return false;
+    return {success: false, userId: -1};
   }
 
   try {
-    const payload = verifyToken(token);
-    return true;
+    const payload: JwtPayload = verifyToken(token) as JwtPayload;
+    return {success: true, userId: payload.userId};
   } catch (error) {
     const response: ClientResponse = {
       key: 'authenticationError',
@@ -46,7 +46,7 @@ export const authenticate = (socket: WebSocket, message: any) => {
       }
     };
     socket.send(JSON.stringify(response));
-    return false;
+    return {success: false, userId: -1};
   }
 };
 

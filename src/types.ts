@@ -22,7 +22,8 @@ export type ResponseKey =
   | 'getChatMessages'
   | 'authenticationError'
   | 'createAccount'
-  | 'login';
+  | 'login'
+  | 'userParams';
 export type ClientMessageKey =
   'getTables'
   | 'getSpectateTables'
@@ -37,7 +38,8 @@ export type ClientMessageKey =
   | 'chatMessage'
   | 'getChatMessages'
   | 'createAccount'
-  | 'login';
+  | 'login'
+  | 'userParams';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
 export type ChatMessage = {

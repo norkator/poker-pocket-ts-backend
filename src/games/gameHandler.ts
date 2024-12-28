@@ -1,4 +1,4 @@
-import {ClientResponse, GameHandlerInterface, PlayerInterface} from '../interfaces';
+import {AuthInterface, ClientResponse, GameHandlerInterface, PlayerInterface} from '../interfaces';
 import WebSocket from 'ws';
 import {HoldemTable} from './holdem/holdemTable';
 import {FiveCardDrawTable} from './fiveCardDraw/fiveCardDrawTable';
@@ -8,6 +8,7 @@ import {ClientMessageKey} from '../types';
 import logger from '../logger';
 import {gameConfig} from '../gameConfig';
 import {
+  authenticate,
   createMockWebSocket,
   generatePlayerName,
   generateToken,
@@ -80,6 +81,7 @@ class GameHandler implements GameHandlerInterface {
     username: string;
     email: string;
     password: string;
+    token: string;
   } | any): Promise<void> {
     let tableId: number = -1;
     let table: FiveCardDrawTable | HoldemTable | BottleSpinTable | undefined = undefined;
@@ -329,6 +331,28 @@ class GameHandler implements GameHandlerInterface {
             }
           };
           socket.send(JSON.stringify(response));
+        }
+        break;
+      }
+      case 'userParams': {
+        const auth: AuthInterface = authenticate(socket, message);
+        if (auth.success) {
+          player = players.get(socket);
+          const user = await User.findOne({where: {id: auth.userId}});
+          if (player && user) {
+            player.playerDatabaseId = user.id;
+            // player.playerName = user.name;
+            // player.playerMoney = user.money;
+            // player.playerWinCount = user.win_count;
+            // player.playerLoseCount = user.lose_count;
+            const response: ClientResponse = {
+              key: 'userParams',
+              data: {
+                success: true,
+              }
+            };
+            socket.send(JSON.stringify(response));
+          }
         }
         break;
       }

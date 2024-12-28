@@ -228,3 +228,8 @@ export interface StatsInterface {
   totalBots: number;
   totalPlayers: number;
 }
+
+export interface AuthInterface {
+  success: boolean;
+  userId: number;
+}
