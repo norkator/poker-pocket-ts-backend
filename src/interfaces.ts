@@ -209,6 +209,7 @@ export interface ClientResponse {
     success?: boolean;
     token?: string;
     stats?: StatsInterface;
+    userStats?: UserStatsInterface;
   };
 }
 
@@ -232,4 +233,16 @@ export interface StatsInterface {
 export interface AuthInterface {
   success: boolean;
   userId: number;
+}
+
+export interface UserStatsInterface {
+  username: string;
+  money: number;
+  winCount: number;
+  loseCount: number;
+  xp: number;
+  achievements: {
+    id: number;
+    achievementType: string;
+  }[];
 }

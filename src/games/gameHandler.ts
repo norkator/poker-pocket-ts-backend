@@ -22,6 +22,7 @@ import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
 import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
+import {Achievement} from '../database/models/achievement';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -361,6 +362,34 @@ class GameHandler implements GameHandlerInterface {
             const response: ClientResponse = {
               key: 'userParams',
               data: {
+                success: true,
+              }
+            };
+            socket.send(JSON.stringify(response));
+          }
+        }
+        break;
+      }
+      case 'userStatistics': {
+        const auth: AuthInterface = authenticate(socket, message);
+        if (auth.success) {
+          player = players.get(socket);
+          const user = await User.findOne({where: {id: auth.userId}});
+          if (player && user) {
+            const achievements: Achievement[] = await Achievement.findAll({where: {userId: auth.userId}});
+            const response: ClientResponse = {
+              key: 'userStatistics',
+              data: {
+                userStats: {
+                  username: user.username,
+                  money: user.money,
+                  winCount: user.win_count,
+                  loseCount: user.lose_count,
+                  xp: user.xp,
+                  achievements: achievements.map(({id, achievementType}) => ({
+                    id, achievementType,
+                  })),
+                },
                 success: true,
               }
             };
