@@ -37,6 +37,30 @@ export class User extends Model {
   @Column(DataType.STRING)
   email!: string;
 
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  xp!: number;
+  
+  @Column({
+    type: DataType.DECIMAL,
+    defaultValue: 0,
+  })
+  money!: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  win_count!: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  lose_count!: number;
+
   @BeforeCreate
   @BeforeUpdate
   static async hashPassword(user: User) {

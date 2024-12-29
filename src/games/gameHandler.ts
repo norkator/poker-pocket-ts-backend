@@ -341,10 +341,10 @@ class GameHandler implements GameHandlerInterface {
           const user = await User.findOne({where: {id: auth.userId}});
           if (player && user) {
             player.playerDatabaseId = user.id;
-            // player.playerName = user.name;
-            // player.playerMoney = user.money;
-            // player.playerWinCount = user.win_count;
-            // player.playerLoseCount = user.lose_count;
+            player.playerName = user.username;
+            player.playerMoney = user.money;
+            player.playerWinCount = user.win_count;
+            player.playerLoseCount = user.lose_count;
             const response: ClientResponse = {
               key: 'userParams',
               data: {
