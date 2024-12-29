@@ -23,6 +23,7 @@ import {Hand} from 'pokersolver';
 import {Player} from '../../player';
 import EventEmitter from 'events';
 import {User} from '../../database/models/user';
+import {Statistic} from '../../database/models/statistic';
 
 // noinspection DuplicatedCode
 export class HoldemTable implements HoldemTableInterface {
@@ -550,6 +551,7 @@ export class HoldemTable implements HoldemTableInterface {
     logger.info(`${this.tableName} winners are ${winnerNames}`);
     this.currentStatusText = `${winnerNames} got ${this.players[winnerPlayers[0]].handName}`;
 
+    // noinspection JSIgnoredPromiseFromCall
     this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
     this.lastWinnerPlayers = winnerPlayers; // Take new reference of winner players
     this.totalPot = 0;
@@ -578,6 +580,7 @@ export class HoldemTable implements HoldemTableInterface {
       this.currentStatusText = this.players[winnerPlayer].playerName + ' is only standing player!';
       this.currentTurnText = '';
       this.isResultsCall = true;
+      // noinspection JSIgnoredPromiseFromCall
       this.updateLoggedInPlayerDatabaseStatistics([winnerPlayer], this.lastWinnerPlayers);
       this.lastWinnerPlayers = [winnerPlayer]; // Take new reference of winner player
     }
@@ -1031,7 +1034,7 @@ export class HoldemTable implements HoldemTableInterface {
     for (let index: number = 0; index < this.players.length; index++) {
       const player = this.players[index];
       if (player && player.socket) {
-        if (!player.isBot && player.isLoggedInPlayer()) {
+        if (!player.isBot && player.isLoggedInPlayer() && player.playerDatabaseId > 0) {
           if (containsValue(winnerPlayers, index)) {
             let winStreak: boolean = containsValue(lastWinnerPlayers, index);
             const user = await User.findOne({where: {id: player.playerDatabaseId}});
@@ -1064,13 +1067,12 @@ export class HoldemTable implements HoldemTableInterface {
               }
             }
           }
-
-          // Todo
-          // dbUtils.InsertPlayerStatisticPromise(
-          //   this.sequelizeObjects, player.playerDatabaseId,
-          //   player.playerMoney, player.playerWinCount,
-          //   player.playerLoseCount
-          // )
+          await Statistic.create({
+            user_id: player.playerDatabaseId,
+            money: player.playerMoney,
+            win_count: player.playerWinCount,
+            lose_count: player.playerLoseCount,
+          });
         }
       }
     }
