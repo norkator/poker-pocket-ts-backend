@@ -8,7 +8,7 @@
     "start": "npx ts-node src/index.ts",
     "test": "jest",
     "build": "tsc",
-    "secret": "ts-node bcrypt-secret-generator.ts"
+    "secret": "ts-node src/bcrypt-secret-generator.ts"
   },
   "repository": {
     "type": "git",
