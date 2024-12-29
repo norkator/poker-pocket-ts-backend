@@ -16,14 +16,16 @@ import {
   sendClientMessage,
   stringToAsciiCardsArray
 } from '../../utils';
-import {PlayerActions} from '../../constants';
+import {NEW_BOT_EVENT_KEY, PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
 import {HoldemBot} from './holdemBot';
 import {Hand} from 'pokersolver';
 import {Player} from '../../player';
+import EventEmitter from 'events';
 
 // noinspection DuplicatedCode
 export class HoldemTable implements HoldemTableInterface {
+  eventEmitter: EventEmitter;
   game: Game = 'HOLDEM';
   holdemType: number;
   tableId: number;
@@ -70,9 +72,11 @@ export class HoldemTable implements HoldemTableInterface {
   chatMaxSize: number = 50;
 
   constructor(
+    eventEmitter: EventEmitter,
     holdemType: number,
     tableId: number,
   ) {
+    this.eventEmitter = eventEmitter;
     this.holdemType = holdemType;
     this.tableId = tableId;
     this.tableMinBet = gameConfig.games.holdEm.games[holdemType].minBet;
@@ -602,18 +606,14 @@ export class HoldemTable implements HoldemTableInterface {
               }, 1000);
             }
           } else {
-            //this.bettingRound(noRoundPlayedPlayer);
-            // --- going into testing ---
             this.players[noRoundPlayedPlayer].isPlayerTurn = true;
             this.players[noRoundPlayedPlayer].playerTimeLeft = this.turnTimeOut;
             this.currentTurnText = '' + this.players[noRoundPlayedPlayer].playerName + ' Turn';
             this.sendStatusUpdate();
-
             if (this.players[noRoundPlayedPlayer].isBot) {
               this.botActionHandler(noRoundPlayedPlayer);
             }
             this.bettingRoundTimer(noRoundPlayedPlayer);
-            // --- going into testing ---
           }
         } else {
           this.isCallSituation = true;
@@ -799,7 +799,6 @@ export class HoldemTable implements HoldemTableInterface {
         this.sendLastPlayerAction(playerId, PlayerActions.RAISE);
         this.sendAudioCommand('raise');
         this.checkHighestBet();
-        //this.calculateTotalPot();
       }
     }
   }
@@ -1162,7 +1161,7 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   removeBotFromTable(currentPlayerTurn: number): void {
-    // this.eventEmitter.emit('needNewBot', this.tableId); // Todo fix
+    this.eventEmitter.emit(NEW_BOT_EVENT_KEY, this.tableId, gameConfig.games.holdEm.startMoney);
     this.players[currentPlayerTurn].socket = null;
   }
 

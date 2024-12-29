@@ -13,12 +13,14 @@ import logger from '../../logger';
 import {asciiToStringCardsArray, getRandomInt, sendClientMessage, stringToAsciiCardsArray} from '../../utils';
 import {Poker} from '../../poker';
 import {Hand} from 'pokersolver';
-import {PlayerActions} from '../../constants';
+import {NEW_BOT_EVENT_KEY, PlayerActions} from '../../constants';
 import evaluator from '../../evaluator';
 import {FiveCardDrawBot} from './fiveCardDrawBot';
+import EventEmitter from 'events';
 
 // noinspection DuplicatedCode
 export class FiveCardDrawTable {
+  eventEmitter: EventEmitter;
   game: Game = 'FIVE_CARD_DRAW';
   gameType: number;
   tableId: number;
@@ -63,9 +65,11 @@ export class FiveCardDrawTable {
   discardAndDrawInitiated: boolean;
 
   constructor(
+    eventEmitter: EventEmitter,
     gameType: number,
     tableId: number,
   ) {
+    this.eventEmitter = eventEmitter;
     this.gameType = gameType;
     this.tableId = tableId;
     this.tableMinBet = gameConfig.games.fiveCardDraw.games[gameType].minBet;
@@ -736,10 +740,12 @@ export class FiveCardDrawTable {
             this.players[playerIndex].playerCards[index] = this.getNextDeckCard();
           }
         });
-        let response: ClientResponse = {key: 'newCards', data: {
-          playerId: this.players[playerIndex].playerId,
-          cards: this.players[playerIndex].playerCards
-        }};
+        let response: ClientResponse = {
+          key: 'newCards', data: {
+            playerId: this.players[playerIndex].playerId,
+            cards: this.players[playerIndex].playerCards
+          }
+        };
         this.sendWebSocketData(playerIndex, response);
         this.sendLastPlayerAction(playerId, PlayerActions.DISCARD_AND_DRAW);
         this.sendAudioCommand('playerDiscardAndDraw');
@@ -1103,7 +1109,7 @@ export class FiveCardDrawTable {
   }
 
   removeBotFromTable(currentPlayerTurn: number): void {
-    // this.eventEmitter.emit('needNewBot', this.tableId); // Todo fix
+    this.eventEmitter.emit(NEW_BOT_EVENT_KEY, this.tableId, gameConfig.games.fiveCardDraw.startMoney);
     this.players[currentPlayerTurn].socket = null;
   }
 
