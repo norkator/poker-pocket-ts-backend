@@ -7,10 +7,12 @@ import {ClientMessageType} from './types';
 import {SocketState} from './enums';
 import jwt, {JwtPayload} from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
+import path from 'node:path';
 
 dotenv.config();
 
-const randomNamesList: string[] = fs.readFileSync('./src/assets/names.txt', 'utf-8').split('\n');
+const filePath = path.join(__dirname, 'assets', 'names.txt');
+const randomNamesList: string[] = fs.readFileSync(filePath, 'utf-8').split('\n');
 
 export const generateToken = (userId: number) => {
   return jwt.sign({userId}, process.env.PW_SECRET as string, {expiresIn: '12h'});
