@@ -119,7 +119,7 @@ class PokerEvaluator {
 }
 
 // Load HandRanks.dat
-const ranksFile = path.join(__dirname, '../src/HandRanks.dat');
+const ranksFile = path.join(__dirname, 'HandRanks.dat');
 PokerEvaluator.ranks = fs.readFileSync(ranksFile);
 
 
