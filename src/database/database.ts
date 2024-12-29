@@ -2,6 +2,9 @@ import {Sequelize} from 'sequelize-typescript';
 import logger from '../logger';
 import * as dotenv from 'dotenv';
 import {User} from './models/user';
+import {Achievement} from './models/achievement';
+import {Statistic} from './models/statistic';
+import {UserTable} from './models/userTables';
 
 dotenv.config();
 
@@ -12,7 +15,7 @@ const sequelize = new Sequelize({
   password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'poker-pocket-ts',
   logging: (msg: string) => logger.info(msg),
-  models: [User],
+  models: [User, Achievement, Statistic, UserTable],
   define: {
     schema: 'poker',
   },
