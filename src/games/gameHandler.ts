@@ -21,7 +21,7 @@ import {AutoPlay} from './holdem/autoPlay';
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
 import EventEmitter from 'events';
-import {NEW_BOT_EVENT_KEY} from '../constants';
+import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -268,7 +268,12 @@ class GameHandler implements GameHandlerInterface {
           return;
         }
         try {
-          const user = await User.create({username, email, password});
+          const user = await User.create({
+            username: username,
+            email: email,
+            password: password,
+            money: NEW_PLAYER_STARTING_FUNDS,
+          });
           logger.info(`New user account created with id ${user.id}`);
           const response: ClientResponse = {
             key: 'createAccount',
