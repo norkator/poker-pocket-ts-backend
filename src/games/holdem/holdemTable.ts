@@ -1068,10 +1068,10 @@ export class HoldemTable implements HoldemTableInterface {
             }
           }
           await Statistic.create({
-            user_id: player.playerDatabaseId,
+            userId: player.playerDatabaseId,
             money: player.playerMoney,
-            win_count: player.playerWinCount,
-            lose_count: player.playerLoseCount,
+            winCount: player.playerWinCount,
+            loseCount: player.playerLoseCount,
           });
         }
       }
