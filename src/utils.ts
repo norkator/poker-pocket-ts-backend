@@ -401,3 +401,11 @@ export function getPlayerCount(players: Map<WebSocket, Player>, isBot?: boolean)
   return count;
 }
 
+export function containsValue(arr: number[], target: number): boolean {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === target) {
+      return true;
+    }
+  }
+  return false;
+}

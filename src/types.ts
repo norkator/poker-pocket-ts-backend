@@ -23,7 +23,8 @@ export type ResponseKey =
   | 'authenticationError'
   | 'createAccount'
   | 'login'
-  | 'userParams';
+  | 'userParams'
+  | 'onXPGained';
 export type ClientMessageKey =
   'getTables'
   | 'getSpectateTables'

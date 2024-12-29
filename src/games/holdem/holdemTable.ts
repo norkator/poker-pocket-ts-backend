@@ -10,18 +10,19 @@ import logger from '../../logger';
 import {Poker} from '../../poker';
 import {ChatMessage, Game, PlayerAction} from '../../types';
 import {
-  asciiToStringCardsArray,
+  asciiToStringCardsArray, containsValue,
   findPlayerById,
   getRandomInt,
   sendClientMessage,
   stringToAsciiCardsArray
 } from '../../utils';
-import {NEW_BOT_EVENT_KEY, PlayerActions} from '../../constants';
+import {NEW_BOT_EVENT_KEY, PlayerActions, WIN_STREAK_XP, WIN_XP} from '../../constants';
 import evaluator from '../../evaluator';
 import {HoldemBot} from './holdemBot';
 import {Hand} from 'pokersolver';
 import {Player} from '../../player';
 import EventEmitter from 'events';
+import {User} from '../../database/models/user';
 
 // noinspection DuplicatedCode
 export class HoldemTable implements HoldemTableInterface {
@@ -1026,45 +1027,53 @@ export class HoldemTable implements HoldemTableInterface {
     }
   }
 
-  updateLoggedInPlayerDatabaseStatistics(winnerPlayers: any, lastWinnerPlayers: any): void {
-    // for (let i = 0; i < this.players.length; i++) {
-    //   if (this.players[i] !== null) {
-    //     if (this.players[i].socket !== null) {
-    //       if (!this.players[i].isBot && this.players[i].isLoggedInPlayer()) {
-//
-    //         // this.fancyLogGreen(this.arrayHasValue(winnerPlayers, i));
-    //         if (this.arrayHasValue(winnerPlayers, i)) { // Update win count
-    //           let winStreak = this.arrayHasValue(lastWinnerPlayers, i);
-    //           dbUtils.UpdatePlayerWinCountPromise(this.sequelizeObjects, this.eventEmitter, this.players[i].playerId, this.players[i].playerDatabaseId, winStreak).then(() => {
-    //           });
-    //           this.players[i].playerWinCount = this.players[i].playerWinCount + 1;
-//
-    //         } else {
-//
-    //           // Update lose count (update only if money is raised up from small and big blinds)
-    //           if (this.totalPot > (this.tableMinBet * this.players.length)) {
-    //             this.players[i].playerLoseCount = this.players[i].playerLoseCount + 1;
-    //             dbUtils.UpdatePlayerLoseCountPromise(this.sequelizeObjects, this.players[i].playerDatabaseId).then(() => {
-    //             });
-    //           }
-    //         }
-//
-    //         // Update player funds
-    //         dbUtils.UpdatePlayerMoneyPromise(this.sequelizeObjects, this.players[i].playerDatabaseId, this.players[i].playerMoney).then(() => {
-    //         });
-    //         dbUtils.InsertPlayerStatisticPromise(
-    //           this.sequelizeObjects, this.players[i].playerDatabaseId,
-    //           this.players[i].playerMoney, this.players[i].playerWinCount,
-    //           this.players[i].playerLoseCount
-    //         ).then(() => {
-    //           logger.log('Updated player ' + this.players[i].playerName + ' statistics.', logger.LOG_GREEN);
-    //         }).catch(error => {
-    //           logger.log(error, logger.LOG_RED);
-    //         });
-    //       }
-    //     }
-    //   }
-    // }
+  async updateLoggedInPlayerDatabaseStatistics(winnerPlayers: number[], lastWinnerPlayers: any): Promise<void> {
+    for (let index: number = 0; index < this.players.length; index++) {
+      const player = this.players[index];
+      if (player && player.socket) {
+        if (!player.isBot && player.isLoggedInPlayer()) {
+          if (containsValue(winnerPlayers, index)) {
+            let winStreak: boolean = containsValue(lastWinnerPlayers, index);
+            const user = await User.findOne({where: {id: player.playerDatabaseId}});
+            if (user) {
+              const incrementXp: number = (winStreak ? WIN_STREAK_XP : WIN_XP);
+              await user.update({
+                win_count: user.win_count + 1,
+                xp: user.xp + incrementXp,
+                money: player.playerMoney,
+              });
+              player.playerWinCount = player.playerWinCount + 1;
+              const response: ClientResponse = {
+                key: 'onXPGained', data: {
+                  amount: incrementXp,
+                  message: winStreak ? 'XP win streak' : 'XP gained',
+                  translationKey: winStreak ? 'XP_GAINED_WIN_STREAK' : 'XP_GAINED',
+                }
+              };
+              this.sendWebSocketData(index, response);
+            }
+          } else {
+            if (this.totalPot > (this.tableMinBet * this.players.length)) {
+              const user = await User.findOne({where: {id: player.playerDatabaseId}});
+              if (user) {
+                await user.update({
+                  lose_count: user.lose_count + 1,
+                  money: player.playerMoney,
+                });
+                player.playerLoseCount = player.playerLoseCount + 1;
+              }
+            }
+          }
+
+          // Todo
+          // dbUtils.InsertPlayerStatisticPromise(
+          //   this.sequelizeObjects, player.playerDatabaseId,
+          //   player.playerMoney, player.playerWinCount,
+          //   player.playerLoseCount
+          // )
+        }
+      }
+    }
   }
 
   burnCard() {
@@ -1179,9 +1188,11 @@ export class HoldemTable implements HoldemTableInterface {
   getChatMessages(playerId: number): void {
     const player: Player | null = findPlayerById(playerId, this.players, this.playersToAppend, this.spectators);
     if (player && player.socket) {
-      const response: ClientResponse = {key: 'getChatMessages', data: {
-        messages: [...this.chatMessages],
-      }};
+      const response: ClientResponse = {
+        key: 'getChatMessages', data: {
+          messages: [...this.chatMessages],
+        }
+      };
       if (player.socket.readyState === SocketState.OPEN) {
         player.socket.send(JSON.stringify(response));
       }
