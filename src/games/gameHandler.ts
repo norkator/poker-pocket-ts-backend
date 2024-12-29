@@ -20,12 +20,20 @@ import {
 import {AutoPlay} from './holdem/autoPlay';
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
+import EventEmitter from 'events';
+import {NEW_BOT_EVENT_KEY} from '../constants';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
 const tables = new Map<number, FiveCardDrawTable | HoldemTable | BottleSpinTable>();
 
 class GameHandler implements GameHandlerInterface {
+  private eventEmitter: EventEmitter;
+
+  constructor() {
+    this.eventEmitter = new EventEmitter();
+    this.eventEmitter.on(NEW_BOT_EVENT_KEY, this.onAppendBot.bind(this));
+  }
 
   createStartingTables(): void {
     const holdEmCount = gameConfig.games.holdEm.startingTables;
@@ -393,7 +401,7 @@ class GameHandler implements GameHandlerInterface {
         type = 2;
         break;
     }
-    tables.set(tableNumber, new HoldemTable(type, tableNumber));
+    tables.set(tableNumber, new HoldemTable(this.eventEmitter, type, tableNumber));
     logger.info(`Created starting holdEm table id ${tableNumber} with type ${type}`);
     Array.from({length: gameConfig.games.holdEm.bot.botCounts[index]}).forEach((_, botIndex: number) => {
       this.onAppendBot(tableNumber, gameConfig.games.holdEm.startMoney);
@@ -432,7 +440,7 @@ class GameHandler implements GameHandlerInterface {
         type = 2;
         break;
     }
-    tables.set(tableNumber, new FiveCardDrawTable(type, tableNumber));
+    tables.set(tableNumber, new FiveCardDrawTable(this.eventEmitter, type, tableNumber));
     logger.info(`Created starting five card draw table id ${tableNumber} with type ${type}`);
     Array.from({length: gameConfig.games.fiveCardDraw.bot.botCounts[index]}).forEach((_, botIndex: number) => {
       this.onAppendBot(tableNumber, gameConfig.games.fiveCardDraw.startMoney);

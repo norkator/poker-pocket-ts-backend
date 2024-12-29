@@ -5,7 +5,7 @@ export const gameConfig = {
   games: {
     holdEm: {
       startingTables: 1, // default 4, how many tables to create at start
-      startMoney: 10000,
+      startMoney: 1000,
       bot: {
         botCounts: [1, 3, 2, 4, 2, 2], // add count for each starting table assuming you want bots in every table
         turnTimes: [1000, 1500, 2000, 2500, 3000],
@@ -52,7 +52,7 @@ export const gameConfig = {
     },
     fiveCardDraw: {
       startingTables: 1,
-      startMoney: 10000,
+      startMoney: 1000,
       bot: {
         botCounts: [2, 2, 2, 2],
         turnTimes: [1000, 1500, 2000, 2500, 3000],
@@ -82,7 +82,7 @@ export const gameConfig = {
     },
     bottleSpin: {
       startingTables: 0,
-      startMoney: 10000,
+      startMoney: 1000,
       bot: {
         botCounts: [1, 1],
         turnTimes: [1000, 1500, 2000, 2500, 3000],
