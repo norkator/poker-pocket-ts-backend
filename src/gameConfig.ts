@@ -4,10 +4,10 @@ export const gameConfig = {
   },
   games: {
     holdEm: {
-      startingTables: 1, // default 4, how many tables to create at start
+      startingTables: 2, // default 4, how many tables to create at start
       startMoney: 1000,
       bot: {
-        botCounts: [1, 3, 2, 4, 2, 2], // add count for each starting table assuming you want bots in every table
+        botCounts: [2, 1, 2, 4, 2, 2], // add count for each starting table assuming you want bots in every table
         turnTimes: [1000, 1500, 2000, 2500, 3000],
         minMoney: [
           50,     // Low bet game

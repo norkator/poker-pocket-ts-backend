@@ -42,7 +42,8 @@ export type ClientMessageKey =
   | 'createAccount'
   | 'login'
   | 'userParams'
-  | 'userStatistics';
+  | 'userStatistics'
+  | 'leaveTable';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
 export type ChatMessage = {

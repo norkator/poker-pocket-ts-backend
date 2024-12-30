@@ -230,6 +230,26 @@ class GameHandler implements GameHandlerInterface {
           table.sendStatusUpdate();
         }
         break;
+      case 'leaveTable': {
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        player = players.get(socket);
+        cardsToDiscard = message.cardsToDiscard;
+        if (table && player) {
+          if (table instanceof HoldemTable) {
+            table.playerFold(player.playerId);
+            player.selectedTableId = -1;
+            table.sendStatusUpdate();
+          } else if (table instanceof FiveCardDrawTable) {
+            table.playerFold(player.playerId);
+            player.selectedTableId = -1;
+            table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
+        }
+        break;
+      }
       case 'chatMessage': {
         player = players.get(socket);
         const chatMsg = message.message;
@@ -495,6 +515,7 @@ class GameHandler implements GameHandlerInterface {
           return playerObj.playerName
         });
       const player = new Player(mockSocket, playerIdIncrement, botStartingMoney, true, getRandomBotName(currentBotNames));
+      player.selectedTableId = table.tableId;
       playerIdIncrement++;
       players.set(mockSocket, player);
       table.playersToAppend.push(player);

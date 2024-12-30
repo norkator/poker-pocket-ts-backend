@@ -14,7 +14,8 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'poker-pocket-ts',
-  logging: (msg: string) => logger.info(msg),
+  // logging: (msg: string) => logger.debug(msg),
+  logging: false,
   models: [User, Achievement, Statistic, UserTable],
   define: {
     schema: 'poker',

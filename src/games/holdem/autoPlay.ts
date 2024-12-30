@@ -3,7 +3,7 @@ import {BotInterface} from '../../interfaces';
 import {HoldemBot} from './holdemBot';
 import {HoldemStage} from '../../enums';
 import {asciiCardToStringCard, getRandomInt} from '../../utils';
-import { calculateEquity } from 'poker-odds';
+import {calculateEquity} from 'poker-odds';
 
 export class AutoPlay implements BotInterface {
   private name: string;
@@ -49,7 +49,7 @@ export class AutoPlay implements BotInterface {
       return this.resultsSet;
     }
 
-    if (this.playerMoney <= this.roomMinBet + 500) {
+    if (this.playerMoney <= (2 * this.roomMinBet)) {
       this.resultsSet.action = HoldemBot.REMOVE_HOLDEM_BOT;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {
       this.resultsSet.action = HoldemBot.HOLDEM_BOT_FOLD;
