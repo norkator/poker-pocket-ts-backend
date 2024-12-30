@@ -2,6 +2,10 @@ import WebSocket from 'ws';
 import {PlayerState} from './enums';
 import {ChatMessage, ClientMessageType, Game, PlayerAction, ResponseKey} from './types';
 
+export interface ExtendedWebSocket extends WebSocket {
+  isAlive: boolean;
+}
+
 export interface GameHandlerInterface {
   createStartingTables(): void;
 
