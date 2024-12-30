@@ -157,9 +157,9 @@ export class HoldemTable implements HoldemTableInterface {
     if (!this.gameStarted) {
       this.playersTemp = [];
       for (const player of this.players) {
-        if (player && player.socket && player.playerMoney > this.tableMinBet) {
+        if (player && player.socket && player.playerMoney > this.tableMinBet && player.selectedTableId === this.tableId) {
           this.playersTemp.push(player);
-        } else if (player && !player.isBot) {
+        } else if (player && !player.isBot && player.selectedTableId === this.tableId) {
           sendClientMessage(
             player.socket, 'Not enough money to join the game. You are now spectator.', 'NO_MONEY_CHANGED_TO_SPECTATOR'
           );
