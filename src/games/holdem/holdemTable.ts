@@ -1207,8 +1207,9 @@ export class HoldemTable implements HoldemTableInterface {
       if (this.chatMessages.length >= this.chatMaxSize) {
         this.chatMessages.shift();
       }
-      this.chatMessages.push({playerName: player.playerName, message});
-      const response: ClientResponse = {key: 'chatMessage', data: {message}};
+      const newMessage: ChatMessage = {playerName: player.playerName, message};
+      this.chatMessages.push(newMessage);
+      const response: ClientResponse = {key: 'chatMessage', data: {chatMessage: newMessage}};
       const allRecipients = [
         ...this.players.map((_, i) => () => this.sendWebSocketData(i, response)),
         ...this.playersToAppend.map((_, i) =>

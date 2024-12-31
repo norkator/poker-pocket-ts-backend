@@ -214,6 +214,7 @@ export interface ClientResponse {
     token?: string;
     stats?: StatsInterface;
     userStats?: UserStatsInterface;
+    chatMessage?: ChatMessage;
   };
 }
 
