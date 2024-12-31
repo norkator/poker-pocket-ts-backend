@@ -1136,7 +1136,7 @@ export class FiveCardDrawTable {
       check_amount,
       this.smallBlindGiven,
       this.bigBlindGiven,
-      this.evaluatePlayerCards(currentPlayerTurn).value,
+      this.evaluatePlayerCards(currentPlayerTurn),
       this.currentStage,
       this.players[currentPlayerTurn].totalBet
     );
