@@ -1,6 +1,7 @@
 import logger from '../../logger';
 import {FiveCardDrawStage} from '../../enums';
-import {BotInterface} from '../../interfaces';
+import {BotInterface, HandEvaluationInterface} from '../../interfaces';
+import {botDiscard} from './botUtils';
 
 export class FiveCardDrawBot implements BotInterface {
 
@@ -20,7 +21,7 @@ export class FiveCardDrawBot implements BotInterface {
   checkAmount: number;
   smallBlindGiven: boolean;
   bigBlindGiven: boolean;
-  handValue: number;
+  handEvaluation: HandEvaluationInterface;
   currentStage: FiveCardDrawStage;
   myTotalBet: number;
   resultsSet: { action: string; amount: number; cardsToDiscard: string[] };
@@ -35,7 +36,7 @@ export class FiveCardDrawBot implements BotInterface {
     checkAmount: number,
     smallBlindGiven: boolean,
     bigBlindGiven: boolean,
-    handValue: number,
+    handEvaluation: HandEvaluationInterface,
     currentStage: FiveCardDrawStage,
     myTotalBet: number
   ) {
@@ -48,7 +49,7 @@ export class FiveCardDrawBot implements BotInterface {
     this.checkAmount = checkAmount;
     this.smallBlindGiven = smallBlindGiven;
     this.bigBlindGiven = bigBlindGiven;
-    this.handValue = handValue;
+    this.handEvaluation = handEvaluation;
     this.currentStage = currentStage;
     this.myTotalBet = myTotalBet;
     this.resultsSet = {action: "", amount: 0, cardsToDiscard: []};
@@ -66,7 +67,7 @@ export class FiveCardDrawBot implements BotInterface {
     logger.info(
       `${this.name} | ${this.resultsSet.action} ${
         this.resultsSet.amount > 0 ? this.resultsSet.amount : ""
-      } | hand value: ${this.handValue ?? ""} | cA: ${this.checkAmount}`
+      } | hand value: ${this.handEvaluation.value ?? ""} | cA: ${this.checkAmount}`
     );
 
     return this.resultsSet;
@@ -83,7 +84,8 @@ export class FiveCardDrawBot implements BotInterface {
         break;
       case FiveCardDrawStage.FOUR_DRAW_PHASE:
         this.resultsSet.action = FiveCardDrawBot.FIVE_CARD_DRAW_BOT_DISCARD_AND_DRAW;
-        this.resultsSet.cardsToDiscard = []; // todo implement later proper logic
+        this.resultsSet.cardsToDiscard = botDiscard(this.myHand, this.handEvaluation, 'balanced');
+        logger.info(`${this.name} discarded cards ${this.resultsSet.cardsToDiscard}`);
         break;
       case FiveCardDrawStage.FIVE_SECOND_BETTING_ROUND:
         this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
