@@ -11,7 +11,7 @@ import {gameConfig} from '../../gameConfig';
 import {FiveCardDrawStage, PlayerState, SocketState} from '../../enums';
 import logger from '../../logger';
 import {
-  asciiToStringCardsArray,
+  asciiToStringCardsArray, containsValue,
   findPlayerById,
   getRandomInt,
   sendClientMessage,
@@ -19,10 +19,12 @@ import {
 } from '../../utils';
 import {Poker} from '../../poker';
 import {Hand} from 'pokersolver';
-import {NEW_BOT_EVENT_KEY, PlayerActions} from '../../constants';
+import {NEW_BOT_EVENT_KEY, PlayerActions, WIN_STREAK_XP, WIN_XP} from '../../constants';
 import evaluator from '../../evaluator';
 import {FiveCardDrawBot} from './fiveCardDrawBot';
 import EventEmitter from 'events';
+import {User} from '../../database/models/user';
+import {Statistic} from '../../database/models/statistic';
 
 // noinspection DuplicatedCode
 export class FiveCardDrawTable {
@@ -478,7 +480,8 @@ export class FiveCardDrawTable {
     logger.info(`${this.tableName} winners are ${winnerNames}`);
     this.currentStatusText = `${winnerNames} got ${this.players[winnerPlayers[0]].handName}`;
 
-    // this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
+    // noinspection JSIgnoredPromiseFromCall
+    this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
     this.lastWinnerPlayers = winnerPlayers; // Take new reference of winner players
     this.totalPot = 0;
     this.isResultsCall = true;
@@ -506,7 +509,8 @@ export class FiveCardDrawTable {
       this.currentStatusText = this.players[winnerPlayer].playerName + ' is only standing player!';
       this.currentTurnText = '';
       this.isResultsCall = true;
-      // this.updateLoggedInPlayerDatabaseStatistics([winnerPlayer], this.lastWinnerPlayers);
+      // noinspection JSIgnoredPromiseFromCall
+      this.updateLoggedInPlayerDatabaseStatistics([winnerPlayer], this.lastWinnerPlayers);
       this.lastWinnerPlayers = [winnerPlayer]; // Take new reference of winner player
     }
     setTimeout(() => {
@@ -1024,6 +1028,53 @@ export class FiveCardDrawTable {
     return {value: 0, handName: null};
   }
 
+  async updateLoggedInPlayerDatabaseStatistics(winnerPlayers: number[], lastWinnerPlayers: any): Promise<void> {
+    for (let index: number = 0; index < this.players.length; index++) {
+      const player = this.players[index];
+      if (player && player.socket) {
+        if (!player.isBot && player.isLoggedInPlayer() && player.playerDatabaseId > 0) {
+          if (containsValue(winnerPlayers, index)) {
+            let winStreak: boolean = containsValue(lastWinnerPlayers, index);
+            const user = await User.findOne({where: {id: player.playerDatabaseId}});
+            if (user) {
+              const incrementXp: number = (winStreak ? WIN_STREAK_XP : WIN_XP);
+              await user.update({
+                win_count: user.win_count + 1,
+                xp: user.xp + incrementXp,
+                money: player.playerMoney,
+              });
+              player.playerWinCount = player.playerWinCount + 1;
+              const response: ClientResponse = {
+                key: 'onXPGained', data: {
+                  amount: incrementXp,
+                  message: winStreak ? 'XP win streak' : 'XP gained',
+                  translationKey: winStreak ? 'XP_GAINED_WIN_STREAK' : 'XP_GAINED',
+                }
+              };
+              this.sendWebSocketData(index, response);
+            }
+          } else {
+            if (this.totalPot > (this.tableMinBet * this.players.length)) {
+              const user = await User.findOne({where: {id: player.playerDatabaseId}});
+              if (user) {
+                await user.update({
+                  lose_count: user.lose_count + 1,
+                  money: player.playerMoney,
+                });
+                player.playerLoseCount = player.playerLoseCount + 1;
+              }
+            }
+          }
+          await Statistic.create({
+            userId: player.playerDatabaseId,
+            money: player.playerMoney,
+            winCount: player.playerWinCount,
+            loseCount: player.playerLoseCount,
+          });
+        }
+      }
+    }
+  }
 
   burnCard() {
     this.deckCard = this.deckCard + 1;
