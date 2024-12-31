@@ -5,12 +5,18 @@ import {
   PlayerInterface,
   TableInfoInterface
 } from '../../interfaces';
-import {Game, PlayerAction} from '../../types';
+import {ChatMessage, Game, PlayerAction} from '../../types';
 import {Player} from '../../player';
 import {gameConfig} from '../../gameConfig';
 import {FiveCardDrawStage, PlayerState, SocketState} from '../../enums';
 import logger from '../../logger';
-import {asciiToStringCardsArray, getRandomInt, sendClientMessage, stringToAsciiCardsArray} from '../../utils';
+import {
+  asciiToStringCardsArray,
+  findPlayerById,
+  getRandomInt,
+  sendClientMessage,
+  stringToAsciiCardsArray
+} from '../../utils';
 import {Poker} from '../../poker';
 import {Hand} from 'pokersolver';
 import {NEW_BOT_EVENT_KEY, PlayerActions} from '../../constants';
@@ -63,6 +69,8 @@ export class FiveCardDrawTable {
   lastWinnerPlayers: any[];
   collectingPot: boolean;
   discardAndDrawInitiated: boolean;
+  chatMessages: ChatMessage[] = [];
+  chatMaxSize: number = 50;
 
   constructor(
     eventEmitter: EventEmitter,
@@ -1122,6 +1130,41 @@ export class FiveCardDrawTable {
       }
     }
     return c;
+  }
+
+  getChatMessages(playerId: number): void {
+    const player: Player | null = findPlayerById(playerId, this.players, this.playersToAppend, this.spectators);
+    if (player && player.socket) {
+      const response: ClientResponse = {
+        key: 'getChatMessages', data: {
+          messages: [...this.chatMessages],
+        }
+      };
+      if (player.socket.readyState === SocketState.OPEN) {
+        player.socket.send(JSON.stringify(response));
+      }
+    }
+  }
+
+  handleChatMessage(playerId: number, message: string): void {
+    const player: Player | null = findPlayerById(playerId, this.players, this.playersToAppend, this.spectators);
+    if (player) {
+      if (this.chatMessages.length >= this.chatMaxSize) {
+        this.chatMessages.shift();
+      }
+      this.chatMessages.push({playerName: player.playerName, message});
+      const response: ClientResponse = {key: 'chatMessage', data: {message}};
+      const allRecipients = [
+        ...this.players.map((_, i) => () => this.sendWebSocketData(i, response)),
+        ...this.playersToAppend.map((_, i) =>
+          () => this.sendWaitingPlayerWebSocketData(i, response)
+        ),
+        ...this.spectators.map((_, i) =>
+          () => this.sendSpectatorWebSocketData(i, response)
+        ),
+      ];
+      allRecipients.forEach((send) => send());
+    }
   }
 
 }
