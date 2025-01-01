@@ -19,7 +19,16 @@ import {
 } from '../../utils';
 import {Poker} from '../../poker';
 import {Hand} from 'pokersolver';
-import {NEW_BOT_EVENT_KEY, PlayerActions, WIN_STREAK_XP, WIN_XP} from '../../constants';
+import {
+  BOT_CALL,
+  BOT_CHECK,
+  BOT_DISCARD_AND_DRAW, BOT_FOLD, BOT_RAISE,
+  BOT_REMOVE,
+  NEW_BOT_EVENT_KEY,
+  PlayerActions,
+  WIN_STREAK_XP,
+  WIN_XP
+} from '../../constants';
 import evaluator from '../../evaluator';
 import {FiveCardDrawBot} from './fiveCardDrawBot';
 import EventEmitter from 'events';
@@ -1143,22 +1152,22 @@ export class FiveCardDrawTable {
     let resultSet = botObj.performAction();
     let tm = setTimeout(() => {
       switch (resultSet.action) {
-        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_DISCARD_AND_DRAW:
+        case BOT_DISCARD_AND_DRAW:
           this.playerDiscardAndDraw(playerId, resultSet.cardsToDiscard);
           break;
-        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_FOLD:
+        case BOT_FOLD:
           this.playerFold(playerId);
           break;
-        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CHECK:
+        case BOT_CHECK:
           this.playerCheck(playerId);
           break;
-        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CALL:
+        case BOT_CALL:
           this.playerCheck(playerId);
           break;
-        case FiveCardDrawBot.FIVE_CARD_DRAW_BOT_RAISE:
+        case BOT_RAISE:
           this.playerRaise(playerId, resultSet.amount);
           break;
-        case FiveCardDrawBot.REMOVE_FIVE_CARD_DRAW_BOT:
+        case BOT_REMOVE:
           this.playerFold(playerId);
           this.removeBotFromTable(currentPlayerTurn);
           break;
