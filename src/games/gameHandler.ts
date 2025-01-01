@@ -237,11 +237,27 @@ class GameHandler implements GameHandlerInterface {
         cardsToDiscard = message.cardsToDiscard;
         if (table && player) {
           if (table instanceof HoldemTable) {
-            table.playerFold(player.playerId);
+            const spectatorIndex = table.spectators.indexOf(player);
+            const playersToAppendIndex = table.playersToAppend.indexOf(player);
+            if (spectatorIndex !== -1) {
+              table.spectators.splice(spectatorIndex, 1); // Remove from spectators
+            } else if (playersToAppendIndex !== -1) {
+              table.playersToAppend.splice(spectatorIndex, 1); // Remove from waiting players
+            } else {
+              table.playerFold(player.playerId);
+            }
             player.selectedTableId = -1;
             table.sendStatusUpdate();
           } else if (table instanceof FiveCardDrawTable) {
-            table.playerFold(player.playerId);
+            const spectatorIndex = table.spectators.indexOf(player);
+            const playersToAppendIndex = table.playersToAppend.indexOf(player);
+            if (spectatorIndex !== -1) {
+              table.spectators.splice(spectatorIndex, 1); // Remove from spectators
+            } else if (playersToAppendIndex !== -1) {
+              table.playersToAppend.splice(spectatorIndex, 1); // Remove from waiting players
+            } else {
+              table.playerFold(player.playerId);
+            }
             player.selectedTableId = -1;
             table.sendStatusUpdate();
           } else {
