@@ -46,10 +46,10 @@ export const gameConfig = {
       ],
     },
     fiveCardDraw: {
-      startingTables: 2,
+      startingTables: 4,
       startMoney: 1000,
       bot: {
-        botCounts: [2, 2, 1, 3],
+        botCounts: [1, 2, 1, 0],
         turnTimes: [1000, 1500, 2000, 2500, 3000],
         betAmounts: [
           [15, 25, 30, 40], // Low bet game
