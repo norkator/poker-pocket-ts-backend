@@ -23,6 +23,7 @@ import bcrypt from 'bcrypt';
 import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
+import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -565,14 +566,41 @@ class GameHandler implements GameHandlerInterface {
           table.currentStage,
           player.totalBet
         );
-        const responseArray: ClientResponse = {key: 'autoPlayActionResult', data: {}};
         const action = autoplay.performAction();
-        responseArray.data.action = action.action;
-        responseArray.data.amount = action.amount;
+        const responseArray: ClientResponse = {
+          key: 'autoPlayActionResult', data: {
+            action: action.action,
+            amount: action.amount,
+          }
+        };
+        logger.info(`Sending player ${player.playerId} auto play action ${action.action}`);
+        player.socket?.send(JSON.stringify(responseArray));
+      } else if (table instanceof FiveCardDrawTable) {
+        const check_amount = table.currentHighestBet === 0 ?
+          table.tableMinBet : (table.currentHighestBet - player.totalBet);
+        const autoplay = new FiveCardDrawBot(
+          player.playerName,
+          player.playerMoney,
+          player.playerCards,
+          table.isCallSituation,
+          table.tableMinBet,
+          check_amount,
+          table.evaluatePlayerCards(table.current_player_turn),
+          table.currentStage,
+          player.totalBet
+        );
+        const action = autoplay.performAction();
+        const responseArray: ClientResponse = {
+          key: 'autoPlayActionResult', data: {
+            action: action.action,
+            amount: action.amount,
+            cards: action.cardsToDiscard,
+          }
+        };
         logger.info(`Sending player ${player.playerId} auto play action ${action.action}`);
         player.socket?.send(JSON.stringify(responseArray));
       } else {
-        logger.warn('No auto play handler defined for other than HoldemTable instance');
+        logger.warn('No auto play handler defined for selected game');
       }
     }
   }

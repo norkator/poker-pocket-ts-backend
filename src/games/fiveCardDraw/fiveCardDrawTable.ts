@@ -1132,19 +1132,16 @@ export class FiveCardDrawTable {
   }
 
   botActionHandler(currentPlayerTurn: number): void {
-    let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
+    const check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
       (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
-    let playerId = this.players[currentPlayerTurn].playerId;
-    let botObj = new FiveCardDrawBot(
-      this.gameType,
+    const playerId = this.players[currentPlayerTurn].playerId;
+    const botObj = new FiveCardDrawBot(
       this.players[currentPlayerTurn].playerName,
       this.players[currentPlayerTurn].playerMoney,
       this.players[currentPlayerTurn].playerCards,
       this.isCallSituation,
       this.tableMinBet,
       check_amount,
-      this.smallBlindGiven,
-      this.bigBlindGiven,
       this.evaluatePlayerCards(currentPlayerTurn),
       this.currentStage,
       this.players[currentPlayerTurn].totalBet
