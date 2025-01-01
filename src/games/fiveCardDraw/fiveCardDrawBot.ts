@@ -2,16 +2,9 @@ import logger from '../../logger';
 import {FiveCardDrawStage} from '../../enums';
 import {BotInterface, HandEvaluationInterface} from '../../interfaces';
 import {botDiscard} from './botUtils';
+import {BOT_CALL, BOT_CHECK, BOT_DISCARD_AND_DRAW, BOT_FOLD, BOT_REMOVE} from '../../constants';
 
 export class FiveCardDrawBot implements BotInterface {
-
-  static FIVE_CARD_DRAW_BOT_DISCARD_AND_DRAW = 'five_card_draw_bot_discard_and_draw';
-  static FIVE_CARD_DRAW_BOT_FOLD = 'five_card_draw_bot_fold';
-  static FIVE_CARD_DRAW_BOT_CHECK = 'five_card_draw_bot_check';
-  static FIVE_CARD_DRAW_BOT_CALL = 'five_card_draw_bot_call';
-  static FIVE_CARD_DRAW_BOT_RAISE = 'five_card_draw_bot_raise';
-  static REMOVE_FIVE_CARD_DRAW_BOT = 'remove_bot';
-
   holdemType: number;
   name: string;
   playerMoney: number;
@@ -57,9 +50,9 @@ export class FiveCardDrawBot implements BotInterface {
 
   performAction(): { action: string; amount: number; cardsToDiscard: string[] } {
     if (this.playerMoney <= this.tableMinBet + 500) {
-      this.resultsSet.action = FiveCardDrawBot.REMOVE_FIVE_CARD_DRAW_BOT;
+      this.resultsSet.action = BOT_REMOVE;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {
-      this.resultsSet.action = FiveCardDrawBot.FIVE_CARD_DRAW_BOT_FOLD;
+      this.resultsSet.action = BOT_FOLD;
     } else {
       this.handleGameStages();
     }
@@ -74,7 +67,7 @@ export class FiveCardDrawBot implements BotInterface {
   }
 
   private handleGameStages(): void {
-    this.resultsSet.action = FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CHECK;
+    this.resultsSet.action = BOT_CHECK;
     switch (this.currentStage) {
       case FiveCardDrawStage.ONE_SMALL_AND_BIG_BLIND:
         this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
@@ -83,7 +76,7 @@ export class FiveCardDrawBot implements BotInterface {
         this.FIVE_CARD_DRAW_BOT_CHECK_CALL();
         break;
       case FiveCardDrawStage.FOUR_DRAW_PHASE:
-        this.resultsSet.action = FiveCardDrawBot.FIVE_CARD_DRAW_BOT_DISCARD_AND_DRAW;
+        this.resultsSet.action = BOT_DISCARD_AND_DRAW;
         this.resultsSet.cardsToDiscard = botDiscard(this.myHand, this.handEvaluation, 'balanced');
         logger.info(`${this.name} discarded cards ${this.resultsSet.cardsToDiscard}`);
         break;
@@ -94,7 +87,7 @@ export class FiveCardDrawBot implements BotInterface {
   }
 
   private FIVE_CARD_DRAW_BOT_CHECK_CALL(): void {
-    this.resultsSet.action = this.isCallSituation ? FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CALL : FiveCardDrawBot.FIVE_CARD_DRAW_BOT_CHECK;
+    this.resultsSet.action = this.isCallSituation ? BOT_CALL : BOT_CHECK;
   }
 
 }

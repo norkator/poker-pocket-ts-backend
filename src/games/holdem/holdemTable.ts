@@ -16,7 +16,15 @@ import {
   sendClientMessage,
   stringToAsciiCardsArray
 } from '../../utils';
-import {NEW_BOT_EVENT_KEY, PlayerActions, WIN_STREAK_XP, WIN_XP} from '../../constants';
+import {
+  BOT_CALL, BOT_CHECK, BOT_FOLD,
+  BOT_RAISE,
+  BOT_REMOVE,
+  NEW_BOT_EVENT_KEY,
+  PlayerActions,
+  WIN_STREAK_XP,
+  WIN_XP
+} from '../../constants';
 import evaluator from '../../evaluator';
 import {HoldemBot} from './holdemBot';
 import {Hand} from 'pokersolver';
@@ -1145,19 +1153,19 @@ export class HoldemTable implements HoldemTableInterface {
     let resultSet = botObj.performAction();
     let tm = setTimeout(() => {
       switch (resultSet.action) {
-        case HoldemBot.HOLDEM_BOT_FOLD:
+        case BOT_FOLD:
           this.playerFold(playerId);
           break;
-        case HoldemBot.HOLDEM_BOT_CHECK:
+        case BOT_CHECK:
           this.playerCheck(playerId);
           break;
-        case HoldemBot.HOLDEM_BOT_CALL:
+        case BOT_CALL:
           this.playerCheck(playerId);
           break;
-        case HoldemBot.HOLDEM_BOT_RAISE:
+        case BOT_RAISE:
           this.playerRaise(playerId, resultSet.amount);
           break;
-        case HoldemBot.REMOVE_HOLDEM_BOT: // HoldemBot run out of money
+        case BOT_REMOVE: // HoldemBot run out of money
           this.playerFold(playerId);
           this.removeBotFromTable(currentPlayerTurn);
           break;
