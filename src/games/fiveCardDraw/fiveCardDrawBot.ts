@@ -40,7 +40,7 @@ export class FiveCardDrawBot implements BotInterface {
   }
 
   performAction(): { action: string; amount: number; cardsToDiscard: string[] } {
-    if (this.playerMoney <= this.tableMinBet + 500) {
+    if (this.playerMoney <= this.tableMinBet + 100) {
       this.resultsSet.action = BOT_REMOVE;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {
       this.resultsSet.action = BOT_FOLD;

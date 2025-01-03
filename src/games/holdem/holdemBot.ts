@@ -58,7 +58,7 @@ export class HoldemBot implements BotInterface {
   }
 
   performAction(): { action: string; amount: number } {
-    if (this.playerMoney <= this.tableMinBet + 500) {
+    if (this.playerMoney <= this.tableMinBet + 100) {
       this.resultsSet.action = BOT_REMOVE;
     } else if (this.isCallSituation && this.checkAmount > this.playerMoney) {
       this.resultsSet.action = BOT_FOLD;
