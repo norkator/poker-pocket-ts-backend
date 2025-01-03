@@ -28,7 +28,6 @@ export async function getDailyAverageStats(userId: number) {
   const averageLoseCount: number[] = [];
 
   results.forEach((row: any) => {
-    console.log(row.date);
     const date = new Date(row.date).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
