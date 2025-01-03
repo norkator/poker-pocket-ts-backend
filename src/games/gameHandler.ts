@@ -24,6 +24,7 @@ import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
+import {getDailyAverageStats} from '../database/queries';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -419,6 +420,7 @@ class GameHandler implements GameHandlerInterface {
           const user = await User.findOne({where: {id: auth.userId}});
           if (player && user) {
             const achievements: Achievement[] = await Achievement.findAll({where: {userId: auth.userId}});
+            const dailyAverageStats = await getDailyAverageStats(auth.userId);
             const response: ClientResponse = {
               key: 'userStatistics',
               data: {
@@ -431,6 +433,7 @@ class GameHandler implements GameHandlerInterface {
                   achievements: achievements.map(({id, achievementType}) => ({
                     id, achievementType,
                   })),
+                  dailyAverageStats: dailyAverageStats,
                 },
                 success: true,
               }
