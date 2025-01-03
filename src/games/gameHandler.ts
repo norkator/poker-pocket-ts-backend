@@ -480,7 +480,7 @@ class GameHandler implements GameHandlerInterface {
     tables.set(tableNumber, new HoldemTable(this.eventEmitter, type, tableNumber));
     logger.info(`Created starting holdEm table id ${tableNumber} with type ${type}`);
     Array.from({length: gameConfig.games.holdEm.bot.botCounts[index]}).forEach((_, botIndex: number) => {
-      this.onAppendBot(-1, tableNumber, gameConfig.games.holdEm.startMoney);
+      this.onAppendBot(tableNumber, gameConfig.games.holdEm.startMoney);
     });
   }
 
@@ -519,19 +519,12 @@ class GameHandler implements GameHandlerInterface {
     tables.set(tableNumber, new FiveCardDrawTable(this.eventEmitter, type, tableNumber));
     logger.info(`Created starting five card draw table id ${tableNumber} with type ${type}`);
     Array.from({length: gameConfig.games.fiveCardDraw.bot.botCounts[index]}).forEach((_, botIndex: number) => {
-      this.onAppendBot(-1, tableNumber, gameConfig.games.fiveCardDraw.startMoney);
+      this.onAppendBot(tableNumber, gameConfig.games.fiveCardDraw.startMoney);
     });
   }
 
   // append new bot on selected room
-  private onAppendBot(
-    playerId: number,
-    tableNumber: number,
-    botStartingMoney: number
-  ): void {
-    if (playerId > -1) {
-      this.removePlayerById(playerId);
-    }
+  private onAppendBot(tableNumber: number, botStartingMoney: number): void {
     const table = tables.get(tableNumber);
     if (!table) {
       return;
@@ -610,16 +603,6 @@ class GameHandler implements GameHandlerInterface {
         logger.warn('No auto play handler defined for selected game');
       }
     }
-  }
-
-  private removePlayerById(playerId: number): boolean {
-    for (const [socket, player] of players.entries()) {
-      if (player.playerId === playerId) {
-        players.delete(socket);
-        return true;
-      }
-    }
-    return false;
   }
 
 
