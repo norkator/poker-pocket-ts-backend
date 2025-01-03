@@ -240,6 +240,13 @@ export interface AuthInterface {
   userId: number;
 }
 
+export interface DailyAverageStatsInterface {
+  labels: string[];
+  averageMoney: number[];
+  averageWinCount: number[];
+  averageLoseCount: number[];
+}
+
 export interface UserStatsInterface {
   username: string;
   money: number;
@@ -250,4 +257,5 @@ export interface UserStatsInterface {
     id: number;
     achievementType: string;
   }[];
+  dailyAverageStats: DailyAverageStatsInterface;
 }
