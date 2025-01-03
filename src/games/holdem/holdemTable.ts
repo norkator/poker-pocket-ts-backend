@@ -1180,10 +1180,8 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   removeBotFromTable(currentPlayerTurn: number): void {
-    this.eventEmitter.emit(
-      NEW_BOT_EVENT_KEY, this.players[currentPlayerTurn].playerId,
-      this.tableId, gameConfig.games.holdEm.startMoney
-    );
+    this.eventEmitter.emit(NEW_BOT_EVENT_KEY, this.tableId, gameConfig.games.holdEm.startMoney);
+    this.players[currentPlayerTurn].socket = null;
   }
 
   getTableBotCount(): number {
