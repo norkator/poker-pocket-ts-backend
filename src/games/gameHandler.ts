@@ -580,7 +580,7 @@ class GameHandler implements GameHandlerInterface {
             amount: action.amount,
           }
         };
-        logger.info(`Sending player ${player.playerId} auto play action ${action.action}`);
+        logger.info(`🤖 Sending player ${player.playerId} auto play action ${action.action}`);
         player.socket?.send(JSON.stringify(responseArray));
       } else if (table instanceof FiveCardDrawTable) {
         const check_amount = table.currentHighestBet === 0 ?
@@ -604,7 +604,7 @@ class GameHandler implements GameHandlerInterface {
             cards: action.cardsToDiscard,
           }
         };
-        logger.info(`Sending player ${player.playerId} auto play action ${action.action}`);
+        logger.info(`🤖 Sending player ${player.playerId} auto play action ${action.action}`);
         player.socket?.send(JSON.stringify(responseArray));
       } else {
         logger.warn('No auto play handler defined for selected game');
