@@ -1137,15 +1137,12 @@ export class HoldemTable implements HoldemTableInterface {
       (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
     let playerId = this.players[currentPlayerTurn].playerId;
     let botObj = new HoldemBot(
-      this.holdemType,
       this.players[currentPlayerTurn].playerName,
       this.players[currentPlayerTurn].playerMoney,
       this.players[currentPlayerTurn].playerCards,
       this.isCallSituation,
       this.tableMinBet,
       check_amount,
-      this.smallBlindGiven,
-      this.bigBlindGiven,
       this.evaluatePlayerCards(currentPlayerTurn).value,
       this.currentStage,
       this.players[currentPlayerTurn].totalBet

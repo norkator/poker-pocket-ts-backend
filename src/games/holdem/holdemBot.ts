@@ -6,15 +6,12 @@ import {BOT_CALL, BOT_CHECK, BOT_FOLD, BOT_RAISE, BOT_REMOVE} from '../../consta
 
 export class HoldemBot implements BotInterface {
 
-  holdemType: number;
   name: string;
   playerMoney: number;
   myHand: string[];
   isCallSituation: boolean;
   tableMinBet: number;
   checkAmount: number;
-  smallBlindGiven: boolean;
-  bigBlindGiven: boolean;
   handValue: number;
   currentStage: HoldemStage;
   myTotalBet: number;
@@ -29,28 +26,22 @@ export class HoldemBot implements BotInterface {
         05.11.2018 - Removed this.isBot logic check. Making autoPlay action for own file for future tricks
   */
   constructor(
-    holdemType: number,
     botName: string,
     playerMoney: number,
     myHand: string[],
     isCallSituation: boolean,
     tableMinBet: number,
     checkAmount: number,
-    smallBlindGiven: boolean,
-    bigBlindGiven: boolean,
     handValue: number,
     currentStage: HoldemStage,
     myTotalBet: number
   ) {
-    this.holdemType = holdemType;
     this.name = botName;
     this.playerMoney = playerMoney;
     this.myHand = myHand;
     this.isCallSituation = isCallSituation;
     this.tableMinBet = tableMinBet;
     this.checkAmount = checkAmount;
-    this.smallBlindGiven = smallBlindGiven;
-    this.bigBlindGiven = bigBlindGiven;
     this.handValue = handValue;
     this.currentStage = currentStage;
     this.myTotalBet = myTotalBet;

@@ -17,7 +17,6 @@ import {
   isPlayerInTable,
   sendClientNotification,
 } from '../utils';
-import {AutoPlay} from './holdem/autoPlay';
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
 import EventEmitter from 'events';
@@ -25,6 +24,7 @@ import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
 import {getDailyAverageStats} from '../database/queries';
+import {HoldemBot} from './holdem/holdemBot';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -555,16 +555,15 @@ class GameHandler implements GameHandlerInterface {
     if (!player.isFold) {
       const table = tables.get(player.selectedTableId);
       if (table instanceof HoldemTable) {
-        const check_amount = table.currentHighestBet === 0 ?
+        const checkAmount = table.currentHighestBet === 0 ?
           table.tableMinBet : (table.currentHighestBet - player.totalBet);
-        const autoplay = new AutoPlay(
+        const autoplay = new HoldemBot(
           player.playerName,
           player.playerMoney,
           player.playerCards,
-          table.middleCards,
           table.isCallSituation,
           table.tableMinBet,
-          check_amount,
+          checkAmount,
           table.evaluatePlayerCards(table.current_player_turn).value,
           table.currentStage,
           player.totalBet
@@ -579,7 +578,7 @@ class GameHandler implements GameHandlerInterface {
         logger.info(`🤖 Sending player ${player.playerId} auto play action ${action.action}`);
         player.socket?.send(JSON.stringify(responseArray));
       } else if (table instanceof FiveCardDrawTable) {
-        const check_amount = table.currentHighestBet === 0 ?
+        const checkAmount = table.currentHighestBet === 0 ?
           table.tableMinBet : (table.currentHighestBet - player.totalBet);
         const autoplay = new FiveCardDrawBot(
           player.playerName,
@@ -587,7 +586,7 @@ class GameHandler implements GameHandlerInterface {
           player.playerCards,
           table.isCallSituation,
           table.tableMinBet,
-          check_amount,
+          checkAmount,
           table.evaluatePlayerCards(table.current_player_turn),
           table.currentStage,
           player.totalBet
