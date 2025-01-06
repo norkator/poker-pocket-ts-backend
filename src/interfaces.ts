@@ -215,6 +215,7 @@ export interface ClientResponse {
     stats?: StatsInterface;
     userStats?: UserStatsInterface;
     chatMessage?: ChatMessage;
+    ranks?: RanksInterface[];
   };
 }
 
@@ -258,4 +259,12 @@ export interface UserStatsInterface {
     achievementType: string;
   }[];
   dailyAverageStats: DailyAverageStatsInterface;
+}
+
+export interface RanksInterface {
+  username: string;
+  xp: number;
+  money: number;
+  win_count: number;
+  lose_count: number;
 }

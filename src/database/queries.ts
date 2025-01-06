@@ -1,5 +1,7 @@
 import {col, fn, Op} from 'sequelize';
 import {Statistic} from './models/statistic';
+import {User} from './models/user';
+import {RanksInterface} from '../interfaces';
 
 export async function getDailyAverageStats(userId: number) {
   const oneMonthAgo = new Date();
@@ -39,4 +41,16 @@ export async function getDailyAverageStats(userId: number) {
   });
 
   return {labels, averageMoney, averageWinCount, averageLoseCount};
+}
+
+
+export async function getRankings(): Promise<RanksInterface[]> {
+  return await User.findAll({
+    attributes: ['username', 'xp', 'money', 'win_count', 'lose_count'],
+    order: [
+      ['xp', 'DESC'],
+    ],
+    limit: 100,
+    raw: true
+  });
 }

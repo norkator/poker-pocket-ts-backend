@@ -1,4 +1,4 @@
-import {AuthInterface, ClientResponse, GameHandlerInterface, PlayerInterface} from '../interfaces';
+import {AuthInterface, ClientResponse, GameHandlerInterface, PlayerInterface, RanksInterface} from '../interfaces';
 import WebSocket from 'ws';
 import {HoldemTable} from './holdem/holdemTable';
 import {FiveCardDrawTable} from './fiveCardDraw/fiveCardDrawTable';
@@ -23,7 +23,7 @@ import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
-import {getDailyAverageStats} from '../database/queries';
+import {getDailyAverageStats, getRankings} from '../database/queries';
 import {HoldemBot} from './holdem/holdemBot';
 
 let playerIdIncrement = 0;
@@ -440,6 +440,19 @@ class GameHandler implements GameHandlerInterface {
             };
             socket.send(JSON.stringify(response));
           }
+        }
+        break;
+      }
+      case 'rankings': {
+        const ranks: RanksInterface[] = await getRankings();
+        if (ranks) {
+          const response: ClientResponse = {
+            key: 'rankings',
+            data: {
+              ranks: ranks,
+            }
+          };
+          socket.send(JSON.stringify(response));
         }
         break;
       }
