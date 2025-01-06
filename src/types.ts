@@ -25,7 +25,8 @@ export type ResponseKey =
   | 'login'
   | 'userParams'
   | 'onXPGained'
-  | 'userStatistics';
+  | 'userStatistics'
+  | 'rankings';
 export type ClientMessageKey =
   'getTables'
   | 'getSpectateTables'
@@ -43,7 +44,8 @@ export type ClientMessageKey =
   | 'login'
   | 'userParams'
   | 'userStatistics'
-  | 'leaveTable';
+  | 'leaveTable'
+  | 'rankings';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
 export type ChatMessage = {
