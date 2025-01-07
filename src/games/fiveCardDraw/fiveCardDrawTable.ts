@@ -672,6 +672,10 @@ export class FiveCardDrawTable {
   }
 
   playerCheck(playerId: number): void {
+    if (this.currentStage === FiveCardDrawStage.FOUR_DRAW_PHASE) { // ui auto check is enabled, this fixed folding issue
+      this.playerDiscardAndDraw(playerId, []);
+      return;
+    }
     let playerIndex = this.getPlayerIndex(playerId);
     if (this.players[playerIndex].socket != null || this.players[playerIndex].isBot) {
       if (playerIndex !== -1) {
