@@ -103,3 +103,15 @@ export async function getUserTables(
     raw: true,
   });
 }
+
+export async function getUserTable(
+  userId: number, tableId: number
+): Promise<UserTableInterface | null> {
+  return UserTable.findOne({
+    where: {
+      id: tableId,
+      userId: userId,
+    },
+    raw: true,
+  });
+}

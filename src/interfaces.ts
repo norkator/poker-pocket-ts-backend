@@ -216,6 +216,7 @@ export interface ClientResponse {
     userStats?: UserStatsInterface;
     chatMessage?: ChatMessage;
     ranks?: RanksInterface[];
+    table?: UserTableInterface | null;
   };
 }
 
