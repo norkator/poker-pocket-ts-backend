@@ -114,7 +114,19 @@ export const gameConfig = {
         },
       ],
     },
-    blackJack: {},
-    dices: {}
+    blackJack: {
+      startingTables: 0,
+      startMoney: 1000,
+      bot: {
+        botCounts: [1, 1],
+      },
+    },
+    dices: {
+      startingTables: 0,
+      startMoney: 1000,
+      bot: {
+        botCounts: [1, 1],
+      },
+    }
   }
 };

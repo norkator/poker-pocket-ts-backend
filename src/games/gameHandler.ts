@@ -31,7 +31,7 @@ import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
 import {
-  createUpdateUserTable,
+  createUpdateUserTable, getAllUsersTables,
   getDailyAverageStats,
   getRankings,
   getUserTable,
@@ -51,22 +51,31 @@ class GameHandler implements GameHandlerInterface {
     this.eventEmitter.on(NEW_BOT_EVENT_KEY, this.onAppendBot.bind(this));
   }
 
-  createStartingTables(): void {
+  async createStartingTables(): Promise<void> {
     const holdEmCount = gameConfig.games.holdEm.startingTables;
     Array.from({length: holdEmCount}).forEach((_, index: number) => {
-      this.createHoldEmTable(index, index);
+      const botCount = gameConfig.games.holdEm.bot.botCounts[index];
+      const startMoney = gameConfig.games.holdEm.startMoney;
+      this.createGameTable(index, index, HoldemTable, botCount, startMoney);
     });
     const fiveCardDrawCount = gameConfig.games.fiveCardDraw.startingTables;
     Array.from({length: fiveCardDrawCount}).forEach((_, index: number) => {
       const roomNumber = holdEmCount + index;
-      this.createFiveCardDrawTable(roomNumber, index);
+      const botCount = gameConfig.games.holdEm.bot.botCounts[index];
+      const startMoney = gameConfig.games.holdEm.startMoney;
+      this.createGameTable(roomNumber, index, FiveCardDrawTable, botCount, startMoney);
     });
     // Todo implement all table creation logic behind same function
     // const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
     // Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
     //   const roomNumber = holdEmCount + fiveCardDrawCount + index;
-    //   this.createFiveCardDrawTable(roomNumber);
+    //   this.createGameTable(roomNumber);
     // });
+    const allUsersTables: UserTableInterface[] = await getAllUsersTables();
+    allUsersTables.forEach((table: UserTableInterface, index: number) => {
+      const roomNumber = holdEmCount + fiveCardDrawCount + index;
+      this.createUserTable(table, roomNumber, index);
+    });
   }
 
   onConnection(socket: WebSocket): void {
@@ -90,11 +99,11 @@ class GameHandler implements GameHandlerInterface {
   }
 
   onError(): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   onClose(): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   private async messageHandler(socket: WebSocket, message: {
@@ -151,7 +160,7 @@ class GameHandler implements GameHandlerInterface {
         tables.forEach((table: HoldemTable | FiveCardDrawTable | BottleSpinTable) => {
           spectateTableParams.data.tables?.push(table.getTableInfo());
         });
-        logger.info("Sending spectate tables... " + JSON.stringify(spectateTableParams));
+        logger.info('Sending spectate tables... ' + JSON.stringify(spectateTableParams));
         socket.send(JSON.stringify(spectateTableParams));
         break;
       case 'selectSpectateTable':
@@ -519,50 +528,39 @@ class GameHandler implements GameHandlerInterface {
     }
   }
 
-  private createHoldEmTable(tableNumber: number, index: number) {
-    let betTypeCount = {lowBets: 0, mediumBets: 0, highBets: 0};
-    tables.forEach((table) => {
-      if (table instanceof HoldemTable) {
-        switch (table.holdemType) {
-          case 0:
-            betTypeCount.lowBets++;
-            break;
-          case 1:
-            betTypeCount.mediumBets++;
-            break;
-          case 2:
-            betTypeCount.highBets++;
-            break;
-        }
-      }
-    });
-    let tableType = Object.entries(betTypeCount)
-      .sort(([, countA], [, countB]) => countA - countB)
-      .map(([key]) => key);
-    let type: number = 0;
-    switch (tableType[0]) {
-      case 'lowBets':
-        type = 0;
+  private createUserTable(
+    table: UserTableInterface, roomNumber: number, index: number
+  ): void {
+    switch (table.game) {
+      case 'HOLDEM':
+        const holdemInstance = this.createGameTable(
+          roomNumber, index, HoldemTable, table.botCount, gameConfig.games.holdEm.startMoney
+        ) as HoldemTable;
+        holdemInstance.setTableInfo(table.tableName, table.id);
         break;
-      case 'mediumBets':
-        type = 1;
+      case 'FIVE_CARD_DRAW':
+        const fiveCardDrawInstance = this.createGameTable(
+          roomNumber, index, FiveCardDrawTable, table.botCount, gameConfig.games.fiveCardDraw.startMoney
+        ) as FiveCardDrawTable;
+        fiveCardDrawInstance.setTableInfo(table.tableName, table.id);
         break;
-      case 'highBets':
-        type = 2;
+      case 'BOTTLE_SPIN':
         break;
     }
-    tables.set(tableNumber, new HoldemTable(this.eventEmitter, type, tableNumber));
-    logger.info(`Created starting holdEm table id ${tableNumber} with type ${type}`);
-    Array.from({length: gameConfig.games.holdEm.bot.botCounts[index]}).forEach((_, botIndex: number) => {
-      this.onAppendBot(tableNumber, gameConfig.games.holdEm.startMoney);
-    });
   }
 
-  private createFiveCardDrawTable(tableNumber: number, index: number) {
+  private createGameTable(
+    tableNumber: number,
+    index: number,
+    tableClass: typeof HoldemTable | typeof FiveCardDrawTable | typeof BottleSpinTable,
+    botCount: number,
+    startMoney: number,
+  ): HoldemTable | FiveCardDrawTable | BottleSpinTable {
     let betTypeCount = {lowBets: 0, mediumBets: 0, highBets: 0};
     tables.forEach((table) => {
-      if (table instanceof FiveCardDrawTable) {
-        switch (table.gameType) {
+      if (table instanceof tableClass) {
+        const gameType = table instanceof HoldemTable ? table.holdemType : table.gameType;
+        switch (gameType) {
           case 0:
             betTypeCount.lowBets++;
             break;
@@ -575,7 +573,7 @@ class GameHandler implements GameHandlerInterface {
         }
       }
     });
-    let tableType = Object.entries(betTypeCount)
+    const tableType = Object.entries(betTypeCount)
       .sort(([, countA], [, countB]) => countA - countB)
       .map(([key]) => key);
     let type: number = 0;
@@ -590,12 +588,15 @@ class GameHandler implements GameHandlerInterface {
         type = 2;
         break;
     }
-    tables.set(tableNumber, new FiveCardDrawTable(this.eventEmitter, type, tableNumber));
-    logger.info(`Created starting five card draw table id ${tableNumber} with type ${type}`);
-    Array.from({length: gameConfig.games.fiveCardDraw.bot.botCounts[index]}).forEach((_, botIndex: number) => {
-      this.onAppendBot(tableNumber, gameConfig.games.fiveCardDraw.startMoney);
+    const tableInstance = new tableClass(this.eventEmitter, type, tableNumber);
+    tables.set(tableNumber, tableInstance);
+    logger.info(`Created game table id ${tableNumber} with name (${tableClass.name})`);
+    Array.from({length: botCount}).forEach(() => {
+      this.onAppendBot(tableNumber, startMoney);
     });
+    return tableInstance;
   }
+
 
   // append new bot on selected room
   private onAppendBot(tableNumber: number, botStartingMoney: number): void {

@@ -12,7 +12,7 @@ const gameHandler = new GameHandler();
 const launch = async () => {
   await initializeDatabase();
 
-  gameHandler.createStartingTables();
+  await gameHandler.createStartingTables();
 
   server.on('connection', (socket: ExtendedWebSocket) => {
     gameHandler.onConnection(socket);
