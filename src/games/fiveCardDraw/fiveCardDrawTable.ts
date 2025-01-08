@@ -41,6 +41,7 @@ export class FiveCardDrawTable {
   game: Game = 'FIVE_CARD_DRAW';
   gameType: number;
   tableId: number;
+  tableDatabaseId: number;
   tableMinBet: number;
   tableName: string;
   maxSeats: number;
@@ -91,6 +92,7 @@ export class FiveCardDrawTable {
     this.eventEmitter = eventEmitter;
     this.gameType = gameType;
     this.tableId = tableId;
+    this.tableDatabaseId = -1;
     this.tableMinBet = gameConfig.games.fiveCardDraw.games[gameType].minBet;
     this.tableName = 'Table ' + tableId;
     this.maxSeats = gameConfig.games.fiveCardDraw.games[gameType].max_seats;
@@ -149,6 +151,14 @@ export class FiveCardDrawTable {
     this.collectingPot = false;
     this.deckCardsBurned = 0;
     this.discardAndDrawInitiated = false;
+  }
+
+  setTableInfo(
+    tableName: string,
+    tableDatabaseId: number,
+  ): void {
+    this.tableName = tableName;
+    this.tableDatabaseId = tableDatabaseId
   }
 
   getTableInfo(): TableInfoInterface {

@@ -74,6 +74,8 @@ export interface HoldemTableInterface {
 
   resetTableParams(): void; // Run before each new round
 
+  setTableInfo(tableName: string, tableDatabaseId: number): void;
+
   getTableInfo(): TableInfoInterface;
 
   triggerNewGame(): void;
