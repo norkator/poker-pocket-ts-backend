@@ -268,3 +268,15 @@ export interface RanksInterface {
   win_count: number;
   lose_count: number;
 }
+
+export interface UserTableInterface {
+  id: number;
+  game: Game;
+  tableName: string;
+  botCount: number;
+  password: string;
+  turnCountdown: number;
+  minBet: number;
+  afterRoundCountdown: number;
+  discardAndDrawTimeout: number;
+}

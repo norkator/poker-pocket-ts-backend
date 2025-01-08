@@ -1,4 +1,11 @@
-import {AuthInterface, ClientResponse, GameHandlerInterface, PlayerInterface, RanksInterface} from '../interfaces';
+import {
+  AuthInterface,
+  ClientResponse,
+  GameHandlerInterface,
+  PlayerInterface,
+  RanksInterface,
+  UserTableInterface
+} from '../interfaces';
 import WebSocket from 'ws';
 import {HoldemTable} from './holdem/holdemTable';
 import {FiveCardDrawTable} from './fiveCardDraw/fiveCardDrawTable';
@@ -23,7 +30,7 @@ import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
-import {getDailyAverageStats, getRankings} from '../database/queries';
+import {createUpdateUserTable, getDailyAverageStats, getRankings, getUserTables} from '../database/queries';
 import {HoldemBot} from './holdem/holdemBot';
 
 let playerIdIncrement = 0;
@@ -450,6 +457,39 @@ class GameHandler implements GameHandlerInterface {
             key: 'rankings',
             data: {
               ranks: ranks,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        }
+        break;
+      }
+      case 'getUserTable': {
+        break;
+      }
+      case 'getUserTables': {
+        const auth: AuthInterface = authenticate(socket, message);
+        if (auth.success) {
+          const tables: UserTableInterface[] = await getUserTables(auth.userId);
+          const response: ClientResponse = {
+            key: 'getUserTables',
+            data: {
+              tables: tables,
+              success: true,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        }
+        break;
+      }
+      case 'createUpdateUserTable': {
+        const auth: AuthInterface = authenticate(socket, message);
+        if (auth.success) {
+          const tableData: UserTableInterface = message.tableData as UserTableInterface;
+          const success = await createUpdateUserTable(auth.userId, tableData);
+          const response: ClientResponse = {
+            key: 'createUpdateUserTable',
+            data: {
+              success: success,
             }
           };
           socket.send(JSON.stringify(response));

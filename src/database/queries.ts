@@ -1,7 +1,8 @@
 import {col, fn, Op} from 'sequelize';
 import {Statistic} from './models/statistic';
 import {User} from './models/user';
-import {RanksInterface} from '../interfaces';
+import {RanksInterface, UserTableInterface} from '../interfaces';
+import {UserTable} from './models/userTables';
 
 export async function getDailyAverageStats(userId: number) {
   const oneMonthAgo = new Date();
@@ -52,5 +53,53 @@ export async function getRankings(): Promise<RanksInterface[]> {
     ],
     limit: 100,
     raw: true
+  });
+}
+
+export async function createUpdateUserTable(
+  userId: number, tableData: UserTableInterface
+): Promise<boolean> {
+  if (tableData.id) {
+    const existingTable = await UserTable.findOne({
+      where: {id: tableData.id, userId},
+    });
+    if (existingTable) {
+      await existingTable.update({
+        game: tableData.game,
+        tableName: tableData.tableName,
+        botCount: tableData.botCount,
+        password: tableData.password,
+        turnCountdown: tableData.turnCountdown,
+        minBet: tableData.minBet,
+        afterRoundCountdown: tableData.afterRoundCountdown,
+        discardAndDrawTimeout: tableData.discardAndDrawTimeout,
+      });
+    } else {
+      throw new Error(`UserTable with ID ${tableData.id} not found for user ${userId}`);
+    }
+  } else {
+    await UserTable.create({
+      userId,
+      game: tableData.game,
+      tableName: tableData.tableName,
+      botCount: tableData.botCount,
+      password: tableData.password,
+      turnCountdown: tableData.turnCountdown,
+      minBet: tableData.minBet,
+      afterRoundCountdown: tableData.afterRoundCountdown,
+      discardAndDrawTimeout: tableData.discardAndDrawTimeout,
+    });
+  }
+  return true;
+}
+
+export async function getUserTables(
+  userId: number
+): Promise<UserTableInterface[]> {
+  return UserTable.findAll({
+    where: {
+      userId: userId
+    },
+    raw: true,
   });
 }
