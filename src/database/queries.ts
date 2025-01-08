@@ -115,3 +115,9 @@ export async function getUserTable(
     raw: true,
   });
 }
+
+export async function getAllUsersTables(): Promise<UserTableInterface[]> {
+  return UserTable.findAll({
+    raw: true,
+  });
+}
