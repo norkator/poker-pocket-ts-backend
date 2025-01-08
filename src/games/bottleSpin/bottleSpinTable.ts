@@ -10,12 +10,15 @@ import {BottleSpinStage, PlayerState, SocketState} from '../../enums';
 import logger from '../../logger';
 import {sendClientMessage} from '../../utils';
 import {PlayerActions} from '../../constants';
+import EventEmitter from 'events';
 
 // noinspection DuplicatedCode
 export class BottleSpinTable {
+  eventEmitter: EventEmitter;
   game: Game = 'BOTTLE_SPIN';
   gameType: number;
   tableId: number;
+  tableDatabaseId: number;
   tableMinBet: number;
   tableName: string;
   maxSeats: number;
@@ -50,11 +53,14 @@ export class BottleSpinTable {
   collectingPot: boolean;
 
   constructor(
+    eventEmitter: EventEmitter,
     gameType: number,
     tableId: number,
   ) {
+    this.eventEmitter = eventEmitter;
     this.gameType = gameType;
     this.tableId = tableId;
+    this.tableDatabaseId = -1;
     this.tableMinBet = gameConfig.games.fiveCardDraw.games[gameType].minBet;
     this.tableName = 'Table ' + tableId;
     this.maxSeats = gameConfig.games.fiveCardDraw.games[gameType].max_seats;
@@ -102,6 +108,14 @@ export class BottleSpinTable {
     this.bigBlindGiven = false;
     this.bigBlindPlayerHadTurn = false;
     this.collectingPot = false;
+  }
+
+  setTableInfo(
+    tableName: string,
+    tableDatabaseId: number,
+  ): void {
+    this.tableName = tableName;
+    this.tableDatabaseId = tableDatabaseId
   }
 
   getTableInfo(): TableInfoInterface {
