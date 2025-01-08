@@ -39,6 +39,7 @@ export class HoldemTable implements HoldemTableInterface {
   game: Game = 'HOLDEM';
   holdemType: number;
   tableId: number;
+  tableDatabaseId: number;
   tableMinBet: number;
   tableName: string;
   maxSeats: number;
@@ -89,6 +90,7 @@ export class HoldemTable implements HoldemTableInterface {
     this.eventEmitter = eventEmitter;
     this.holdemType = holdemType;
     this.tableId = tableId;
+    this.tableDatabaseId = -1;
     this.tableMinBet = gameConfig.games.holdEm.games[holdemType].minBet;
     this.tableName = 'Table ' + tableId;
     this.maxSeats = gameConfig.games.holdEm.games[holdemType].max_seats;
@@ -147,6 +149,15 @@ export class HoldemTable implements HoldemTableInterface {
     this.bigBlindPlayerHadTurn = false;
     this.collectingPot = false;
     this.deckCardsBurned = 0;
+  }
+
+  setTableInfo(
+    tableName: string,
+    tableDatabaseId: number,
+  ): void {
+    this.tableName = tableName;
+    this.tableDatabaseId = tableDatabaseId
+    logger.debug(`Table info updated for table ${this.tableId} set name to ${tableName}`);
   }
 
   getTableInfo(): TableInfoInterface {
