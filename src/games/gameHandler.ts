@@ -30,7 +30,13 @@ import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
-import {createUpdateUserTable, getDailyAverageStats, getRankings, getUserTables} from '../database/queries';
+import {
+  createUpdateUserTable,
+  getDailyAverageStats,
+  getRankings,
+  getUserTable,
+  getUserTables
+} from '../database/queries';
 import {HoldemBot} from './holdem/holdemBot';
 
 let playerIdIncrement = 0;
@@ -464,6 +470,18 @@ class GameHandler implements GameHandlerInterface {
         break;
       }
       case 'getUserTable': {
+        const auth: AuthInterface = authenticate(socket, message);
+        if (auth.success && message.tableId) {
+          const table: UserTableInterface | null = await getUserTable(auth.userId, message.tableId);
+          const response: ClientResponse = {
+            key: 'getUserTable',
+            data: {
+              table: table,
+              success: table !== null,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        }
         break;
       }
       case 'getUserTables': {
