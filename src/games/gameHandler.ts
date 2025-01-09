@@ -513,12 +513,15 @@ class GameHandler implements GameHandlerInterface {
         if (auth.success) {
           const tableData: UserTableInterface = message.tableData as UserTableInterface;
           const success = await createUpdateUserTable(auth.userId, tableData);
-          if (success) {
+          if (success && tableData.id && Number(tableData.id) > 0) {
             table = findTableByDatabaseId(tables, Number(tableData.id));
             if (table) {
               table.setTableInfo(tableData);
               logger.info(`Table info/settings updated for ${tableData.tableName}`);
             }
+          }
+          if (success && (!tableData.id || tableData.id === -1)) {
+            this.createUserTable(tableData, tables.size);
           }
           const response: ClientResponse = {
             key: 'createUpdateUserTable',

@@ -59,7 +59,7 @@ export async function getRankings(): Promise<RanksInterface[]> {
 export async function createUpdateUserTable(
   userId: number, tableData: UserTableInterface
 ): Promise<boolean> {
-  if (tableData.id) {
+  if (tableData.id && tableData.id > 0) {
     const existingTable = await UserTable.findOne({
       where: {id: tableData.id, userId},
     });
