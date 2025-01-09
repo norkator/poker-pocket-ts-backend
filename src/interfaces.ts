@@ -74,7 +74,7 @@ export interface HoldemTableInterface {
 
   resetTableParams(): void; // Run before each new round
 
-  setTableInfo(tableName: string, tableDatabaseId: number): void;
+  setTableInfo(table: UserTableInterface): void;
 
   getTableInfo(): TableInfoInterface;
 

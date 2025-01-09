@@ -4,7 +4,7 @@ import {
   ClientResponse,
   HandEvaluationInterface,
   HoldemTableInterface,
-  PlayerData, PlayerInterface, TableInfoInterface,
+  PlayerData, PlayerInterface, TableInfoInterface, UserTableInterface,
 } from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
@@ -40,11 +40,13 @@ export class HoldemTable implements HoldemTableInterface {
   holdemType: number;
   tableId: number;
   tableDatabaseId: number;
+  tablePassword: string;
   tableMinBet: number;
   tableName: string;
   maxSeats: number;
   minPlayers: number;
   turnTimeOut: number;
+  afterRoundCountDown: number;
   currentStage: number;
   holeCardsGiven: boolean;
   totalPot: number;
@@ -91,11 +93,13 @@ export class HoldemTable implements HoldemTableInterface {
     this.holdemType = holdemType;
     this.tableId = tableId;
     this.tableDatabaseId = -1;
+    this.tablePassword = '';
     this.tableMinBet = gameConfig.games.holdEm.games[holdemType].minBet;
     this.tableName = 'Table ' + tableId;
     this.maxSeats = gameConfig.games.holdEm.games[holdemType].max_seats;
     this.minPlayers = gameConfig.games.holdEm.games[holdemType].minPlayers;
     this.turnTimeOut = gameConfig.games.holdEm.games[holdemType].turnCountdown * 1000;
+    this.afterRoundCountDown = gameConfig.games.holdEm.games[this.holdemType].afterRoundCountdown * 1000;
     this.currentStage = HoldemStage.ONE_HOLE_CARDS;
     this.holeCardsGiven = false;
     this.totalPot = 0;
@@ -152,12 +156,21 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   setTableInfo(
-    tableName: string,
-    tableDatabaseId: number,
+    table: UserTableInterface
   ): void {
-    this.tableName = tableName;
-    this.tableDatabaseId = tableDatabaseId
-    logger.debug(`Table info updated for table ${this.tableId} set name to ${tableName}`);
+    this.tableName = table.tableName || this.tableName;
+    this.tableDatabaseId = Number(table.id) || this.tableDatabaseId;
+    this.tablePassword = table.password || this.tablePassword;
+    if (table.turnCountdown && table.turnCountdown > 0) {
+      this.turnTimeOut = Number(table.turnCountdown) * 1000;
+    }
+    if (table.minBet && table.minBet > 0) {
+      this.tableMinBet = Number(table.minBet);
+    }
+    if (table.afterRoundCountdown && table.afterRoundCountdown > 0) {
+      this.afterRoundCountDown = Number(table.afterRoundCountdown) * 1000;
+    }
+    logger.debug(`Table info updated for table ${this.tableId} set name to ${this.tableName}`);
   }
 
   getTableInfo(): TableInfoInterface {
@@ -579,7 +592,7 @@ export class HoldemTable implements HoldemTableInterface {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.holdEm.games[this.holdemType].afterRoundCountdown * 1000);
+    }, this.afterRoundCountDown);
   }
 
   roundResultsMiddleOfTheGame(): void {

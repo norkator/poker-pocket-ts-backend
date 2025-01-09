@@ -3,7 +3,7 @@ import {
   HandEvaluationInterface,
   PlayerData,
   PlayerInterface,
-  TableInfoInterface
+  TableInfoInterface, UserTableInterface
 } from '../../interfaces';
 import {ChatMessage, Game, PlayerAction} from '../../types';
 import {Player} from '../../player';
@@ -154,11 +154,21 @@ export class FiveCardDrawTable {
   }
 
   setTableInfo(
-    tableName: string,
-    tableDatabaseId: number,
+    table: UserTableInterface
   ): void {
-    this.tableName = tableName;
-    this.tableDatabaseId = tableDatabaseId
+    this.tableName = table.tableName || this.tableName;
+    this.tableDatabaseId = Number(table.id) || this.tableDatabaseId;
+    // this.tablePassword = table.password || this.tablePassword;
+    if (table.turnCountdown && table.turnCountdown > 0) {
+      this.turnTimeOut = Number(table.turnCountdown) * 1000;
+    }
+    if (table.minBet && table.minBet > 0) {
+      this.tableMinBet = Number(table.minBet);
+    }
+    // if (table.afterRoundCountdown && table.afterRoundCountdown > 0) {
+    //   this.afterRoundCountDown = Number(table.afterRoundCountdown) * 1000;
+    // }
+    logger.debug(`Table info updated for table ${this.tableId} set name to ${this.tableName}`);
   }
 
   getTableInfo(): TableInfoInterface {

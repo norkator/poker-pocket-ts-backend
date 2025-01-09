@@ -16,7 +16,7 @@ import logger from '../logger';
 import {gameConfig} from '../gameConfig';
 import {
   authenticate,
-  createMockWebSocket,
+  createMockWebSocket, findTableByDatabaseId,
   generatePlayerName,
   generateToken,
   getPlayerCount,
@@ -56,14 +56,14 @@ class GameHandler implements GameHandlerInterface {
     Array.from({length: holdEmCount}).forEach((_, index: number) => {
       const botCount = gameConfig.games.holdEm.bot.botCounts[index];
       const startMoney = gameConfig.games.holdEm.startMoney;
-      this.createGameTable(index, index, HoldemTable, botCount, startMoney);
+      this.createGameTable(index, HoldemTable, botCount, startMoney);
     });
     const fiveCardDrawCount = gameConfig.games.fiveCardDraw.startingTables;
     Array.from({length: fiveCardDrawCount}).forEach((_, index: number) => {
       const roomNumber = holdEmCount + index;
       const botCount = gameConfig.games.holdEm.bot.botCounts[index];
       const startMoney = gameConfig.games.holdEm.startMoney;
-      this.createGameTable(roomNumber, index, FiveCardDrawTable, botCount, startMoney);
+      this.createGameTable(roomNumber, FiveCardDrawTable, botCount, startMoney);
     });
     // Todo implement all table creation logic behind same function
     // const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
@@ -74,7 +74,7 @@ class GameHandler implements GameHandlerInterface {
     const allUsersTables: UserTableInterface[] = await getAllUsersTables();
     allUsersTables.forEach((table: UserTableInterface, index: number) => {
       const roomNumber = holdEmCount + fiveCardDrawCount + index;
-      this.createUserTable(table, roomNumber, index);
+      this.createUserTable(table, roomNumber);
     });
   }
 
@@ -513,6 +513,13 @@ class GameHandler implements GameHandlerInterface {
         if (auth.success) {
           const tableData: UserTableInterface = message.tableData as UserTableInterface;
           const success = await createUpdateUserTable(auth.userId, tableData);
+          if (success) {
+            table = findTableByDatabaseId(tables, Number(tableData.id));
+            if (table) {
+              table.setTableInfo(tableData);
+              logger.info(`Table info/settings updated for ${tableData.tableName}`);
+            }
+          }
           const response: ClientResponse = {
             key: 'createUpdateUserTable',
             data: {
@@ -529,20 +536,20 @@ class GameHandler implements GameHandlerInterface {
   }
 
   private createUserTable(
-    table: UserTableInterface, roomNumber: number, index: number
+    table: UserTableInterface, roomNumber: number
   ): void {
     switch (table.game) {
       case 'HOLDEM':
         const holdemInstance = this.createGameTable(
-          roomNumber, index, HoldemTable, table.botCount, gameConfig.games.holdEm.startMoney
+          roomNumber, HoldemTable, table.botCount, gameConfig.games.holdEm.startMoney
         ) as HoldemTable;
-        holdemInstance.setTableInfo(table.tableName, table.id);
+        holdemInstance.setTableInfo(table);
         break;
       case 'FIVE_CARD_DRAW':
         const fiveCardDrawInstance = this.createGameTable(
-          roomNumber, index, FiveCardDrawTable, table.botCount, gameConfig.games.fiveCardDraw.startMoney
+          roomNumber, FiveCardDrawTable, table.botCount, gameConfig.games.fiveCardDraw.startMoney
         ) as FiveCardDrawTable;
-        fiveCardDrawInstance.setTableInfo(table.tableName, table.id);
+        fiveCardDrawInstance.setTableInfo(table);
         break;
       case 'BOTTLE_SPIN':
         break;
@@ -551,7 +558,6 @@ class GameHandler implements GameHandlerInterface {
 
   private createGameTable(
     tableNumber: number,
-    index: number,
     tableClass: typeof HoldemTable | typeof FiveCardDrawTable | typeof BottleSpinTable,
     botCount: number,
     startMoney: number,
