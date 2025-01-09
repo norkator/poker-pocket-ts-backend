@@ -101,6 +101,7 @@ export async function getUserTables(
       userId: userId
     },
     raw: true,
+    order: [['id', 'ASC']],
   });
 }
 
