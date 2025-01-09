@@ -8,6 +8,9 @@ import {SocketState} from './enums';
 import jwt, {JwtPayload} from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
 import path from 'node:path';
+import {FiveCardDrawTable} from './games/fiveCardDraw/fiveCardDrawTable';
+import {HoldemTable} from './games/holdem/holdemTable';
+import {BottleSpinTable} from './games/bottleSpin/bottleSpinTable';
 
 dotenv.config();
 
@@ -410,4 +413,16 @@ export function containsValue(arr: number[], target: number): boolean {
     }
   }
   return false;
+}
+
+export function findTableByDatabaseId(
+  tables: Map<number, FiveCardDrawTable | HoldemTable | BottleSpinTable>,
+  targetDatabaseId: number
+): FiveCardDrawTable | HoldemTable | BottleSpinTable | undefined {
+  for (const table of tables.values()) {
+    if (table.tableDatabaseId === targetDatabaseId) {
+      return table;
+    }
+  }
+  return undefined;
 }
