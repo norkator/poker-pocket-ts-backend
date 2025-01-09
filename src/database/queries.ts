@@ -59,7 +59,7 @@ export async function getRankings(): Promise<RanksInterface[]> {
 export async function createUpdateUserTable(
   userId: number, tableData: UserTableInterface
 ): Promise<boolean> {
-  if (tableData.id) {
+  if (tableData.id && tableData.id > 0) {
     const existingTable = await UserTable.findOne({
       where: {id: tableData.id, userId},
     });
@@ -101,6 +101,7 @@ export async function getUserTables(
       userId: userId
     },
     raw: true,
+    order: [['id', 'ASC']],
   });
 }
 
@@ -119,5 +120,6 @@ export async function getUserTable(
 export async function getAllUsersTables(): Promise<UserTableInterface[]> {
   return UserTable.findAll({
     raw: true,
+    order: [['id', 'ASC']],
   });
 }
