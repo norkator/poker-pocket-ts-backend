@@ -119,5 +119,6 @@ export async function getUserTable(
 export async function getAllUsersTables(): Promise<UserTableInterface[]> {
   return UserTable.findAll({
     raw: true,
+    order: [['id', 'ASC']],
   });
 }
