@@ -68,6 +68,7 @@ export interface TableInfoInterface {
   tableMinBet: number;
   playerCount: number;
   maxSeats: number;
+  passwordProtected: boolean;
 }
 
 export interface HoldemTableInterface {

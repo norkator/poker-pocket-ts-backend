@@ -180,7 +180,8 @@ export class HoldemTable implements HoldemTableInterface {
       tableName: this.tableName,
       tableMinBet: this.tableMinBet,
       playerCount: (this.players.length + this.playersToAppend.length + this.bots.length),
-      maxSeats: this.maxSeats
+      maxSeats: this.maxSeats,
+      passwordProtected: this.tablePassword.length > 0,
     };
   }
 
