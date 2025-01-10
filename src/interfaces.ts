@@ -220,6 +220,7 @@ export interface ClientResponse {
     chatMessage?: ChatMessage;
     ranks?: RanksInterface[];
     table?: UserTableInterface | null;
+    tableId?: number;
   };
 }
 
