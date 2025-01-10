@@ -38,6 +38,7 @@ import {
   getUserTables
 } from '../database/queries';
 import {HoldemBot} from './holdem/holdemBot';
+import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -341,6 +342,9 @@ class GameHandler implements GameHandlerInterface {
           } else if (table && table instanceof FiveCardDrawTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
+          } else if (tableId === -1) {
+            handlePublicChatMessage(players, player, chatMsg);
+            logger.info(`Player ${player.playerId} send public chat message ${chatMsg}`);
           }
         }
         break;
@@ -354,6 +358,8 @@ class GameHandler implements GameHandlerInterface {
             table.getChatMessages(player.playerId);
           } else if (table && table instanceof FiveCardDrawTable) {
             table.getChatMessages(player.playerId);
+          } else if (tableId === -1) {
+            getPublicChatMessages(player);
           }
         }
         break;
