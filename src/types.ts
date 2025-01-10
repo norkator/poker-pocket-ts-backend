@@ -29,7 +29,10 @@ export type ResponseKey =
   | 'rankings'
   | 'getUserTable'
   | 'getUserTables'
-  | 'createUpdateUserTable';
+  | 'createUpdateUserTable'
+  | 'invalidTablePassword'
+  | 'selectTable'
+  | 'selectSpectateTable';
 export type ClientMessageKey =
   'getTables' // return playable tables list
   | 'getSpectateTables'

@@ -138,48 +138,87 @@ class GameHandler implements GameHandlerInterface {
         tableId = Number(message.tableId);
         table = tables.get(tableId);
         if (table) {
-          const player: Player | undefined = players.get(socket);
-          if (player && (table.players.length + table.playersToAppend.length) < table.maxSeats) {
-            if (!isPlayerInTable(player, table.players, table.playersToAppend)) {
-              player.selectedTableId = tableId;
-              table.playersToAppend.push(player);
-              logger.info(`${player.playerName} selected table ${tableId}`);
-              table.triggerNewGame();
-              socket.send(JSON.stringify(table.getTableParams()));
-            } else {
-              logger.error(`Player ${player.playerId} somehow was able to try join table ${tableId} again while being already in it!`);
-              sendClientNotification(player.socket, 'errorMessage', 'Player already in table', 'ERROR_PLAYER_ALREADY_IN_TABLE');
-            }
+          if (table.tablePassword.length > 0 && message.password !== table.tablePassword) {
+            const response: ClientResponse = {
+              key: 'invalidTablePassword',
+              data: {
+                translationKey: 'INVALID_TABLE_PASSWORD',
+                success: false,
+              }
+            };
+            socket.send(JSON.stringify(response));
           } else {
-            logger.warn(`Table ${tableId} is already full!`);
+            const player: Player | undefined = players.get(socket);
+            if (player && (table.players.length + table.playersToAppend.length) < table.maxSeats) {
+              if (!isPlayerInTable(player, table.players, table.playersToAppend)) {
+                player.selectedTableId = tableId;
+                table.playersToAppend.push(player);
+                logger.info(`${player.playerName} selected table ${tableId}`);
+                table.triggerNewGame();
+                const response: ClientResponse = {
+                  key: 'selectTable',
+                  data: {
+                    success: true,
+                    tableId: table.tableId,
+                    game: table.game
+                  }
+                };
+                socket.send(JSON.stringify(response));
+              } else {
+                logger.error(`Player ${player.playerId} somehow was able to try join table ${tableId} again while being already in it!`);
+                sendClientNotification(player.socket, 'errorMessage', 'Player already in table', 'ERROR_PLAYER_ALREADY_IN_TABLE');
+              }
+            } else {
+              logger.warn(`Table ${tableId} is already full!`);
+            }
           }
         }
         break;
-      case 'getSpectateTables':
-        const spectateTableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
-        tables.forEach((table: HoldemTable | FiveCardDrawTable | BottleSpinTable) => {
-          spectateTableParams.data.tables?.push(table.getTableInfo());
-        });
-        logger.info('Sending spectate tables... ' + JSON.stringify(spectateTableParams));
-        socket.send(JSON.stringify(spectateTableParams));
-        break;
+      // case 'getSpectateTables':
+      //   const spectateTableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
+      //   tables.forEach((table: HoldemTable | FiveCardDrawTable | BottleSpinTable) => {
+      //     spectateTableParams.data.tables?.push(table.getTableInfo());
+      //   });
+      //   logger.info('Sending spectate tables... ' + JSON.stringify(spectateTableParams));
+      //   socket.send(JSON.stringify(spectateTableParams));
+      //   break;
       case 'selectSpectateTable':
         tableId = Number(message.tableId);
         table = tables.get(tableId);
         player = players.get(socket);
         if (table && player) {
-          if (player.selectedTableId > -1) {
-            const previousTable = tables.get(player.selectedTableId);
-            if (previousTable) {
-              previousTable.spectators = previousTable.spectators.filter(
-                spectator => spectator !== player
-              );
-              logger.info(`Spectating player id ${player.playerId} is removed from table ${previousTable.tableName}`);
+          if (table.tablePassword.length > 0 && message.password !== table.tablePassword) {
+            const response: ClientResponse = {
+              key: 'invalidTablePassword',
+              data: {
+                translationKey: 'INVALID_TABLE_PASSWORD',
+                success: false,
+              }
+            };
+            socket.send(JSON.stringify(response));
+          } else {
+            if (player.selectedTableId > -1) {
+              const previousTable = tables.get(player.selectedTableId);
+              if (previousTable) {
+                previousTable.spectators = previousTable.spectators.filter(
+                  spectator => spectator !== player
+                );
+                logger.info(`Spectating player id ${player.playerId} is removed from table ${previousTable.tableName}`);
+              }
             }
+            player.selectedTableId = tableId;
+            table.spectators.push(player);
+            logger.info(`Player id ${player.playerId} is spectating on table ${table.tableName}`);
+            const response: ClientResponse = {
+              key: 'selectSpectateTable',
+              data: {
+                success: true,
+                tableId: table.tableId,
+                game: table.game
+              }
+            };
+            socket.send(JSON.stringify(response));
           }
-          player.selectedTableId = tableId;
-          table.spectators.push(player);
-          logger.info(`Player id ${player.playerId} is spectating on table ${table.tableName}`);
         }
         break;
       case 'getTableParams':
