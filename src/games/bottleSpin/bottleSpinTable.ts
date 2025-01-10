@@ -19,6 +19,7 @@ export class BottleSpinTable {
   gameType: number;
   tableId: number;
   tableDatabaseId: number;
+  tablePassword: string;
   tableMinBet: number;
   tableName: string;
   maxSeats: number;
@@ -61,6 +62,7 @@ export class BottleSpinTable {
     this.gameType = gameType;
     this.tableId = tableId;
     this.tableDatabaseId = -1;
+    this.tablePassword = '';
     this.tableMinBet = gameConfig.games.fiveCardDraw.games[gameType].minBet;
     this.tableName = 'Table ' + tableId;
     this.maxSeats = gameConfig.games.fiveCardDraw.games[gameType].max_seats;
@@ -115,7 +117,7 @@ export class BottleSpinTable {
   ): void {
     this.tableName = table.tableName || this.tableName;
     this.tableDatabaseId = Number(table.id) || this.tableDatabaseId;
-    // this.tablePassword = table.password || this.tablePassword;
+    this.tablePassword = table.password || this.tablePassword;
     if (table.turnCountdown && table.turnCountdown > 0) {
       this.turnTimeOut = Number(table.turnCountdown) * 1000;
     }
@@ -135,7 +137,8 @@ export class BottleSpinTable {
       tableName: this.tableName,
       tableMinBet: this.tableMinBet,
       playerCount: (this.players.length + this.playersToAppend.length + this.bots.length),
-      maxSeats: this.maxSeats
+      maxSeats: this.maxSeats,
+      passwordProtected: this.tablePassword.length > 0,
     };
   }
 
