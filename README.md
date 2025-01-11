@@ -13,15 +13,13 @@ This ts version replaces old js version https://github.com/norkator/poker-pocket
 ### Testing it out
 
 Current staging: https://pokerpocket-staging.nitramite.com  
-Current production: todo
+Current production: todo, because current runs old js version
 
-[comment]: <> (Here's list of different front end clients. You may want to take a look at them to
-[comment]: <> (see what it's all about.
-[comment]: <> (
-[comment]: <> (* React Web UI: https://pokerpocket.nitramite.com/
-[comment]: <> (    * React Web UI source code: https://github.com/norkator/poker-pocket-react-client
-[comment]: <> (        * Based on old UI https://github.com/norkator/poker-pocket-web-client
-[comment]: <> (        * React version is originally developed by [linus2code](https://github.com/linus2code)
+Here's list of different front end clients. You may want to take a look at them to
+see what it's all about.
+
+* React Web UI: https://pokerpocket-staging.nitramite.com
+    * React Web UI source code: https://github.com/norkator/poker-pocket-react-client
 
 ### Prerequisites
 
@@ -46,8 +44,10 @@ DB_PASS=<value>
 6. Run `npm run start:dev` on development environment (uses nodemon)
 7. Backend is now running.
 8. Set up frontend https://github.com/norkator/poker-pocket-react-client
-    * Or open https://pokerpocket.nitramite.com/ and use connection switch set as `dev` to open connection
-      to localhost web socket.
+
+#### Optional
+
+Tweak `./src/gameConfig.ts` file for initial table configurations.
 
 ### Note
 
