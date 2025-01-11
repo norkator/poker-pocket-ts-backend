@@ -770,21 +770,26 @@ export class BottleSpinTable {
 
   verifyPlayersBets(): number {
     let highestBet = 0;
-    let lowestBetPlayerIndex = -1;
-    for (let i = 0; i < this.players.length; i++) {
-      const player = this.players[i];
-      if (player != null && !player.isFold) {
-        // Find the highest bet
-        if (player.totalBet > highestBet) {
-          highestBet = player.totalBet;
-        }
-        if (!player.isAllIn && player.totalBet < highestBet) {
-          lowestBetPlayerIndex = i;
+    for (let i = 0; i < this.players.length; i++) { // Get the highest bet
+      if (this.players[i] != null) {
+        if (!this.players[i].isFold) {
+          if (highestBet === 0) {
+            highestBet = this.players[i].totalBet;
+          }
+          if (this.players[i].totalBet > highestBet) {
+            highestBet = this.players[i].totalBet;
+          }
         }
       }
     }
-    if (lowestBetPlayerIndex !== -1) {
-      return lowestBetPlayerIndex;
+    for (let i = 0; i < this.players.length; i++) { // Find someone with lower bet
+      if (this.players[i] != null) {
+        if (!this.players[i].isFold && !this.players[i].isAllIn) {
+          if (this.players[i].totalBet < highestBet) {
+            return i;
+          }
+        }
+      }
     }
     return !this.smallBlindGiven || !this.bigBlindGiven ? 0 : -1;
   }
