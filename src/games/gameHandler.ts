@@ -66,15 +66,16 @@ class GameHandler implements GameHandlerInterface {
       const startMoney = gameConfig.games.holdEm.startMoney;
       this.createGameTable(roomNumber, FiveCardDrawTable, botCount, startMoney);
     });
-    // Todo implement all table creation logic behind same function
-    // const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
-    // Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
-    //   const roomNumber = holdEmCount + fiveCardDrawCount + index;
-    //   this.createGameTable(roomNumber);
-    // });
+    const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
+    Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
+      const roomNumber = holdEmCount + fiveCardDrawCount + index;
+      const botCount = gameConfig.games.bottleSpin.bot.botCounts[index];
+      const startMoney = gameConfig.games.bottleSpin.startMoney;
+      this.createGameTable(roomNumber, BottleSpinTable, botCount, startMoney);
+    });
     const allUsersTables: UserTableInterface[] = await getAllUsersTables();
     allUsersTables.forEach((table: UserTableInterface, index: number) => {
-      const roomNumber = holdEmCount + fiveCardDrawCount + index;
+      const roomNumber = holdEmCount + fiveCardDrawCount + bottleSpinCount + index;
       this.createUserTable(table, roomNumber);
     });
   }
@@ -240,6 +241,9 @@ class GameHandler implements GameHandlerInterface {
           } else if (table instanceof FiveCardDrawTable) {
             table.playerFold(player.playerId);
             table.sendStatusUpdate();
+          } else if (table instanceof BottleSpinTable) {
+            table.playerFold(player.playerId);
+            table.sendStatusUpdate();
           } else {
             logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
           }
@@ -254,6 +258,9 @@ class GameHandler implements GameHandlerInterface {
             table.playerCheck(player.playerId);
             table.sendStatusUpdate();
           } else if (table instanceof FiveCardDrawTable) {
+            table.playerCheck(player.playerId);
+            table.sendStatusUpdate();
+          } else if (table instanceof BottleSpinTable) {
             table.playerCheck(player.playerId);
             table.sendStatusUpdate();
           } else {
@@ -272,6 +279,9 @@ class GameHandler implements GameHandlerInterface {
           } else if (table instanceof FiveCardDrawTable) {
             table.playerRaise(player.playerId, Number(message.amount));
             table.sendStatusUpdate();
+          } else if (table instanceof BottleSpinTable) {
+            table.playerRaise(player.playerId, Number(message.amount));
+            table.sendStatusUpdate();
           } else {
             logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
           }
@@ -288,10 +298,14 @@ class GameHandler implements GameHandlerInterface {
         table = tables.get(tableId);
         player = players.get(socket);
         cardsToDiscard = message.cardsToDiscard;
-        if (table && player && table instanceof FiveCardDrawTable) {
-          logger.info(`Player ${player.playerId} discarded fcd cards ${message.cardsToDiscard}`);
-          table.playerDiscardAndDraw(player.playerId, cardsToDiscard);
-          table.sendStatusUpdate();
+        if (player) {
+          if (table && table instanceof FiveCardDrawTable) {
+            logger.info(`Player ${player.playerId} discarded fcd cards ${message.cardsToDiscard}`);
+            table.playerDiscardAndDraw(player.playerId, cardsToDiscard);
+            table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
         }
         break;
       case 'leaveTable': {
@@ -300,7 +314,7 @@ class GameHandler implements GameHandlerInterface {
         player = players.get(socket);
         cardsToDiscard = message.cardsToDiscard;
         if (table && player) {
-          if (table instanceof HoldemTable) {
+          if (table instanceof HoldemTable || table instanceof BottleSpinTable) {
             const spectatorIndex = table.spectators.indexOf(player);
             const playersToAppendIndex = table.playersToAppend.indexOf(player);
             if (spectatorIndex !== -1) {
@@ -600,6 +614,10 @@ class GameHandler implements GameHandlerInterface {
         fiveCardDrawInstance.setTableInfo(table);
         break;
       case 'BOTTLE_SPIN':
+        const bottleSpinInstance = this.createGameTable(
+          roomNumber, BottleSpinTable, table.botCount, gameConfig.games.bottleSpin.startMoney
+        ) as BottleSpinTable;
+        bottleSpinInstance.setTableInfo(table);
         break;
     }
   }
