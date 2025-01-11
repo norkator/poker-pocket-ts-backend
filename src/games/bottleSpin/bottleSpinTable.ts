@@ -63,11 +63,11 @@ export class BottleSpinTable {
     this.tableId = tableId;
     this.tableDatabaseId = -1;
     this.tablePassword = '';
-    this.tableMinBet = gameConfig.games.fiveCardDraw.games[gameType].minBet;
+    this.tableMinBet = gameConfig.games.bottleSpin.games[gameType].minBet;
     this.tableName = 'Table ' + tableId;
-    this.maxSeats = gameConfig.games.fiveCardDraw.games[gameType].max_seats;
-    this.minPlayers = gameConfig.games.fiveCardDraw.games[gameType].minPlayers;
-    this.turnTimeOut = gameConfig.games.fiveCardDraw.games[gameType].turnCountdown * 1000;
+    this.maxSeats = gameConfig.games.bottleSpin.games[gameType].max_seats;
+    this.minPlayers = gameConfig.games.bottleSpin.games[gameType].minPlayers;
+    this.turnTimeOut = gameConfig.games.bottleSpin.games[gameType].turnCountdown * 1000;
     this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND;
     this.totalPot = 0;
     this.bots = [];
@@ -332,14 +332,14 @@ export class BottleSpinTable {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.fiveCardDraw.games[this.gameType].afterRoundCountdown * 1000);
+    }, gameConfig.games.bottleSpin.games[this.gameType].afterRoundCountdown * 1000);
   }
 
   roundResultsMiddleOfTheGame(): void {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.fiveCardDraw.games[this.gameType].afterRoundCountdown * 1000);
+    }, gameConfig.games.bottleSpin.games[this.gameType].afterRoundCountdown * 1000);
   }
 
   smallAndBigBlinds(currentPlayerTurn: number): void {
