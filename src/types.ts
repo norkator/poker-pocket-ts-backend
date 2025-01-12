@@ -32,7 +32,8 @@ export type ResponseKey =
   | 'createUpdateUserTable'
   | 'invalidTablePassword'
   | 'selectTable'
-  | 'selectSpectateTable';
+  | 'selectSpectateTable'
+  | 'bottleSpin';
 export type ClientMessageKey =
   'getTables' // return playable tables list
   | 'getSpectateTables'
