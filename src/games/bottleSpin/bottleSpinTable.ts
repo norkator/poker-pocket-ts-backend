@@ -13,10 +13,9 @@ import {
 } from '../../enums';
 import logger from '../../logger';
 import {
-  asciiToStringCardsArray,
   findPlayerById,
   getRandomInt,
-  sendClientMessage, stringToAsciiCardsArray
+  sendClientMessage
 } from '../../utils';
 import {
   BOT_CALL,
@@ -30,7 +29,6 @@ import {
 } from '../../constants';
 import EventEmitter from 'events';
 import {BottleSpinBot} from './bottleSpinBot';
-import {Hand} from "pokersolver";
 
 // noinspection DuplicatedCode
 export class BottleSpinTable {
@@ -56,6 +54,7 @@ export class BottleSpinTable {
   gameStarted: boolean;
   turnTimeOutObj: NodeJS.Timeout | null;
   turnIntervalObj: NodeJS.Timeout | null;
+  afterRoundCountDown: number;
   updateJsonTemp: any | null;
   current_player_turn: number;
   currentTurnText: string;
@@ -92,6 +91,7 @@ export class BottleSpinTable {
     this.minPlayers = gameConfig.games.bottleSpin.games[gameType].minPlayers;
     this.turnTimeOut = gameConfig.games.bottleSpin.games[gameType].turnCountdown * 1000;
     this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND;
+    this.afterRoundCountDown = gameConfig.games.bottleSpin.games[gameType].afterRoundCountdown * 1000;
     this.totalPot = 0;
     this.bots = [];
     this.players = [];
@@ -122,7 +122,8 @@ export class BottleSpinTable {
   }
 
   resetTableParams(): void {
-    this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND;
+    // this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND; // todo revert to this
+    this.currentStage = BottleSpinStage.THREE_BOTTLE_SPIN;
     this.totalPot = 0;
     this.currentHighestBet = 0;
     this.updateJsonTemp = null;
@@ -149,9 +150,9 @@ export class BottleSpinTable {
     if (table.minBet && table.minBet > 0) {
       this.tableMinBet = Number(table.minBet);
     }
-    // if (table.afterRoundCountdown && table.afterRoundCountdown > 0) {
-    //   this.afterRoundCountDown = Number(table.afterRoundCountdown) * 1000;
-    // }
+    if (table.afterRoundCountdown && table.afterRoundCountdown > 0) {
+      this.afterRoundCountDown = Number(table.afterRoundCountdown) * 1000;
+    }
     logger.debug(`Table info updated for table ${this.tableId} set name to ${this.tableName}`);
   }
 
@@ -380,14 +381,14 @@ export class BottleSpinTable {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.bottleSpin.games[this.gameType].afterRoundCountdown * 1000);
+    }, this.afterRoundCountDown);
   }
 
   roundResultsMiddleOfTheGame(): void {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.bottleSpin.games[this.gameType].afterRoundCountdown * 1000);
+    }, this.afterRoundCountDown);
   }
 
   smallAndBigBlinds(currentPlayerTurn: number): void {
