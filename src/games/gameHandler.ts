@@ -356,6 +356,9 @@ class GameHandler implements GameHandlerInterface {
           } else if (table && table instanceof FiveCardDrawTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
+          } else if (table && table instanceof BottleSpinTable) {
+            logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
+            table.handleChatMessage(player.playerId, chatMsg)
           } else if (tableId === -1) {
             handlePublicChatMessage(players, player, chatMsg);
             logger.info(`Player ${player.playerId} send public chat message ${chatMsg}`);
@@ -371,6 +374,8 @@ class GameHandler implements GameHandlerInterface {
           if (table && table instanceof HoldemTable) {
             table.getChatMessages(player.playerId);
           } else if (table && table instanceof FiveCardDrawTable) {
+            table.getChatMessages(player.playerId);
+          } else if (table && table instanceof BottleSpinTable) {
             table.getChatMessages(player.playerId);
           } else if (tableId === -1) {
             getPublicChatMessages(player);
