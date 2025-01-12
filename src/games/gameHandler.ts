@@ -29,7 +29,9 @@ import bcrypt from 'bcrypt';
 import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
+import {HoldemBot} from './holdem/holdemBot';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
+import {BottleSpinBot} from './bottleSpin/bottleSpinBot';
 import {
   createUpdateUserTable, getAllUsersTables,
   getDailyAverageStats,
@@ -37,7 +39,6 @@ import {
   getUserTable,
   getUserTables
 } from '../database/queries';
-import {HoldemBot} from './holdem/holdemBot';
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
 
 let playerIdIncrement = 0;
@@ -746,6 +747,27 @@ class GameHandler implements GameHandlerInterface {
             action: action.action,
             amount: action.amount,
             cards: action.cardsToDiscard,
+          }
+        };
+        logger.info(`🤖 Sending player ${player.playerId} auto play action ${action.action}`);
+        player.socket?.send(JSON.stringify(responseArray));
+      } else if (table instanceof BottleSpinTable) {
+        const checkAmount = table.currentHighestBet === 0 ?
+          table.tableMinBet : (table.currentHighestBet - player.totalBet);
+        const autoplay = new BottleSpinBot(
+          player.playerName,
+          player.playerMoney,
+          table.isCallSituation,
+          table.tableMinBet,
+          checkAmount,
+          table.currentStage,
+          player.totalBet
+        );
+        const action = autoplay.performAction();
+        const responseArray: ClientResponse = {
+          key: 'autoPlayActionResult', data: {
+            action: action.action,
+            amount: action.amount,
           }
         };
         logger.info(`🤖 Sending player ${player.playerId} auto play action ${action.action}`);

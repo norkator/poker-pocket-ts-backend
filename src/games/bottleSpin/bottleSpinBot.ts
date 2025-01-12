@@ -1,6 +1,6 @@
 import {BottleSpinStage} from '../../enums';
 import {BotInterface} from '../../interfaces';
-import {BOT_CALL, BOT_CHECK, BOT_FOLD, BOT_REMOVE} from '../../constants';
+import {BOT_CALL, BOT_CHECK, BOT_FOLD, BOT_REMOVE, BOT_SPIN_BOTTLE} from '../../constants';
 
 export class BottleSpinBot implements BotInterface {
   playerName: string;
@@ -52,7 +52,8 @@ export class BottleSpinBot implements BotInterface {
         this.BOTTLE_SPIN_BOT_CHECK_CALL();
         break;
       case BottleSpinStage.THREE_BOTTLE_SPIN:
-        // Todo
+        this.resultsSet.action = BOT_SPIN_BOTTLE;
+        // todo speed?
         break;
     }
   }

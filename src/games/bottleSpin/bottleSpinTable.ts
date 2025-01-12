@@ -18,7 +18,16 @@ import {
   getRandomInt,
   sendClientMessage, stringToAsciiCardsArray
 } from '../../utils';
-import {BOT_CALL, BOT_CHECK, BOT_FOLD, BOT_RAISE, BOT_REMOVE, NEW_BOT_EVENT_KEY, PlayerActions} from '../../constants';
+import {
+  BOT_CALL,
+  BOT_CHECK,
+  BOT_FOLD,
+  BOT_RAISE,
+  BOT_REMOVE,
+  BOT_SPIN_BOTTLE,
+  NEW_BOT_EVENT_KEY,
+  PlayerActions
+} from '../../constants';
 import EventEmitter from 'events';
 import {BottleSpinBot} from './bottleSpinBot';
 import {Hand} from "pokersolver";
@@ -920,9 +929,12 @@ export class BottleSpinTable {
           this.playerFold(playerId);
           this.removeBotFromTable(currentPlayerTurn);
           break;
-        default:
-          this.playerCheck(playerId);
+        case BOT_SPIN_BOTTLE:
+          // todo
           break;
+        // default:
+        //   this.playerCheck(playerId);
+        //   break;
       }
       this.sendStatusUpdate();
 
