@@ -285,3 +285,8 @@ export interface UserTableInterface {
   afterRoundCountdown: number;
   discardAndDrawTimeout: number;
 }
+
+export interface PlayerPositionInterface {
+  x: number;
+  y: number;
+}
