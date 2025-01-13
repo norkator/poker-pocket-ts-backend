@@ -309,6 +309,20 @@ class GameHandler implements GameHandlerInterface {
           }
         }
         break;
+      case 'bottleSpin': {
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        player = players.get(socket);
+        if (player) {
+          if (table && table instanceof BottleSpinTable) {
+            // table.spinBottle(player.playerId);
+            // table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
+        }
+        break;
+      }
       case 'leaveTable': {
         tableId = Number(message.tableId);
         table = tables.get(tableId);
