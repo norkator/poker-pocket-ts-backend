@@ -55,7 +55,8 @@ export type ClientMessageKey =
   | 'rankings'
   | 'getUserTable'
   | 'getUserTables'
-  | 'createUpdateUserTable';
+  | 'createUpdateUserTable'
+  | 'bottleSpin';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
 export type ChatMessage = {
