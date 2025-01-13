@@ -43,6 +43,7 @@ export interface PlayerInterface {
   handValue: number;
   handName: string | null;
   cardsInvolvedOnEvaluation: { value: string; suit: string; }[];
+  position: PlayerPositionInterface;
 
   resetParams(): void;
 
