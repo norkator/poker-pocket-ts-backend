@@ -235,6 +235,7 @@ export class BottleSpinTable {
       logger.info('Game started for table: ' + this.tableName);
       this.resetTableParams();
       this.resetPlayerParameters(); // Reset players (resets dealer param too)
+      this.arrangePlayers(); // Gives players x, y coordinates around circle table
       this.setNextDealerPlayer(); // Get next dealer player
       this.getNextSmallBlindPlayer(); // Get small blind player
       let response = this.getTableParams();
@@ -996,6 +997,29 @@ export class BottleSpinTable {
       ];
       allRecipients.forEach((send) => send());
     }
+  }
+
+  arrangePlayers(): void {
+    if (this.players.length < 2 || this.players.length > 8) {
+      throw new Error("Number of players must be between 2 and 8.");
+    }
+    const angleIncrement = (2 * Math.PI) / this.players.length;
+    for (let i = 0; i < this.players.length; i++) {
+      const angle = i * angleIncrement;
+      const normalizedX = Math.cos(angle);
+      const normalizedY = Math.sin(angle);
+      this.players[i].position = {
+        x: normalizedX,
+        y: normalizedY,
+      }
+    }
+  }
+
+  spinBottle(numPlayers: number): number {
+    // const randomAngle = Math.random() * 2 * Math.PI;
+    // const playerIndex = Math.floor((randomAngle / (2 * Math.PI)) * numPlayers);
+    // return playerIndex;
+    return -1;
   }
 
 }
