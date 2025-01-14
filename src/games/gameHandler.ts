@@ -316,8 +316,8 @@ class GameHandler implements GameHandlerInterface {
         player = players.get(socket);
         if (player) {
           if (table && table instanceof BottleSpinTable) {
-            // table.spinBottle(player.playerId);
-            // table.sendStatusUpdate();
+            table.spinBottle(player.playerId);
+            table.sendStatusUpdate();
           } else {
             logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
           }

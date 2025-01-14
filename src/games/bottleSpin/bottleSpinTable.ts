@@ -933,7 +933,7 @@ export class BottleSpinTable {
           this.removeBotFromTable(currentPlayerTurn);
           break;
         case BOT_SPIN_BOTTLE:
-          // todo
+          this.spinBottle(playerId);
           break;
         // default:
         //   this.playerCheck(playerId);
@@ -1016,11 +1016,14 @@ export class BottleSpinTable {
     }
   }
 
-  spinBottle(numPlayers: number): number {
-    // const randomAngle = Math.random() * 2 * Math.PI;
-    // const playerIndex = Math.floor((randomAngle / (2 * Math.PI)) * numPlayers);
-    // return playerIndex;
-    return -1;
+  spinBottle(playerId: number): void {
+    const player: Player | null = findPlayerById(playerId, this.players, [], []);
+    if (player && playerId === this.current_player_turn) {
+      logger.info(`BS spin bottle from player ${player.playerName}`);
+      // const randomAngle = Math.random() * 2 * Math.PI;
+      // const playerIndex = Math.floor((randomAngle / (2 * Math.PI)) * numPlayers);
+      // return playerIndex;
+    }
   }
 
 }
