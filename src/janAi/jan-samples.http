@@ -1,0 +1,25 @@
+### GET available models
+GET http://localhost:1337/v1/models
+Accept: application/json
+
+### POST completion
+POST http://localhost:1337/v1/chat/completions
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a extremely rude but humorous bot in a poker game. You are part of public chat. Keep answer under 30 characters."
+    },
+    { "role": "user", "content": "Is anyone here?" }
+  ],
+  "model": "llama3.1-8b-instruct",
+  "stream": false,
+  "max_tokens": 2048,
+  "stop": null,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "temperature": 0.7,
+  "top_p": 0.95
+}
