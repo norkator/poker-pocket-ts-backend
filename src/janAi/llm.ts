@@ -1,19 +1,30 @@
 import axios from 'axios';
 import * as dotenv from 'dotenv';
 import {ChatCompletionResponse} from '../interfaces';
+import {Game} from '../types';
 
 dotenv.config();
 
 const model = 'llama3.1-8b-instruct';
-const modelInstruction = 'You are a extremely rude but humorous bot in a poker game. You are part of public chat. Keep answer under 30 characters.';
 
 export async function fetchLLMChatCompletion(
+  game: Game,
+  playerName: string,
+  playerCards: string[],
+  middleCardsStr: string[],
+  msgPlayerName: string,
   userMsg: string,
 ): Promise<string | null> {
+
+  const gameInstruction = `You are a extremely rude but humorous bot in a ${game} table and your name is ${playerName}`;
+  const chatInstructions = `You are part of public chat where user called ${msgPlayerName} sent a message.`;
+  const cardsInstructions = `You have ${playerCards.join(', ')} cards and middle cards ${middleCardsStr.join(', ')} and you use this information for bluffing reasons.`;
+  const limitations = `Keep answer under 40 characters.`
+
   const url = `${process.env.JAN_AI_SERVER_ADDRESS}/v1/chat/completions`;
   const data = {
     messages: [
-      {role: 'system', content: modelInstruction},
+      {role: 'system', content: `${gameInstruction} ${chatInstructions} ${cardsInstructions} ${limitations}`},
       {role: 'user', content: userMsg},
     ],
     model: model,

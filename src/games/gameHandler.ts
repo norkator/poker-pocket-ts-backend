@@ -22,7 +22,7 @@ import {
   getPlayerCount,
   getRandomBotName,
   isPlayerInTable,
-  sendClientNotification,
+  sendClientNotification, sleep,
 } from '../utils';
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
@@ -369,7 +369,7 @@ class GameHandler implements GameHandlerInterface {
           if (table && table instanceof HoldemTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
-            this.createLlmMessage(chatMsg, table);
+            this.createLlmMessage(player.playerName, chatMsg, table);
           } else if (table && table instanceof FiveCardDrawTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
@@ -796,15 +796,22 @@ class GameHandler implements GameHandlerInterface {
 
   /**
    * Testing LLM messages using first bot and response to user message
-   * @param userMsg
-   * @param table
-   * @private
    */
-  private async createLlmMessage(userMsg: string, table: HoldemTable) {
+  private async createLlmMessage(
+    msgPlayerName: string, userMsg: string, table: HoldemTable
+  ) {
     const botPlayer: Player | undefined = findFirstBotPlayer(table.players);
-    if (botPlayer) {
-      const llmMsg: string | null = await fetchLLMChatCompletion(userMsg);
+    if (botPlayer && process.env.JAN_AI_SERVER_ADDRESS) {
+      const llmMsg: string | null = await fetchLLMChatCompletion(
+        table.game,
+        botPlayer.playerName,
+        botPlayer.playerCards,
+        table.middleCards,
+        msgPlayerName,
+        userMsg
+      );
       if (llmMsg) {
+        await sleep(1000);
         table.handleChatMessage(botPlayer.playerId, llmMsg)
       }
     }
