@@ -437,3 +437,5 @@ export function findFirstBotPlayer(players: Player[]): Player | undefined {
   }
   return botPlayer;
 }
+
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

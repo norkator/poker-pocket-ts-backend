@@ -60,7 +60,7 @@ export class HoldemTable implements HoldemTableInterface {
   deckCard: number;
   deckSize: number;
   deckCardsBurned: number;
-  middleCards: any[];
+  middleCards: string[];
   gameStarted: boolean;
   turnTimeOutObj: NodeJS.Timeout | null;
   turnIntervalObj: NodeJS.Timeout | null;
