@@ -426,3 +426,16 @@ export function findTableByDatabaseId(
   }
   return undefined;
 }
+
+export function findFirstBotPlayer(players: Player[]): Player | undefined {
+  if (!players || players.length === 0) {
+    return;
+  }
+  const botPlayer = players.find((player: Player) => player.isBot);
+  if (!botPlayer) {
+    return;
+  }
+  return botPlayer;
+}
+
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

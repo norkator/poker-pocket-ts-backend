@@ -32,7 +32,8 @@ export type ResponseKey =
   | 'createUpdateUserTable'
   | 'invalidTablePassword'
   | 'selectTable'
-  | 'selectSpectateTable';
+  | 'selectSpectateTable'
+  | 'bottleSpin';
 export type ClientMessageKey =
   'getTables' // return playable tables list
   | 'getSpectateTables'
@@ -54,7 +55,8 @@ export type ClientMessageKey =
   | 'rankings'
   | 'getUserTable'
   | 'getUserTables'
-  | 'createUpdateUserTable';
+  | 'createUpdateUserTable'
+  | 'bottleSpin';
 export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
 export type ChatMessage = {

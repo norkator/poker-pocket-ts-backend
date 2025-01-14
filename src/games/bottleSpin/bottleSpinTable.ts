@@ -3,14 +3,32 @@ import {
   PlayerInterface,
   TableInfoInterface, UserTableInterface
 } from '../../interfaces';
-import {Game, PlayerAction} from '../../types';
+import {ChatMessage, Game, PlayerAction} from '../../types';
 import {Player} from '../../player';
 import {gameConfig} from '../../gameConfig';
-import {BottleSpinStage, PlayerState, SocketState} from '../../enums';
+import {
+  BottleSpinStage,
+  PlayerState,
+  SocketState
+} from '../../enums';
 import logger from '../../logger';
-import {sendClientMessage} from '../../utils';
-import {PlayerActions} from '../../constants';
+import {
+  findPlayerById,
+  getRandomInt,
+  sendClientMessage
+} from '../../utils';
+import {
+  BOT_CALL,
+  BOT_CHECK,
+  BOT_FOLD,
+  BOT_RAISE,
+  BOT_REMOVE,
+  BOT_SPIN_BOTTLE,
+  NEW_BOT_EVENT_KEY,
+  PlayerActions
+} from '../../constants';
 import EventEmitter from 'events';
+import {BottleSpinBot} from './bottleSpinBot';
 
 // noinspection DuplicatedCode
 export class BottleSpinTable {
@@ -36,6 +54,7 @@ export class BottleSpinTable {
   gameStarted: boolean;
   turnTimeOutObj: NodeJS.Timeout | null;
   turnIntervalObj: NodeJS.Timeout | null;
+  afterRoundCountDown: number;
   updateJsonTemp: any | null;
   current_player_turn: number;
   currentTurnText: string;
@@ -52,6 +71,9 @@ export class BottleSpinTable {
   bigBlindPlayerHadTurn: boolean;
   lastWinnerPlayers: any[];
   collectingPot: boolean;
+  bottleSpinInitiated: boolean;
+  chatMessages: ChatMessage[] = [];
+  chatMaxSize: number = 50;
 
   constructor(
     eventEmitter: EventEmitter,
@@ -63,12 +85,13 @@ export class BottleSpinTable {
     this.tableId = tableId;
     this.tableDatabaseId = -1;
     this.tablePassword = '';
-    this.tableMinBet = gameConfig.games.fiveCardDraw.games[gameType].minBet;
+    this.tableMinBet = gameConfig.games.bottleSpin.games[gameType].minBet;
     this.tableName = 'Table ' + tableId;
-    this.maxSeats = gameConfig.games.fiveCardDraw.games[gameType].max_seats;
-    this.minPlayers = gameConfig.games.fiveCardDraw.games[gameType].minPlayers;
-    this.turnTimeOut = gameConfig.games.fiveCardDraw.games[gameType].turnCountdown * 1000;
+    this.maxSeats = gameConfig.games.bottleSpin.games[gameType].max_seats;
+    this.minPlayers = gameConfig.games.bottleSpin.games[gameType].minPlayers;
+    this.turnTimeOut = gameConfig.games.bottleSpin.games[gameType].turnCountdown * 1000;
     this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND;
+    this.afterRoundCountDown = gameConfig.games.bottleSpin.games[gameType].afterRoundCountdown * 1000;
     this.totalPot = 0;
     this.bots = [];
     this.players = [];
@@ -95,10 +118,12 @@ export class BottleSpinTable {
     this.bigBlindPlayerHadTurn = false;
     this.lastWinnerPlayers = [];
     this.collectingPot = false;
+    this.bottleSpinInitiated = false;
   }
 
   resetTableParams(): void {
-    this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND;
+    // this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND; // todo revert to this
+    this.currentStage = BottleSpinStage.THREE_BOTTLE_SPIN;
     this.totalPot = 0;
     this.currentHighestBet = 0;
     this.updateJsonTemp = null;
@@ -110,6 +135,7 @@ export class BottleSpinTable {
     this.bigBlindGiven = false;
     this.bigBlindPlayerHadTurn = false;
     this.collectingPot = false;
+    this.bottleSpinInitiated = false;
   }
 
   setTableInfo(
@@ -124,9 +150,9 @@ export class BottleSpinTable {
     if (table.minBet && table.minBet > 0) {
       this.tableMinBet = Number(table.minBet);
     }
-    // if (table.afterRoundCountdown && table.afterRoundCountdown > 0) {
-    //   this.afterRoundCountDown = Number(table.afterRoundCountdown) * 1000;
-    // }
+    if (table.afterRoundCountdown && table.afterRoundCountdown > 0) {
+      this.afterRoundCountDown = Number(table.afterRoundCountdown) * 1000;
+    }
     logger.debug(`Table info updated for table ${this.tableId} set name to ${this.tableName}`);
   }
 
@@ -209,6 +235,7 @@ export class BottleSpinTable {
       logger.info('Game started for table: ' + this.tableName);
       this.resetTableParams();
       this.resetPlayerParameters(); // Reset players (resets dealer param too)
+      this.arrangePlayers(); // Gives players x, y coordinates around circle table
       this.setNextDealerPlayer(); // Get next dealer player
       this.getNextSmallBlindPlayer(); // Get small blind player
       let response = this.getTableParams();
@@ -242,6 +269,7 @@ export class BottleSpinTable {
       playerName: player.playerName,
       playerMoney: player.playerMoney,
       isDealer: player.isDealer,
+      position: player.position,
     }));
     return response;
   }
@@ -279,7 +307,14 @@ export class BottleSpinTable {
         break;
       case BottleSpinStage.THREE_BOTTLE_SPIN: // In this game, 'dealer' is spinning bottle
         logger.debug('BS stage THREE_BOTTLE_SPIN');
-        // Todo
+        this.currentStatusText = 'Bottle Spin';
+        this.currentTurnText = '';
+        this.isCallSituation = false; // table related reset
+        this.resetPlayerStates();
+        this.resetRoundParameters();
+        this.current_player_turn = this.dealerPlayerArrayIndex;
+        this.currentHighestBet = 0;
+        this.bottleSpin(this.current_player_turn);
         break;
       case BottleSpinStage.FOUR_RESULTS:
         logger.debug('BS stage FOUR_RESULTS');
@@ -329,21 +364,37 @@ export class BottleSpinTable {
   }
 
   roundResultsEnd(): void {
+    let winnerPlayer: number = -1;
+    let l = this.players.length;
+    for (let i = 0; i < l; i++) {
+      if (!this.players[i].isFold) {
+        // todo implement
+      }
+    }
+    let winnerName = '';
+
+    logger.info(`${this.tableName} winner is ${winnerName}`);
+    this.currentStatusText = `${winnerName}`;
+
+    // this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
+    this.lastWinnerPlayers = [winnerPlayer]; // Take new reference of winner players
+    this.totalPot = 0;
+
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.fiveCardDraw.games[this.gameType].afterRoundCountdown * 1000);
+    }, this.afterRoundCountDown);
   }
 
   roundResultsMiddleOfTheGame(): void {
     setTimeout(() => {
       this.gameStarted = false;
       this.triggerNewGame();
-    }, gameConfig.games.fiveCardDraw.games[this.gameType].afterRoundCountdown * 1000);
+    }, this.afterRoundCountDown);
   }
 
   smallAndBigBlinds(currentPlayerTurn: number): void {
-    this.bettingRound(currentPlayerTurn); // todo implement correct process later
+    this.bettingRound(currentPlayerTurn);
   }
 
   bettingRound(currentPlayerTurn: number): void {
@@ -370,10 +421,9 @@ export class BottleSpinTable {
             this.players[noRoundPlayedPlayer].playerTimeLeft = this.turnTimeOut;
             this.currentTurnText = '' + this.players[noRoundPlayedPlayer].playerName + ' Turn';
             this.sendStatusUpdate();
-
-            // if (this.players[noRoundPlayedPlayer].isBot) {
-            //   this.botActionHandler(noRoundPlayedPlayer);
-            // }
+            if (this.players[noRoundPlayedPlayer].isBot) {
+              this.botActionHandler(noRoundPlayedPlayer);
+            }
             this.bettingRoundTimer(noRoundPlayedPlayer);
           }
         } else {
@@ -397,9 +447,9 @@ export class BottleSpinTable {
               this.currentTurnText = '' + this.players[currentPlayerTurn].playerName + ' Turn';
               this.sendStatusUpdate();
 
-              // if (this.players[currentPlayerTurn].isBot) {
-              //   this.botActionHandler(currentPlayerTurn);
-              // }
+              if (this.players[currentPlayerTurn].isBot) {
+                this.botActionHandler(currentPlayerTurn);
+              }
               this.bettingRoundTimer(currentPlayerTurn);
             } else {
               this.current_player_turn = this.current_player_turn + 1;
@@ -572,6 +622,62 @@ export class BottleSpinTable {
       }
     }
   }
+
+
+  bottleSpin(currentPlayerTurn: number): void {
+    if (this.hasActivePlayers()) { // Checks that game has active players (not fold ones)
+      if (!this.bottleSpinInitiated) {
+        for (let i = 0; i < this.players.length; i++) {
+          if (i === currentPlayerTurn) {
+            this.players[i].isPlayerTurn = true;
+            this.players[i].playerTimeLeft = this.turnTimeOut;
+          } else {
+            this.players[i].isPlayerTurn = false;
+          }
+        }
+        const response: ClientResponse = {
+          key: 'bottleSpin', data: {
+            timeLeft: this.turnTimeOut,
+            playerId: this.players[currentPlayerTurn].playerId,
+          }
+        };
+        this.players.forEach((player, index) => {
+          if (player.isBot) {
+            this.botActionHandler(index);
+          } else {
+            if (!player.isFold) {
+              this.sendWebSocketData(index, response);
+            }
+          }
+        });
+        this.bottleSpinInitiated = true;
+        this.sendStatusUpdate();
+        this.bottleSpinTimer();
+      } else {
+        // for (const player of this.players) {
+        //   if (player.playerState !== PlayerState.DISCARD_AND_DRAW) {
+        //     player.setStateFold();
+        //   }
+        // }
+        this.currentStage = BottleSpinStage.FOUR_RESULTS;
+        this.sendStatusUpdate();
+        setTimeout(() => {
+          this.staging();
+        }, 1000);
+      }
+    } else {
+      this.roundResultsMiddleOfTheGame();
+    }
+  }
+
+  bottleSpinTimer(): void {
+    this.turnTimeOutObj = setTimeout(() => {
+      this.clearTimers();
+      this.bottleSpin(this.current_player_turn);
+      logger.debug('BS bottleSpinTimer timeout reached');
+    }, this.turnTimeOut);
+  }
+
 
   sendWebSocketData(playerIndex: number, data: any): void {
     const player = this.players[playerIndex];
@@ -770,23 +876,154 @@ export class BottleSpinTable {
 
   verifyPlayersBets(): number {
     let highestBet = 0;
-    let lowestBetPlayerIndex = -1;
-    for (let i = 0; i < this.players.length; i++) {
-      const player = this.players[i];
-      if (player != null && !player.isFold) {
-        // Find the highest bet
-        if (player.totalBet > highestBet) {
-          highestBet = player.totalBet;
-        }
-        if (!player.isAllIn && player.totalBet < highestBet) {
-          lowestBetPlayerIndex = i;
+    for (let i = 0; i < this.players.length; i++) { // Get the highest bet
+      if (this.players[i] != null) {
+        if (!this.players[i].isFold) {
+          if (highestBet === 0) {
+            highestBet = this.players[i].totalBet;
+          }
+          if (this.players[i].totalBet > highestBet) {
+            highestBet = this.players[i].totalBet;
+          }
         }
       }
     }
-    if (lowestBetPlayerIndex !== -1) {
-      return lowestBetPlayerIndex;
+    for (let i = 0; i < this.players.length; i++) { // Find someone with lower bet
+      if (this.players[i] != null) {
+        if (!this.players[i].isFold && !this.players[i].isAllIn) {
+          if (this.players[i].totalBet < highestBet) {
+            return i;
+          }
+        }
+      }
     }
     return !this.smallBlindGiven || !this.bigBlindGiven ? 0 : -1;
+  }
+
+  botActionHandler(currentPlayerTurn: number): void {
+    let checkAmount = (this.currentHighestBet === 0 ? this.tableMinBet :
+      (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
+    let playerId = this.players[currentPlayerTurn].playerId;
+    let botObj = new BottleSpinBot(
+      this.players[currentPlayerTurn].playerName,
+      this.players[currentPlayerTurn].playerMoney,
+      this.isCallSituation,
+      this.tableMinBet,
+      checkAmount,
+      this.currentStage,
+      this.players[currentPlayerTurn].totalBet
+    );
+    let resultSet = botObj.performAction();
+    let tm = setTimeout(() => {
+      switch (resultSet.action) {
+        case BOT_FOLD:
+          this.playerFold(playerId);
+          break;
+        case BOT_CHECK:
+          this.playerCheck(playerId);
+          break;
+        case BOT_CALL:
+          this.playerCheck(playerId);
+          break;
+        case BOT_RAISE:
+          this.playerRaise(playerId, resultSet.amount);
+          break;
+        case BOT_REMOVE:
+          this.playerFold(playerId);
+          this.removeBotFromTable(currentPlayerTurn);
+          break;
+        case BOT_SPIN_BOTTLE:
+          this.spinBottle(playerId);
+          break;
+        // default:
+        //   this.playerCheck(playerId);
+        //   break;
+      }
+      this.sendStatusUpdate();
+
+      clearTimeout(tm);
+    }, gameConfig.games.bottleSpin.bot.turnTimes[getRandomInt(1, 4)]);
+  }
+
+  removeBotFromTable(currentPlayerTurn: number): void {
+    this.players[currentPlayerTurn].socket = null;
+    this.players[currentPlayerTurn].selectedTableId = -1;
+    if (this.players[currentPlayerTurn].isBot) {
+      this.eventEmitter.emit(NEW_BOT_EVENT_KEY, this.tableId, gameConfig.games.bottleSpin.startMoney);
+    }
+  }
+
+  getTableBotCount(): number {
+    let l = this.players.length;
+    let c = 0;
+    for (let i = 0; i < l; i++) {
+      if (this.players[i].isBot) {
+        c++;
+      }
+    }
+    return c;
+  }
+
+  getChatMessages(playerId: number): void {
+    const player: Player | null = findPlayerById(playerId, this.players, this.playersToAppend, this.spectators);
+    if (player && player.socket) {
+      const response: ClientResponse = {
+        key: 'getChatMessages', data: {
+          messages: [...this.chatMessages],
+        }
+      };
+      if (player.socket.readyState === SocketState.OPEN) {
+        player.socket.send(JSON.stringify(response));
+      }
+    }
+  }
+
+  handleChatMessage(playerId: number, message: string): void {
+    const player: Player | null = findPlayerById(playerId, this.players, this.playersToAppend, this.spectators);
+    if (player) {
+      if (this.chatMessages.length >= this.chatMaxSize) {
+        this.chatMessages.shift();
+      }
+      const newMessage: ChatMessage = {playerName: player.playerName, message};
+      this.chatMessages.push(newMessage);
+      const response: ClientResponse = {key: 'chatMessage', data: {chatMessage: newMessage}};
+      const allRecipients = [
+        ...this.players.map((_, i) => () => this.sendWebSocketData(i, response)),
+        ...this.playersToAppend.map((_, i) =>
+          () => this.sendWaitingPlayerWebSocketData(i, response)
+        ),
+        ...this.spectators.map((_, i) =>
+          () => this.sendSpectatorWebSocketData(i, response)
+        ),
+      ];
+      allRecipients.forEach((send) => send());
+    }
+  }
+
+  arrangePlayers(): void {
+    if (this.players.length < 2 || this.players.length > 8) {
+      throw new Error("Number of players must be between 2 and 8.");
+    }
+    const angleIncrement = (2 * Math.PI) / this.players.length;
+    for (let i = 0; i < this.players.length; i++) {
+      const angle = i * angleIncrement;
+      const normalizedX = Math.cos(angle);
+      const normalizedY = Math.sin(angle);
+      this.players[i].position = {
+        x: normalizedX,
+        y: normalizedY,
+      }
+    }
+  }
+
+  spinBottle(playerId: number): void {
+    const player: Player | null = findPlayerById(playerId, this.players, [], []);
+    if (player && playerId === this.current_player_turn) {
+      logger.info(`BS spin bottle from player ${player.playerName}`);
+      // const randomAngle = Math.random() * 2 * Math.PI;
+      // const playerIndex = Math.floor((randomAngle / (2 * Math.PI)) * numPlayers);
+      // return playerIndex;
+    }
   }
 
 }

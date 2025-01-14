@@ -60,7 +60,7 @@ export class HoldemTable implements HoldemTableInterface {
   deckCard: number;
   deckSize: number;
   deckCardsBurned: number;
-  middleCards: any[];
+  middleCards: string[];
   gameStarted: boolean;
   turnTimeOutObj: NodeJS.Timeout | null;
   turnIntervalObj: NodeJS.Timeout | null;
@@ -287,6 +287,7 @@ export class HoldemTable implements HoldemTableInterface {
       playerName: player.playerName,
       playerMoney: player.playerMoney,
       isDealer: player.isDealer,
+      position: player.position,
     }));
     return response;
   }

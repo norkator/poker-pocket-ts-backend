@@ -286,6 +286,7 @@ export class FiveCardDrawTable {
       playerName: player.playerName,
       playerMoney: player.playerMoney,
       isDealer: player.isDealer,
+      position: player.position,
     }));
     return response;
   }
@@ -552,7 +553,7 @@ export class FiveCardDrawTable {
   }
 
   smallAndBigBlinds(currentPlayerTurn: number): void {
-    this.bettingRound(currentPlayerTurn); // todo implement correct process later
+    this.bettingRound(currentPlayerTurn);
   }
 
   bettingRound(currentPlayerTurn: number): void {

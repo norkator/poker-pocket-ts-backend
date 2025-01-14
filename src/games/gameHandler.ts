@@ -16,20 +16,22 @@ import logger from '../logger';
 import {gameConfig} from '../gameConfig';
 import {
   authenticate,
-  createMockWebSocket, findTableByDatabaseId,
+  createMockWebSocket, findFirstBotPlayer, findTableByDatabaseId,
   generatePlayerName,
   generateToken,
   getPlayerCount,
   getRandomBotName,
   isPlayerInTable,
-  sendClientNotification,
+  sendClientNotification, sleep,
 } from '../utils';
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
 import EventEmitter from 'events';
 import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
+import {HoldemBot} from './holdem/holdemBot';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
+import {BottleSpinBot} from './bottleSpin/bottleSpinBot';
 import {
   createUpdateUserTable, getAllUsersTables,
   getDailyAverageStats,
@@ -37,8 +39,8 @@ import {
   getUserTable,
   getUserTables
 } from '../database/queries';
-import {HoldemBot} from './holdem/holdemBot';
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
+import {fetchLLMChatCompletion} from '../janAi/llm';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -66,15 +68,16 @@ class GameHandler implements GameHandlerInterface {
       const startMoney = gameConfig.games.holdEm.startMoney;
       this.createGameTable(roomNumber, FiveCardDrawTable, botCount, startMoney);
     });
-    // Todo implement all table creation logic behind same function
-    // const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
-    // Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
-    //   const roomNumber = holdEmCount + fiveCardDrawCount + index;
-    //   this.createGameTable(roomNumber);
-    // });
+    const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
+    Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
+      const roomNumber = holdEmCount + fiveCardDrawCount + index;
+      const botCount = gameConfig.games.bottleSpin.bot.botCounts[index];
+      const startMoney = gameConfig.games.bottleSpin.startMoney;
+      this.createGameTable(roomNumber, BottleSpinTable, botCount, startMoney);
+    });
     const allUsersTables: UserTableInterface[] = await getAllUsersTables();
     allUsersTables.forEach((table: UserTableInterface, index: number) => {
-      const roomNumber = holdEmCount + fiveCardDrawCount + index;
+      const roomNumber = holdEmCount + fiveCardDrawCount + bottleSpinCount + index;
       this.createUserTable(table, roomNumber);
     });
   }
@@ -240,6 +243,9 @@ class GameHandler implements GameHandlerInterface {
           } else if (table instanceof FiveCardDrawTable) {
             table.playerFold(player.playerId);
             table.sendStatusUpdate();
+          } else if (table instanceof BottleSpinTable) {
+            table.playerFold(player.playerId);
+            table.sendStatusUpdate();
           } else {
             logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
           }
@@ -254,6 +260,9 @@ class GameHandler implements GameHandlerInterface {
             table.playerCheck(player.playerId);
             table.sendStatusUpdate();
           } else if (table instanceof FiveCardDrawTable) {
+            table.playerCheck(player.playerId);
+            table.sendStatusUpdate();
+          } else if (table instanceof BottleSpinTable) {
             table.playerCheck(player.playerId);
             table.sendStatusUpdate();
           } else {
@@ -272,6 +281,9 @@ class GameHandler implements GameHandlerInterface {
           } else if (table instanceof FiveCardDrawTable) {
             table.playerRaise(player.playerId, Number(message.amount));
             table.sendStatusUpdate();
+          } else if (table instanceof BottleSpinTable) {
+            table.playerRaise(player.playerId, Number(message.amount));
+            table.sendStatusUpdate();
           } else {
             logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
           }
@@ -288,19 +300,37 @@ class GameHandler implements GameHandlerInterface {
         table = tables.get(tableId);
         player = players.get(socket);
         cardsToDiscard = message.cardsToDiscard;
-        if (table && player && table instanceof FiveCardDrawTable) {
-          logger.info(`Player ${player.playerId} discarded fcd cards ${message.cardsToDiscard}`);
-          table.playerDiscardAndDraw(player.playerId, cardsToDiscard);
-          table.sendStatusUpdate();
+        if (player) {
+          if (table && table instanceof FiveCardDrawTable) {
+            logger.info(`Player ${player.playerId} discarded fcd cards ${message.cardsToDiscard}`);
+            table.playerDiscardAndDraw(player.playerId, cardsToDiscard);
+            table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
         }
         break;
+      case 'bottleSpin': {
+        tableId = Number(message.tableId);
+        table = tables.get(tableId);
+        player = players.get(socket);
+        if (player) {
+          if (table && table instanceof BottleSpinTable) {
+            table.spinBottle(player.playerId);
+            table.sendStatusUpdate();
+          } else {
+            logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
+          }
+        }
+        break;
+      }
       case 'leaveTable': {
         tableId = Number(message.tableId);
         table = tables.get(tableId);
         player = players.get(socket);
         cardsToDiscard = message.cardsToDiscard;
         if (table && player) {
-          if (table instanceof HoldemTable) {
+          if (table instanceof HoldemTable || table instanceof BottleSpinTable) {
             const spectatorIndex = table.spectators.indexOf(player);
             const playersToAppendIndex = table.playersToAppend.indexOf(player);
             if (spectatorIndex !== -1) {
@@ -339,7 +369,11 @@ class GameHandler implements GameHandlerInterface {
           if (table && table instanceof HoldemTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
+            this.createLlmMessage(player.playerName, chatMsg, table);
           } else if (table && table instanceof FiveCardDrawTable) {
+            logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
+            table.handleChatMessage(player.playerId, chatMsg)
+          } else if (table && table instanceof BottleSpinTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
           } else if (tableId === -1) {
@@ -357,6 +391,8 @@ class GameHandler implements GameHandlerInterface {
           if (table && table instanceof HoldemTable) {
             table.getChatMessages(player.playerId);
           } else if (table && table instanceof FiveCardDrawTable) {
+            table.getChatMessages(player.playerId);
+          } else if (table && table instanceof BottleSpinTable) {
             table.getChatMessages(player.playerId);
           } else if (tableId === -1) {
             getPublicChatMessages(player);
@@ -600,6 +636,10 @@ class GameHandler implements GameHandlerInterface {
         fiveCardDrawInstance.setTableInfo(table);
         break;
       case 'BOTTLE_SPIN':
+        const bottleSpinInstance = this.createGameTable(
+          roomNumber, BottleSpinTable, table.botCount, gameConfig.games.bottleSpin.startMoney
+        ) as BottleSpinTable;
+        bottleSpinInstance.setTableInfo(table);
         break;
     }
   }
@@ -727,12 +767,55 @@ class GameHandler implements GameHandlerInterface {
         };
         logger.info(`🤖 Sending player ${player.playerId} auto play action ${action.action}`);
         player.socket?.send(JSON.stringify(responseArray));
+      } else if (table instanceof BottleSpinTable) {
+        const checkAmount = table.currentHighestBet === 0 ?
+          table.tableMinBet : (table.currentHighestBet - player.totalBet);
+        const autoplay = new BottleSpinBot(
+          player.playerName,
+          player.playerMoney,
+          table.isCallSituation,
+          table.tableMinBet,
+          checkAmount,
+          table.currentStage,
+          player.totalBet
+        );
+        const action = autoplay.performAction();
+        const responseArray: ClientResponse = {
+          key: 'autoPlayActionResult', data: {
+            action: action.action,
+            amount: action.amount,
+          }
+        };
+        logger.info(`🤖 Sending player ${player.playerId} auto play action ${action.action}`);
+        player.socket?.send(JSON.stringify(responseArray));
       } else {
         logger.warn('No auto play handler defined for selected game');
       }
     }
   }
 
+  /**
+   * Testing LLM messages using first bot and response to user message
+   */
+  private async createLlmMessage(
+    msgPlayerName: string, userMsg: string, table: HoldemTable
+  ) {
+    const botPlayer: Player | undefined = findFirstBotPlayer(table.players);
+    if (botPlayer && process.env.JAN_AI_SERVER_ADDRESS) {
+      const llmMsg: string | null = await fetchLLMChatCompletion(
+        table.game,
+        botPlayer.playerName,
+        botPlayer.playerCards,
+        table.middleCards,
+        msgPlayerName,
+        userMsg
+      );
+      if (llmMsg) {
+        await sleep(1000);
+        table.handleChatMessage(botPlayer.playerId, llmMsg)
+      }
+    }
+  }
 
 }
 

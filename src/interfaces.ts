@@ -43,6 +43,7 @@ export interface PlayerInterface {
   handValue: number;
   handName: string | null;
   cardsInvolvedOnEvaluation: { value: string; suit: string; }[];
+  position: PlayerPositionInterface;
 
   resetParams(): void;
 
@@ -284,4 +285,30 @@ export interface UserTableInterface {
   minBet: number;
   afterRoundCountdown: number;
   discardAndDrawTimeout: number;
+}
+
+export interface PlayerPositionInterface {
+  x: number;
+  y: number;
+}
+
+export interface ChatCompletionResponse {
+  choices: {
+    finish_reason: string;
+    index: number;
+    message: {
+      content: string;
+      role: string;
+    };
+  }[];
+  created: number;
+  id: string;
+  model: string;
+  object: string;
+  system_fingerprint: string;
+  usage: {
+    completion_tokens: number;
+    prompt_tokens: number;
+    total_tokens: number;
+  };
 }

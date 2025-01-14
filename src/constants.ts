@@ -15,3 +15,4 @@ export const BOT_CALL = 'bot_call';
 export const BOT_RAISE = 'bot_raise';
 export const BOT_REMOVE = 'remove_bot';
 export const BOT_DISCARD_AND_DRAW = 'bot_discard_and_draw';
+export const BOT_SPIN_BOTTLE = 'bot_spin_bottle';

@@ -1,4 +1,4 @@
-import {PlayerInterface} from './interfaces';
+import {PlayerInterface, PlayerPositionInterface} from './interfaces';
 import {PlayerState} from './enums';
 import WebSocket from 'ws';
 
@@ -24,6 +24,7 @@ class Player implements PlayerInterface {
   handValue: number = 0;
   handName: string | null = null;
   cardsInvolvedOnEvaluation: { value: string; suit: string; }[] = [];
+  position: PlayerPositionInterface = {x: 0, y: 0};
 
   constructor(
     socket: WebSocket,
@@ -50,6 +51,7 @@ class Player implements PlayerInterface {
     this.handName = '';
     this.cardsInvolvedOnEvaluation = [];
     this.isDealer = false;
+    this.position = {x: 0, y: 0};
   }
 
   checkFunds(tableMinBet: number): void {
