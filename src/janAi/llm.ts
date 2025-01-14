@@ -46,7 +46,6 @@ export async function fetchLLMChatCompletion(
     const {choices, usage} = response.data;
     return choices.length > 0 ? choices[0].message.content : null;
   } catch (error) {
-    console.error('Error fetching chat completion:', error);
     return null;
   }
 }
