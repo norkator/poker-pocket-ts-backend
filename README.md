@@ -47,7 +47,9 @@ DB_PASS=<value>
 
 #### Optional
 
-Tweak `./src/gameConfig.ts` file for initial table configurations.
+* Tweak `./src/gameConfig.ts` file for initial table configurations.
+* Add env var `JAN_AI_SERVER_ADDRESS=<value>` if you want bots to go crazy.
+  * Sample value `http://localhost:1337`
 
 ### Note
 
