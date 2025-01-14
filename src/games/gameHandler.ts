@@ -16,7 +16,7 @@ import logger from '../logger';
 import {gameConfig} from '../gameConfig';
 import {
   authenticate,
-  createMockWebSocket, findTableByDatabaseId,
+  createMockWebSocket, findFirstBotPlayer, findTableByDatabaseId,
   generatePlayerName,
   generateToken,
   getPlayerCount,
@@ -40,6 +40,7 @@ import {
   getUserTables
 } from '../database/queries';
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
+import {fetchLLMChatCompletion} from '../janAi/llm';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -368,6 +369,7 @@ class GameHandler implements GameHandlerInterface {
           if (table && table instanceof HoldemTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
+            this.createLlmMessage(chatMsg, table);
           } else if (table && table instanceof FiveCardDrawTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
@@ -792,6 +794,21 @@ class GameHandler implements GameHandlerInterface {
     }
   }
 
+  /**
+   * Testing LLM messages using first bot and response to user message
+   * @param userMsg
+   * @param table
+   * @private
+   */
+  private async createLlmMessage(userMsg: string, table: HoldemTable) {
+    const botPlayer: Player | undefined = findFirstBotPlayer(table.players);
+    if (botPlayer) {
+      const llmMsg: string | null = await fetchLLMChatCompletion(userMsg);
+      if (llmMsg) {
+        table.handleChatMessage(botPlayer.playerId, llmMsg)
+      }
+    }
+  }
 
 }
 
