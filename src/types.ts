@@ -33,7 +33,8 @@ export type ResponseKey =
   | 'invalidTablePassword'
   | 'selectTable'
   | 'selectSpectateTable'
-  | 'bottleSpin';
+  | 'bottleSpin'
+  | 'spinBottle';
 export type ClientMessageKey =
   'getTables' // return playable tables list
   | 'getSpectateTables'
