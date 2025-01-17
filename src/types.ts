@@ -63,3 +63,4 @@ export type ChatMessage = {
   playerName: string;
   message: string;
 };
+export type BotType = 'NORMAL' | 'AI';

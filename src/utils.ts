@@ -427,11 +427,11 @@ export function findTableByDatabaseId(
   return undefined;
 }
 
-export function findFirstBotPlayer(players: Player[]): Player | undefined {
+export function findFirstAiBotPlayer(players: Player[]): Player | undefined {
   if (!players || players.length === 0) {
     return;
   }
-  const botPlayer = players.find((player: Player) => player.isBot);
+  const botPlayer = players.find((player: Player) => player.isBot && player.botType === 'AI');
   if (!botPlayer) {
     return;
   }

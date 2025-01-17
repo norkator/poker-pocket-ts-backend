@@ -16,13 +16,14 @@ import logger from '../logger';
 import {gameConfig} from '../gameConfig';
 import {
   authenticate,
-  createMockWebSocket, findFirstBotPlayer, findTableByDatabaseId,
+  createMockWebSocket,
+  findTableByDatabaseId,
   generatePlayerName,
   generateToken,
   getPlayerCount,
   getRandomBotName,
   isPlayerInTable,
-  sendClientNotification, sleep,
+  sendClientNotification,
 } from '../utils';
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
@@ -40,7 +41,6 @@ import {
   getUserTables
 } from '../database/queries';
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
-import {fetchLLMChatCompletion} from '../janAi/llm';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -369,7 +369,6 @@ class GameHandler implements GameHandlerInterface {
           if (table && table instanceof HoldemTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
-            this.createLlmMessage(player.playerName, chatMsg, table);
           } else if (table && table instanceof FiveCardDrawTable) {
             logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
             table.handleChatMessage(player.playerId, chatMsg)
@@ -790,29 +789,6 @@ class GameHandler implements GameHandlerInterface {
         player.socket?.send(JSON.stringify(responseArray));
       } else {
         logger.warn('No auto play handler defined for selected game');
-      }
-    }
-  }
-
-  /**
-   * Testing LLM messages using first bot and response to user message
-   */
-  private async createLlmMessage(
-    msgPlayerName: string, userMsg: string, table: HoldemTable
-  ) {
-    const botPlayer: Player | undefined = findFirstBotPlayer(table.players);
-    if (botPlayer && process.env.JAN_AI_SERVER_ADDRESS) {
-      const llmMsg: string | null = await fetchLLMChatCompletion(
-        table.game,
-        botPlayer.playerName,
-        botPlayer.playerCards,
-        table.middleCards,
-        msgPlayerName,
-        userMsg
-      );
-      if (llmMsg) {
-        await sleep(1000);
-        table.handleChatMessage(botPlayer.playerId, llmMsg)
       }
     }
   }

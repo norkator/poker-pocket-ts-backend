@@ -8,12 +8,15 @@ import {
 } from '../../interfaces';
 import logger from '../../logger';
 import {Poker} from '../../poker';
-import {ChatMessage, Game, PlayerAction} from '../../types';
+import {BotType, ChatMessage, Game, PlayerAction} from '../../types';
 import {
-  asciiToStringCardsArray, containsValue,
+  asciiToStringCardsArray,
+  containsValue,
+  findFirstAiBotPlayer,
   findPlayerById,
   getRandomInt,
   sendClientMessage,
+  sleep,
   stringToAsciiCardsArray
 } from '../../utils';
 import {
@@ -32,6 +35,7 @@ import {Player} from '../../player';
 import EventEmitter from 'events';
 import {User} from '../../database/models/user';
 import {Statistic} from '../../database/models/statistic';
+import {fetchLLMChatCompletion} from '../../janAi/llm';
 
 // noinspection DuplicatedCode
 export class HoldemTable implements HoldemTableInterface {
@@ -1159,6 +1163,7 @@ export class HoldemTable implements HoldemTableInterface {
   }
 
   botActionHandler(currentPlayerTurn: number): void {
+    const botType: BotType = this.players[currentPlayerTurn].botType;
     let check_amount = (this.currentHighestBet === 0 ? this.tableMinBet :
       (this.currentHighestBet - this.players[currentPlayerTurn].totalBet));
     let playerId = this.players[currentPlayerTurn].playerId;
@@ -1173,33 +1178,37 @@ export class HoldemTable implements HoldemTableInterface {
       this.currentStage,
       this.players[currentPlayerTurn].totalBet
     );
-    let resultSet = botObj.performAction();
-    let tm = setTimeout(() => {
-      switch (resultSet.action) {
-        case BOT_FOLD:
-          this.playerFold(playerId);
-          break;
-        case BOT_CHECK:
-          this.playerCheck(playerId);
-          break;
-        case BOT_CALL:
-          this.playerCheck(playerId);
-          break;
-        case BOT_RAISE:
-          this.playerRaise(playerId, resultSet.amount);
-          break;
-        case BOT_REMOVE: // HoldemBot run out of money
-          this.playerFold(playerId);
-          this.removeBotFromTable(currentPlayerTurn);
-          break;
-        default:
-          this.playerCheck(playerId);
-          break;
-      }
-      this.sendStatusUpdate();
+    if (botType === 'NORMAL') {
+      let resultSet = botObj.performAction();
+      let tm = setTimeout(() => {
+        switch (resultSet.action) {
+          case BOT_FOLD:
+            this.playerFold(playerId);
+            break;
+          case BOT_CHECK:
+            this.playerCheck(playerId);
+            break;
+          case BOT_CALL:
+            this.playerCheck(playerId);
+            break;
+          case BOT_RAISE:
+            this.playerRaise(playerId, resultSet.amount);
+            break;
+          case BOT_REMOVE: // HoldemBot run out of money
+            this.playerFold(playerId);
+            this.removeBotFromTable(currentPlayerTurn);
+            break;
+          default:
+            this.playerCheck(playerId);
+            break;
+        }
+        this.sendStatusUpdate();
 
-      clearTimeout(tm);
-    }, gameConfig.games.holdEm.bot.turnTimes[getRandomInt(1, 4)]);
+        clearTimeout(tm);
+      }, gameConfig.games.holdEm.bot.turnTimes[getRandomInt(1, 4)]);
+    } else if (botType === 'AI') {
+      // todo
+    }
   }
 
   removeBotFromTable(currentPlayerTurn: number): void {
@@ -1254,6 +1263,32 @@ export class HoldemTable implements HoldemTableInterface {
         ),
       ];
       allRecipients.forEach((send) => send());
+
+      const aiBotPlayer: Player | undefined = findFirstAiBotPlayer(this.players);
+      if (!player.isBot && aiBotPlayer) {
+        // noinspection JSIgnoredPromiseFromCall
+        this.createLlmMessage(aiBotPlayer, player.playerName, message);
+      }
+    }
+  }
+
+  private async createLlmMessage(
+    aiBotPlayer: Player, msgPlayerName: string, userMsg: string
+  ) {
+
+    if (aiBotPlayer && process.env.JAN_AI_SERVER_ADDRESS) {
+      const llmMsg: string | null = await fetchLLMChatCompletion(
+        this.game,
+        aiBotPlayer.playerName,
+        aiBotPlayer.playerCards,
+        this.middleCards,
+        msgPlayerName,
+        userMsg
+      );
+      if (llmMsg) {
+        await sleep(1000);
+        this.handleChatMessage(aiBotPlayer.playerId, llmMsg)
+      }
     }
   }
 
