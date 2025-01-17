@@ -1,11 +1,13 @@
 import {PlayerInterface, PlayerPositionInterface} from './interfaces';
 import {PlayerState} from './enums';
 import WebSocket from 'ws';
+import {BotType} from './types';
 
 class Player implements PlayerInterface {
   socket: WebSocket | null;
   playerId: number; // this is incremented for each connection or bot, needed for table seat handling
   isBot: boolean;
+  botType: BotType = 'NORMAL';
   playerMoney: number;
   playerDatabaseId: number = -1;
   public selectedTableId: number = -1;

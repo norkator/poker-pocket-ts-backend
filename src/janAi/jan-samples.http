@@ -23,3 +23,25 @@ Content-Type: application/json
   "temperature": 0.7,
   "top_p": 0.95
 }
+
+### POST completion
+POST http://localhost:1337/v1/chat/completions
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are in Texas Hold 'em table and your task is to determine next best action. You can respond by actions CALL, CHECK, RAISE, FOLD. When using option RAISE separate amount using space."
+    },
+    { "role": "user", "content": "Your hole cards are ['A♥','Q♥'] and current middle cards ['5♥','K♠']. What is your action?" }
+  ],
+  "model": "llama3.1-8b-instruct",
+  "stream": false,
+  "max_tokens": 2048,
+  "stop": null,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "temperature": 0.7,
+  "top_p": 0.95
+}
