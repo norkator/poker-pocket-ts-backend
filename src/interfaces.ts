@@ -43,7 +43,6 @@ export interface PlayerInterface {
   handValue: number;
   handName: string | null;
   cardsInvolvedOnEvaluation: { value: string; suit: string; }[];
-  position: PlayerPositionInterface;
 
   resetParams(): void;
 
@@ -222,6 +221,8 @@ export interface ClientResponse {
     ranks?: RanksInterface[];
     table?: UserTableInterface | null;
     tableId?: number;
+    initialSpeed?: number;
+    deceleration?: number;
   };
 }
 
@@ -285,11 +286,6 @@ export interface UserTableInterface {
   minBet: number;
   afterRoundCountdown: number;
   discardAndDrawTimeout: number;
-}
-
-export interface PlayerPositionInterface {
-  x: number;
-  y: number;
 }
 
 export interface ChatCompletionResponse {

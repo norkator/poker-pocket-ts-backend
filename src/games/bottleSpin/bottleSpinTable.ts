@@ -1,22 +1,10 @@
-import {
-  ClientResponse,
-  PlayerInterface,
-  TableInfoInterface, UserTableInterface
-} from '../../interfaces';
+import {ClientResponse, PlayerInterface, TableInfoInterface, UserTableInterface} from '../../interfaces';
 import {ChatMessage, Game, PlayerAction} from '../../types';
 import {Player} from '../../player';
 import {gameConfig} from '../../gameConfig';
-import {
-  BottleSpinStage,
-  PlayerState,
-  SocketState
-} from '../../enums';
+import {BottleSpinStage, PlayerState, SocketState} from '../../enums';
 import logger from '../../logger';
-import {
-  findPlayerById,
-  getRandomInt,
-  sendClientMessage
-} from '../../utils';
+import {findPlayerById, getRandomInt, sendClientMessage} from '../../utils';
 import {
   BOT_CALL,
   BOT_CHECK,
@@ -61,7 +49,6 @@ export class BottleSpinTable {
   currentHighestBet: number;
   isCallSituation: boolean;
   roundWinnerPlayerIds: number[];
-  roundWinnerPlayerCards: any[];
   currentStatusText: string;
   lastUserAction: { playerId: number; actionText: string | null };
   dealerPlayerArrayIndex: number;
@@ -74,6 +61,7 @@ export class BottleSpinTable {
   bottleSpinInitiated: boolean;
   chatMessages: ChatMessage[] = [];
   chatMaxSize: number = 50;
+  winnerPlayer: number = -1;
 
   constructor(
     eventEmitter: EventEmitter,
@@ -108,7 +96,6 @@ export class BottleSpinTable {
     this.currentHighestBet = 0;
     this.isCallSituation = false;
     this.roundWinnerPlayerIds = [];
-    this.roundWinnerPlayerCards = [];
     this.currentStatusText = 'Waiting players...';
     this.lastUserAction = {playerId: -1, actionText: null};
     this.dealerPlayerArrayIndex = -1;
@@ -119,6 +106,7 @@ export class BottleSpinTable {
     this.lastWinnerPlayers = [];
     this.collectingPot = false;
     this.bottleSpinInitiated = false;
+    this.winnerPlayer = -1;
   }
 
   resetTableParams(): void {
@@ -129,7 +117,6 @@ export class BottleSpinTable {
     this.updateJsonTemp = null;
     this.current_player_turn = 0;
     this.roundWinnerPlayerIds = [];
-    this.roundWinnerPlayerCards = [];
     this.lastUserAction = {playerId: -1, actionText: null};
     this.smallBlindGiven = false;
     this.bigBlindGiven = false;
@@ -235,7 +222,6 @@ export class BottleSpinTable {
       logger.info('Game started for table: ' + this.tableName);
       this.resetTableParams();
       this.resetPlayerParameters(); // Reset players (resets dealer param too)
-      this.arrangePlayers(); // Gives players x, y coordinates around circle table
       this.setNextDealerPlayer(); // Get next dealer player
       this.getNextSmallBlindPlayer(); // Get small blind player
       let response = this.getTableParams();
@@ -269,7 +255,6 @@ export class BottleSpinTable {
       playerName: player.playerName,
       playerMoney: player.playerMoney,
       isDealer: player.isDealer,
-      position: player.position,
     }));
     return response;
   }
@@ -318,6 +303,7 @@ export class BottleSpinTable {
         break;
       case BottleSpinStage.FOUR_RESULTS:
         logger.debug('BS stage FOUR_RESULTS');
+        this.currentStatusText = 'Results';
         this.roundResultsEnd();
         break;
       default:
@@ -337,7 +323,6 @@ export class BottleSpinTable {
         playersData: [] as any[],
         isCallSituation: this.isCallSituation,
         roundWinnerPlayerIds: this.roundWinnerPlayerIds,
-        roundWinnerPlayerCards: this.roundWinnerPlayerCards,
         tableName: this.tableName,
         playingPlayersCount: this.players.length,
         appendPlayersCount: this.playersToAppend.length,
@@ -364,20 +349,14 @@ export class BottleSpinTable {
   }
 
   roundResultsEnd(): void {
-    let winnerPlayer: number = -1;
-    let l = this.players.length;
-    for (let i = 0; i < l; i++) {
-      if (!this.players[i].isFold) {
-        // todo implement
-      }
-    }
-    let winnerName = '';
-
-    logger.info(`${this.tableName} winner is ${winnerName}`);
-    this.currentStatusText = `${winnerName}`;
+    const player = this.players[this.winnerPlayer];
+    const winnerMsg = `${this.tableName} winner is ${player.playerName}`;
+    logger.info(winnerMsg);
+    this.currentStatusText = winnerMsg;
+    player.playerMoney = player.playerMoney + this.totalPot;
 
     // this.updateLoggedInPlayerDatabaseStatistics(winnerPlayers, this.lastWinnerPlayers);
-    this.lastWinnerPlayers = [winnerPlayer]; // Take new reference of winner players
+    this.lastWinnerPlayers = [this.winnerPlayer]; // Take new reference of winner players
     this.totalPot = 0;
 
     setTimeout(() => {
@@ -654,11 +633,6 @@ export class BottleSpinTable {
         this.sendStatusUpdate();
         this.bottleSpinTimer();
       } else {
-        // for (const player of this.players) {
-        //   if (player.playerState !== PlayerState.DISCARD_AND_DRAW) {
-        //     player.setStateFold();
-        //   }
-        // }
         this.currentStage = BottleSpinStage.FOUR_RESULTS;
         this.sendStatusUpdate();
         setTimeout(() => {
@@ -1000,30 +974,55 @@ export class BottleSpinTable {
     }
   }
 
-  arrangePlayers(): void {
-    if (this.players.length < 2 || this.players.length > 8) {
-      throw new Error("Number of players must be between 2 and 8.");
-    }
-    const angleIncrement = (2 * Math.PI) / this.players.length;
-    for (let i = 0; i < this.players.length; i++) {
-      const angle = i * angleIncrement;
-      const normalizedX = Math.cos(angle);
-      const normalizedY = Math.sin(angle);
-      this.players[i].position = {
-        x: normalizedX,
-        y: normalizedY,
-      }
-    }
+  calculateSpinDuration(
+    initialSpeed: number, deceleration: number, intervalMs: number = 16
+  ): number {
+    const steps = Math.ceil(initialSpeed / deceleration);
+    const totalTimeMs = steps * intervalMs;
+    return totalTimeMs / 1000;
   }
 
   spinBottle(playerId: number): void {
-    const player: Player | null = findPlayerById(playerId, this.players, [], []);
-    if (player && playerId === this.current_player_turn) {
-      logger.info(`BS spin bottle from player ${player.playerName}`);
-      // const randomAngle = Math.random() * 2 * Math.PI;
-      // const playerIndex = Math.floor((randomAngle / (2 * Math.PI)) * numPlayers);
-      // return playerIndex;
+    const playerIndex = this.getPlayerIndex(playerId);
+    const player = this.players[playerIndex];
+    // Step 1: Generate speed and deceleration
+    const initialSpeed = Math.random() * 15 + 15; // Random speed between 15 and 30
+    const deceleration = 0.2;
+    const spinDuration = this.calculateSpinDuration(initialSpeed, deceleration);
+
+    // Step 2: Calculate the total spin angle
+    const totalSpin = (initialSpeed ** 2) / (2 * deceleration); // Physics: v² = u² + 2as, solve for s
+
+    // Step 3: Determine the stopping angle
+    const finalAngle = totalSpin % 360; // Angle in degrees
+
+    // Step 4: Determine which player it points to
+    const numPlayers = this.players.length;
+    const anglePerPlayer = 360 / numPlayers;
+    const targetIndex = Math.floor(finalAngle / anglePerPlayer);
+    const winningPlayerId = this.players[targetIndex].playerId;
+
+    logger.info(`Bottle will stop at angle: ${finalAngle}, pointing to player: ${this.players[targetIndex].playerName} in ${spinDuration} seconds`);
+
+    for (const player of this.players) {
+      player.isPlayerTurn = false;
+      player.roundPlayed = true;
+      player.playerTimeLeft = 0;
     }
+
+    const response: ClientResponse = {key: 'spinBottle', data: {initialSpeed, deceleration}};
+    this.players.forEach((_, index) => {
+      this.sendWebSocketData(index, response);
+    });
+    this.sendStatusUpdate();
+
+    this.winnerPlayer = targetIndex;
+    this.roundWinnerPlayerIds = [winningPlayerId]
+    this.currentStage = BottleSpinStage.FOUR_RESULTS;
+
+    setTimeout(() => {
+      this.staging();
+    }, (spinDuration + 2) * 1000);
   }
 
 }

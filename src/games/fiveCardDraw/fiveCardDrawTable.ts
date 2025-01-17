@@ -286,7 +286,6 @@ export class FiveCardDrawTable {
       playerName: player.playerName,
       playerMoney: player.playerMoney,
       isDealer: player.isDealer,
-      position: player.position,
     }));
     return response;
   }

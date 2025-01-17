@@ -317,7 +317,6 @@ class GameHandler implements GameHandlerInterface {
         if (player) {
           if (table && table instanceof BottleSpinTable) {
             table.spinBottle(player.playerId);
-            table.sendStatusUpdate();
           } else {
             logger.error(`Player ${player.playerId} called ${message.key} for table instance which do not exist`);
           }

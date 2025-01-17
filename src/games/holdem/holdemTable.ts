@@ -291,7 +291,6 @@ export class HoldemTable implements HoldemTableInterface {
       playerName: player.playerName,
       playerMoney: player.playerMoney,
       isDealer: player.isDealer,
-      position: player.position,
     }));
     return response;
   }
