@@ -614,18 +614,10 @@ export class BottleSpinTable {
             this.players[i].isPlayerTurn = false;
           }
         }
-        const response: ClientResponse = {
-          key: 'bottleSpin', data: {
-            timeLeft: this.turnTimeOut,
-            playerId: this.players[currentPlayerTurn].playerId,
-          }
-        };
         this.players.forEach((player, index) => {
-          if (player.isBot) {
-            this.botActionHandler(index);
-          } else {
-            if (!player.isFold) {
-              this.sendWebSocketData(index, response);
+          if (player.isPlayerTurn) {
+            if (player.isBot) {
+              this.botActionHandler(index);
             }
           }
         });
