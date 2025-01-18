@@ -994,7 +994,7 @@ export class BottleSpinTable {
     const anglePerPlayer = 360 / numPlayers;
 
     const halfAngle = anglePerPlayer / 2;
-    const adjustedFinalAngle = (finalAngle - halfAngle + 360) % 360;
+    const adjustedFinalAngle = (finalAngle + halfAngle + 360) % 360;
 
     const targetIndex = Math.floor(adjustedFinalAngle / anglePerPlayer);
     const winningPlayerId = this.players[targetIndex].playerId;
