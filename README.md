@@ -45,12 +45,6 @@ DB_PASS=<value>
 7. Backend is now running.
 8. Set up frontend https://github.com/norkator/poker-pocket-react-client
 
-#### Optional
-
-* Tweak `./src/gameConfig.ts` file for initial table configurations.
-* Add env var `JAN_AI_SERVER_ADDRESS=<value>` if you want bots to go crazy.
-  * Sample value `http://localhost:1337`
-
 ### Note
 
 `.gitignore` file is set to ignore `HandRanks.dat` which is big file.

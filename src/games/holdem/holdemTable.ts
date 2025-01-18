@@ -35,7 +35,6 @@ import {Player} from '../../player';
 import EventEmitter from 'events';
 import {User} from '../../database/models/user';
 import {Statistic} from '../../database/models/statistic';
-import {fetchLLMChatCompletion} from '../../janAi/llm';
 
 // noinspection DuplicatedCode
 export class HoldemTable implements HoldemTableInterface {
@@ -1276,18 +1275,18 @@ export class HoldemTable implements HoldemTableInterface {
   ) {
 
     if (aiBotPlayer && process.env.JAN_AI_SERVER_ADDRESS) {
-      const llmMsg: string | null = await fetchLLMChatCompletion(
-        this.game,
-        aiBotPlayer.playerName,
-        aiBotPlayer.playerCards,
-        this.middleCards,
-        msgPlayerName,
-        userMsg
-      );
-      if (llmMsg) {
-        await sleep(1000);
-        this.handleChatMessage(aiBotPlayer.playerId, llmMsg)
-      }
+      // const llmMsg: string | null = await fetchLLMChatCompletion(
+      //   this.game,
+      //   aiBotPlayer.playerName,
+      //   aiBotPlayer.playerCards,
+      //   this.middleCards,
+      //   msgPlayerName,
+      //   userMsg
+      // );
+      // if (llmMsg) {
+      //   await sleep(1000);
+      //   this.handleChatMessage(aiBotPlayer.playerId, llmMsg)
+      // }
     }
   }
 
