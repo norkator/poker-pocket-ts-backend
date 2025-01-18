@@ -110,8 +110,7 @@ export class BottleSpinTable {
   }
 
   resetTableParams(): void {
-    // this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND; // todo revert to this
-    this.currentStage = BottleSpinStage.THREE_BOTTLE_SPIN;
+    this.currentStage = BottleSpinStage.ONE_SMALL_AND_BIG_BLIND;
     this.totalPot = 0;
     this.currentHighestBet = 0;
     this.updateJsonTemp = null;
@@ -123,6 +122,7 @@ export class BottleSpinTable {
     this.bigBlindPlayerHadTurn = false;
     this.collectingPot = false;
     this.bottleSpinInitiated = false;
+    this.clearTimers();
   }
 
   setTableInfo(
