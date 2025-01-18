@@ -975,10 +975,11 @@ export class BottleSpinTable {
   }
 
   spinBottle(playerId: number): void {
+    this.clearTimers();
     const playerIndex = this.getPlayerIndex(playerId);
     const player = this.players[playerIndex];
     // Step 1: Generate speed and deceleration
-    const initialSpeed = Math.random() * 15 + 15; // Random speed between 15 and 30
+    const initialSpeed = Math.random() * 15 + 25; // Random speed
     const deceleration = 0.2;
     const spinDuration = this.calculateSpinDuration(initialSpeed, deceleration);
 
@@ -991,10 +992,14 @@ export class BottleSpinTable {
     // Step 4: Determine which player it points to
     const numPlayers = this.players.length;
     const anglePerPlayer = 360 / numPlayers;
-    const targetIndex = Math.floor(finalAngle / anglePerPlayer);
+
+    const halfAngle = anglePerPlayer / 2;
+    const adjustedFinalAngle = (finalAngle - halfAngle + 360) % 360;
+
+    const targetIndex = Math.floor(adjustedFinalAngle / anglePerPlayer);
     const winningPlayerId = this.players[targetIndex].playerId;
 
-    logger.info(`Bottle will stop at angle: ${finalAngle}, pointing to player: ${this.players[targetIndex].playerName} in ${spinDuration} seconds`);
+    logger.info(`Bottle will stop at angle: ${adjustedFinalAngle}, pointing to player: ${this.players[targetIndex].playerName} in ${spinDuration} seconds`);
 
     for (const player of this.players) {
       player.isPlayerTurn = false;
@@ -1006,6 +1011,12 @@ export class BottleSpinTable {
     this.players.forEach((_, index) => {
       this.sendWebSocketData(index, response);
     });
+    for (let w = 0; w < this.playersToAppend.length; w++) {
+      this.sendWaitingPlayerWebSocketData(w, response);
+    }
+    for (let s = 0; s < this.spectators.length; s++) {
+      this.sendSpectatorWebSocketData(s, response);
+    }
     this.sendStatusUpdate();
 
     this.winnerPlayer = targetIndex;
