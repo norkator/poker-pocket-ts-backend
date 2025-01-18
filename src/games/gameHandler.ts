@@ -92,9 +92,13 @@ class GameHandler implements GameHandlerInterface {
   }
 
   onMessage(socket: WebSocket, msg: string): void {
-    const message = JSON.parse(msg.toString());
-    // noinspection JSIgnoredPromiseFromCall
-    this.messageHandler(socket, message);
+    try {
+      const message = JSON.parse(msg.toString());
+      // noinspection JSIgnoredPromiseFromCall
+      this.messageHandler(socket, message);
+    } catch (error) {
+      logger.fatal(`☣️  Someone sent something unexpected: ${msg.toString()}`);
+    }
   }
 
   onClientDisconnected(socket: WebSocket) {
