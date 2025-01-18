@@ -91,10 +91,10 @@ export const gameConfig = {
       ],
     },
     bottleSpin: {
-      startingTables: 0,
+      startingTables: 1,
       startMoney: 1000,
       bot: {
-        botCounts: [1, 1],
+        botCounts: [3, 1],
         turnTimes: [1000, 1500, 2000, 2500, 3000],
         betAmounts: [
           [25, 35, 100, 500],         // Low bet game
@@ -110,7 +110,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 10,
-          afterRoundCountdown: 10,
+          afterRoundCountdown: 5,
         },
       ],
     },
