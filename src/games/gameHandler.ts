@@ -87,7 +87,10 @@ class GameHandler implements GameHandlerInterface {
     const player = new Player(socket, playerId, gameConfig.games.holdEm.startMoney, false, generatePlayerName(playerId));
     playerIdIncrement++;
     players.set(socket, player);
-    socket.send(JSON.stringify({key: 'connected', data: {playerId: playerId}} as ClientResponse));
+    socket.send(JSON.stringify({
+      key: 'connected',
+      data: {playerId: playerId, playerName: player.playerName}
+    } as ClientResponse));
     logger.info(`New client connection player id ${playerId} and name ${player.playerName}`);
   }
 
