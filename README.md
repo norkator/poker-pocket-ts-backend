@@ -15,8 +15,7 @@ This ts version replaces old js version https://github.com/norkator/poker-pocket
 Current staging: https://pokerpocket-staging.nitramite.com  
 Current production: todo, because current runs old js version
 
-Here's list of different front end clients. You may want to take a look at them to
-see what it's all about.
+Get following front end client:
 
 * React Web UI: https://pokerpocket-staging.nitramite.com
     * React Web UI source code: https://github.com/norkator/poker-pocket-react-client
@@ -44,6 +43,10 @@ DB_PASS=<value>
 6. Run `npm run start:dev` on development environment (uses nodemon)
 7. Backend is now running.
 8. Set up frontend https://github.com/norkator/poker-pocket-react-client
+
+### AI LLM Addon
+
+* https://github.com/norkator/poker-pocket-ai-provider
 
 ### Note
 
