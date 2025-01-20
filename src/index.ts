@@ -39,6 +39,7 @@ const launch = async () => {
 
 launch().catch((error: any) => {
   logger.error('Error starting the application:', error);
+  process.exit(1);
 });
 
 // Ping clients periodically

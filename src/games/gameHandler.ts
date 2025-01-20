@@ -55,31 +55,36 @@ class GameHandler implements GameHandlerInterface {
   }
 
   async createStartingTables(): Promise<void> {
-    const holdEmCount = gameConfig.games.holdEm.startingTables;
-    Array.from({length: holdEmCount}).forEach((_, index: number) => {
-      const botCount = gameConfig.games.holdEm.bot.botCounts[index];
-      const startMoney = gameConfig.games.holdEm.startMoney;
-      this.createGameTable(index, HoldemTable, botCount, startMoney);
-    });
-    const fiveCardDrawCount = gameConfig.games.fiveCardDraw.startingTables;
-    Array.from({length: fiveCardDrawCount}).forEach((_, index: number) => {
-      const roomNumber = holdEmCount + index;
-      const botCount = gameConfig.games.holdEm.bot.botCounts[index];
-      const startMoney = gameConfig.games.holdEm.startMoney;
-      this.createGameTable(roomNumber, FiveCardDrawTable, botCount, startMoney);
-    });
-    const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
-    Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
-      const roomNumber = holdEmCount + fiveCardDrawCount + index;
-      const botCount = gameConfig.games.bottleSpin.bot.botCounts[index];
-      const startMoney = gameConfig.games.bottleSpin.startMoney;
-      this.createGameTable(roomNumber, BottleSpinTable, botCount, startMoney);
-    });
-    const allUsersTables: UserTableInterface[] = await getAllUsersTables();
-    allUsersTables.forEach((table: UserTableInterface, index: number) => {
-      const roomNumber = holdEmCount + fiveCardDrawCount + bottleSpinCount + index;
-      this.createUserTable(table, roomNumber);
-    });
+    try {
+      const holdEmCount = gameConfig.games.holdEm.startingTables;
+      Array.from({length: holdEmCount}).forEach((_, index: number) => {
+        const botCount = gameConfig.games.holdEm.bot.botCounts[index];
+        const startMoney = gameConfig.games.holdEm.startMoney;
+        this.createGameTable(index, HoldemTable, botCount, startMoney);
+      });
+      const fiveCardDrawCount = gameConfig.games.fiveCardDraw.startingTables;
+      Array.from({length: fiveCardDrawCount}).forEach((_, index: number) => {
+        const roomNumber = holdEmCount + index;
+        const botCount = gameConfig.games.holdEm.bot.botCounts[index];
+        const startMoney = gameConfig.games.holdEm.startMoney;
+        this.createGameTable(roomNumber, FiveCardDrawTable, botCount, startMoney);
+      });
+      const bottleSpinCount = gameConfig.games.bottleSpin.startingTables;
+      Array.from({length: bottleSpinCount}).forEach((_, index: number) => {
+        const roomNumber = holdEmCount + fiveCardDrawCount + index;
+        const botCount = gameConfig.games.bottleSpin.bot.botCounts[index];
+        const startMoney = gameConfig.games.bottleSpin.startMoney;
+        this.createGameTable(roomNumber, BottleSpinTable, botCount, startMoney);
+      });
+      const allUsersTables: UserTableInterface[] = await getAllUsersTables();
+      allUsersTables.forEach((table: UserTableInterface, index: number) => {
+        const roomNumber = holdEmCount + fiveCardDrawCount + bottleSpinCount + index;
+        this.createUserTable(table, roomNumber);
+      });
+    } catch (error: any) {
+      logger.fatal(`Create starting tables failed: ${error}`);
+      throw new Error(error);
+    }
   }
 
   onConnection(socket: WebSocket): void {
