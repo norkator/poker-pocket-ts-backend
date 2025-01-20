@@ -65,3 +65,6 @@ export type ChatMessage = {
   message: string;
 };
 export type BotType = 'NORMAL' | 'AI';
+export type PokerCards = {
+  [key: string]: string;
+};
