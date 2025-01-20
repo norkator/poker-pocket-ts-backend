@@ -1,4 +1,5 @@
-import seedRandom from 'seedrandom';
+import {randomInt} from 'crypto';
+import {PokerCards} from './types';
 
 const POKER_COLORS: { [key: number]: string } = {
   4: '♠', 	// spade
@@ -20,7 +21,7 @@ const POKER_COLOR_RANK: { [key: string]: number } = {
   '♦': 1, '♣': 2, '♥': 3, '♠': 4
 };
 
-const POKER_CARDS: any = {};
+const POKER_CARDS: PokerCards | any = {};
 
 for (let color = 1; color <= 4; color++) {
   for (let number = 2; number <= 14; number++) {
@@ -28,7 +29,6 @@ for (let color = 1; color <= 4; color++) {
     POKER_CARDS[card] = `${POKER_NUMBERS[number]}${POKER_COLORS[color]}`;
   }
 }
-POKER_CARDS[0] = '?';
 
 class Poker {
 
@@ -81,22 +81,11 @@ class Poker {
     return subset;
   }
 
-  static drawRandom(cards: number[], n: number): number[] {
-    const rng = seedRandom();
-    if (cards.length < n) return [];
-    const subset: number[] = [];
-    while (n-- > 0) {
-      const i = Math.floor(rng() * cards.length);
-      subset.push(cards[i]);
-      cards.splice(i, 1);
-    }
-    return subset;
-  }
-
-  static randomize(cards: number[]): number[] {
-    const randomized = Poker.drawRandom(cards, cards.length);
-    while (randomized.length) {
-      cards.push(randomized.shift()!);
+  // Fisher-Yates shuffle using crypto.randomInt for randomness.
+  static shuffle(cards: number[]): number[] {
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = randomInt(0, i + 1);
+      [cards[i], cards[j]] = [cards[j], cards[i]];
     }
     return cards;
   }

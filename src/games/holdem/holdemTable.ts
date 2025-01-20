@@ -299,7 +299,7 @@ export class HoldemTable implements HoldemTableInterface {
 
   newGame(): void {
     // Always shuffle new deck
-    this.deck = Poker.visualize(Poker.randomize(Poker.newSet()));
+    this.deck = Poker.visualize(Poker.shuffle(Poker.newSet()));
     this.deckSize = this.deck.length;
     this.deckCard = 0;
     this.sendStatusUpdate();
