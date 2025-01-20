@@ -42,7 +42,7 @@ export class UserTable extends Model {
   @AllowNull(false)
   @Column({
     type: DataType.INTEGER,
-    defaultValue: 0,
+    defaultValue: 6,
   })
   maxSeats!: number;
 
