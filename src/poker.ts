@@ -32,16 +32,6 @@ POKER_CARDS[0] = '?';
 
 class Poker {
 
-  static SPADE: number = 4;
-  static HEART: number = 3;
-  static CLUB: number = 2;
-  static DIAMOND: number = 1;
-
-  static COLORS = POKER_COLORS;
-  static NUMBERS = POKER_NUMBERS;
-  static CARDS = POKER_CARDS;
-  static NUMBER_RANK = POKER_NUMBER_RANK;
-
   constructor(str: string | string[]) {
     return Poker.parse(str);
   }
@@ -135,9 +125,9 @@ class Poker {
     return cards.sort(Poker.compareColorNumber).reverse();
   }
 
-  // static sortByColor(cards: number[]): number[] {
-  //   return Poker.sort(cards); // Alias for `sort`
-  // }
+  static sortByColor(cards: number[]): number[] {
+    return Poker.sort(cards); // Alias for `sort`
+  }
 
   static sortByNumber(cards: number[]): number[] {
     return cards.sort(Poker.compareNumberColor).reverse();
@@ -147,15 +137,15 @@ class Poker {
     return a.concat(b);
   }
 
-  // static print(cards: number[]): void {
-  //   const str = cards.join(',');
-  //   console.log(str);
-  // }
+  static print(cards: number[]): void {
+    const str = cards.join(',');
+    console.log(str);
+  }
 
-  // static view(cards: number[]): void {
-  //   const str = Poker.visualize(cards).join(',');
-  //   console.log(str);
-  // }
+  static view(cards: number[]): void {
+    const str = Poker.visualize(cards).join(',');
+    console.log(str);
+  }
 
 }
 
