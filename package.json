@@ -31,7 +31,6 @@
     "poker-odds": "1.0.1",
     "pokersolver": "2.1.4",
     "reflect-metadata": "0.2.2",
-    "seedrandom": "3.0.5",
     "sequelize": "6.37.5",
     "sequelize-typescript": "2.1.6",
     "ws": "8.18.0"
@@ -41,7 +40,6 @@
     "@types/jest": "29.5.14",
     "@types/jsonwebtoken": "9.0.7",
     "@types/node": "22.10.7",
-    "@types/seedrandom": "3.0.8",
     "@types/validator": "13.12.2",
     "@types/ws": "8.5.13",
     "jest": "29.7.0",
