@@ -280,6 +280,7 @@ export interface UserTableInterface {
   id: number;
   game: Game;
   tableName: string;
+  maxSeats: number;
   botCount: number;
   password: string;
   turnCountdown: number;

@@ -167,6 +167,9 @@ export class HoldemTable implements HoldemTableInterface {
     if (table.turnCountdown && table.turnCountdown > 0) {
       this.turnTimeOut = Number(table.turnCountdown) * 1000;
     }
+    if (table.maxSeats && table.maxSeats > 0) {
+      this.maxSeats = table.maxSeats;
+    }
     if (table.minBet && table.minBet > 0) {
       this.tableMinBet = Number(table.minBet);
     }

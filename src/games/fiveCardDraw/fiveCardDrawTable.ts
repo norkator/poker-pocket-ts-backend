@@ -161,6 +161,9 @@ export class FiveCardDrawTable {
     this.tableName = table.tableName || this.tableName;
     this.tableDatabaseId = Number(table.id) || this.tableDatabaseId;
     this.tablePassword = table.password || this.tablePassword;
+    if (table.maxSeats && table.maxSeats > 0) {
+      this.maxSeats = table.maxSeats;
+    }
     if (table.turnCountdown && table.turnCountdown > 0) {
       this.turnTimeOut = Number(table.turnCountdown) * 1000;
     }

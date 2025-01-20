@@ -44,6 +44,13 @@ export class UserTable extends Model {
     type: DataType.INTEGER,
     defaultValue: 0,
   })
+  maxSeats!: number;
+
+  @AllowNull(false)
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
   botCount!: number;
 
   @AllowNull(false)
