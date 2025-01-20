@@ -514,6 +514,13 @@ class GameHandler implements GameHandlerInterface {
               key: 'userParams',
               data: {
                 success: true,
+                userStats: {
+                  username: user.username,
+                  money: user.money,
+                  winCount: user.win_count,
+                  loseCount: user.lose_count,
+                  xp: user.xp
+                }
               }
             };
             socket.send(JSON.stringify(response));

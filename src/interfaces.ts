@@ -261,11 +261,11 @@ export interface UserStatsInterface {
   winCount: number;
   loseCount: number;
   xp: number;
-  achievements: {
+  achievements?: {
     id: number;
     achievementType: string;
   }[];
-  dailyAverageStats: DailyAverageStatsInterface;
+  dailyAverageStats?: DailyAverageStatsInterface;
 }
 
 export interface RanksInterface {
