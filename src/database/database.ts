@@ -29,10 +29,9 @@ const initializeDatabase = async () => {
     logger.info('Database connection established successfully.');
 
     await sequelize.sync(/*{alter: true}*/); // `alter: true` for updates without data loss
-    // logger.info('All models were synchronized successfully.');
   } catch (error) {
-    logger.error('Unable to connect to the database:', error);
-    process.exit(1);
+    logger.error('Error during database initialization:', error);
+    throw new Error(`Database initialization failed: ${error}`);
   }
 };
 
