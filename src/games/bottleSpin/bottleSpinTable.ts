@@ -17,6 +17,7 @@ import {
 } from '../../constants';
 import EventEmitter from 'events';
 import {BottleSpinBot} from './bottleSpinBot';
+import {randomInt} from 'crypto';
 
 // noinspection DuplicatedCode
 export class BottleSpinTable {
@@ -1000,7 +1001,8 @@ export class BottleSpinTable {
     const playerIndex = this.getPlayerIndex(playerId);
     const player = this.players[playerIndex];
     // Step 1: Generate speed and deceleration
-    const initialSpeed = Math.random() * 15 + 25; // Random speed
+    const initialSpeed = randomInt(25, 60); // Generates a random integer between 25 and 40 (inclusive)
+
     const deceleration = 0.2;
     const spinDuration = this.calculateSpinDuration(initialSpeed, deceleration);
 
