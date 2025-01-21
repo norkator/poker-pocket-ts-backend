@@ -283,7 +283,7 @@ export class BottleSpinTable {
     switch (this.currentStage) {
       case BottleSpinStage.ONE_SMALL_AND_BIG_BLIND: // Small blind and big blind are posted (small blind left of dealer, big blind second left of 'dealer')
         logger.debug('BS stage ONE_SMALL_AND_BIG_BLIND');
-        this.currentStatusText = 'Small blind & big blind';
+        this.currentStatusText = 'Small blind & big blind & bets';
         this.isCallSituation = false; // table related reset
         this.resetPlayerStates();
         this.resetRoundParameters();
@@ -292,16 +292,20 @@ export class BottleSpinTable {
         this.currentHighestBet = 0;
         this.smallAndBigBlinds(this.smallBlindPlayerArrayIndex);
         break;
-      case BottleSpinStage.TWO_BETTING_ROUND: // Betting round to extend small and big blinds so pot will have some serious funds
-        logger.debug('BS stage TWO_BETTING_ROUND');
-        this.currentStatusText = 'First betting round';
-        this.currentTurnText = '';
-        this.isCallSituation = false; // table related reset
-        this.resetPlayerStates();
-        this.resetRoundParameters();
-        this.current_player_turn = this.smallBlindPlayerArrayIndex;
-        this.currentHighestBet = 0;
-        this.bettingRound(this.current_player_turn);
+      // case BottleSpinStage.TWO_BETTING_ROUND: // Betting round to extend small and big blinds so pot will have some serious funds
+      //   logger.debug('BS stage TWO_BETTING_ROUND');
+      //   this.currentStatusText = 'First betting round';
+      //   this.currentTurnText = '';
+      //   this.isCallSituation = false; // table related reset
+      //   this.resetPlayerStates();
+      //   this.resetRoundParameters();
+      //   this.current_player_turn = this.smallBlindPlayerArrayIndex;
+      //   this.currentHighestBet = 0;
+      //   this.bettingRound(this.current_player_turn);
+      //   break;
+      case BottleSpinStage.TWO_BETTING_ROUND:
+        this.currentStage = BottleSpinStage.THREE_BOTTLE_SPIN
+        this.staging();
         break;
       case BottleSpinStage.THREE_BOTTLE_SPIN: // In this game, 'dealer' is spinning bottle
         logger.debug('BS stage THREE_BOTTLE_SPIN');
