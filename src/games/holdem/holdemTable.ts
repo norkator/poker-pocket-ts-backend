@@ -431,6 +431,7 @@ export class HoldemTable implements HoldemTableInterface {
       isFold: player.isFold,
       timeLeft: player.playerTimeLeft,
       timeBar: (player.playerTimeLeft / this.turnTimeOut) * 100,
+      actionsAvailable: player.actionsAvailable
     }));
     if (JSON.stringify(this.updateJsonTemp) !== JSON.stringify(response)) {
       this.updateJsonTemp = response;
@@ -663,6 +664,7 @@ export class HoldemTable implements HoldemTableInterface {
             }
           } else {
             this.players[noRoundPlayedPlayer].isPlayerTurn = true;
+            this.players[noRoundPlayedPlayer].actionsAvailable = ['CHECK', 'CALL', 'FOLD', 'RAISE'];
             this.players[noRoundPlayedPlayer].playerTimeLeft = this.turnTimeOut;
             this.currentTurnText = '' + this.players[noRoundPlayedPlayer].playerName + ' Turn';
             this.sendStatusUpdate();
@@ -688,6 +690,7 @@ export class HoldemTable implements HoldemTableInterface {
               }
               // player's turn
               this.players[currentPlayerTurn].isPlayerTurn = true;
+              this.players[currentPlayerTurn].actionsAvailable = ['CHECK', 'CALL', 'FOLD', 'RAISE'];
               this.players[currentPlayerTurn].playerTimeLeft = this.turnTimeOut;
               this.currentTurnText = '' + this.players[currentPlayerTurn].playerName + ' Turn';
               this.sendStatusUpdate();

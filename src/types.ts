@@ -58,7 +58,18 @@ export type ClientMessageKey =
   | 'getUserTables'
   | 'createUpdateUserTable'
   | 'bottleSpin';
-export type PlayerAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'DISCARD_AND_DRAW';
+export type PlayerAction =
+  'CHECK'
+  | 'CALL'
+  | 'RAISE'
+  | 'FOLD'
+  | 'DISCARD_AND_DRAW'
+  | 'SPIN_BOTTLE'
+  | 'HIT'
+  | 'STAND'
+  | 'DOUBLE_DOWN'
+  | 'SPLIT'
+  | 'SURRENDER';
 export type ClientMessageType = 'clientMessage' | 'warningMessage' | 'errorMessage' | 'infoMessage';
 export type ChatMessage = {
   playerName: string;

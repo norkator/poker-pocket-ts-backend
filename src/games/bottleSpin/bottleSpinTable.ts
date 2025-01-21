@@ -352,6 +352,7 @@ export class BottleSpinTable {
       isFold: player.isFold,
       timeLeft: player.playerTimeLeft,
       timeBar: (player.playerTimeLeft / this.turnTimeOut) * 100,
+      actionsAvailable: player.actionsAvailable
     }));
     if (JSON.stringify(this.updateJsonTemp) !== JSON.stringify(response)) {
       this.updateJsonTemp = response;
@@ -410,6 +411,7 @@ export class BottleSpinTable {
             }
           } else {
             this.players[noRoundPlayedPlayer].isPlayerTurn = true;
+            this.players[noRoundPlayedPlayer].actionsAvailable = ['CHECK', 'CALL', 'FOLD', 'RAISE'];
             this.players[noRoundPlayedPlayer].playerTimeLeft = this.turnTimeOut;
             this.currentTurnText = '' + this.players[noRoundPlayedPlayer].playerName + ' Turn';
             this.sendStatusUpdate();
@@ -435,6 +437,7 @@ export class BottleSpinTable {
               }
               // player's turn
               this.players[currentPlayerTurn].isPlayerTurn = true;
+              this.players[currentPlayerTurn].actionsAvailable = ['CHECK', 'CALL', 'FOLD', 'RAISE'];
               this.players[currentPlayerTurn].playerTimeLeft = this.turnTimeOut;
               this.currentTurnText = '' + this.players[currentPlayerTurn].playerName + ' Turn';
               this.sendStatusUpdate();
@@ -622,6 +625,7 @@ export class BottleSpinTable {
         for (let i = 0; i < this.players.length; i++) {
           if (i === currentPlayerTurn) {
             this.players[i].isPlayerTurn = true;
+            this.players[i].actionsAvailable = ['SPIN_BOTTLE'];
             this.players[i].playerTimeLeft = this.turnTimeOut;
           } else {
             this.players[i].isPlayerTurn = false;

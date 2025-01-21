@@ -1,7 +1,7 @@
 import {PlayerInterface} from './interfaces';
 import {PlayerState} from './enums';
 import WebSocket from 'ws';
-import {BotType} from './types';
+import {BotType, PlayerAction} from './types';
 
 class Player implements PlayerInterface {
   socket: WebSocket | null;
@@ -26,6 +26,7 @@ class Player implements PlayerInterface {
   handValue: number = 0;
   handName: string | null = null;
   cardsInvolvedOnEvaluation: { value: string; suit: string; }[] = [];
+  actionsAvailable: PlayerAction[] = [];
 
   constructor(
     socket: WebSocket,
@@ -52,6 +53,7 @@ class Player implements PlayerInterface {
     this.handName = '';
     this.cardsInvolvedOnEvaluation = [];
     this.isDealer = false;
+    this.actionsAvailable = [];
   }
 
   checkFunds(tableMinBet: number): void {
