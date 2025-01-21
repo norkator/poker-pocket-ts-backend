@@ -413,6 +413,7 @@ export class FiveCardDrawTable {
       isFold: player.isFold,
       timeLeft: player.playerTimeLeft,
       timeBar: (player.playerTimeLeft / this.turnTimeOut) * 100,
+      actionsAvailable: player.actionsAvailable
     }));
     if (JSON.stringify(this.updateJsonTemp) !== JSON.stringify(response)) {
       this.updateJsonTemp = response;
@@ -592,6 +593,7 @@ export class FiveCardDrawTable {
             }
           } else {
             this.players[noRoundPlayedPlayer].isPlayerTurn = true;
+            this.players[noRoundPlayedPlayer].actionsAvailable = ['CHECK', 'CALL', 'FOLD', 'RAISE'];
             this.players[noRoundPlayedPlayer].playerTimeLeft = this.turnTimeOut;
             this.currentTurnText = '' + this.players[noRoundPlayedPlayer].playerName + ' Turn';
             this.sendStatusUpdate();
@@ -617,6 +619,7 @@ export class FiveCardDrawTable {
               }
               // player's turn
               this.players[currentPlayerTurn].isPlayerTurn = true;
+              this.players[currentPlayerTurn].actionsAvailable = ['CHECK', 'CALL', 'FOLD', 'RAISE'];
               this.players[currentPlayerTurn].playerTimeLeft = this.turnTimeOut;
               this.currentTurnText = '' + this.players[currentPlayerTurn].playerName + ' Turn';
               this.sendStatusUpdate();
@@ -828,6 +831,7 @@ export class FiveCardDrawTable {
         const {discardAndDrawTimeout} = gameConfig.games.fiveCardDraw.games[this.gameType];
         for (const player of this.players) {
           player.isPlayerTurn = true;
+          player.actionsAvailable = ['DISCARD_AND_DRAW'];
           player.playerTimeLeft = discardAndDrawTimeout * 1000;
         }
         let response: ClientResponse = {key: 'discardAndDraw', data: {}};
