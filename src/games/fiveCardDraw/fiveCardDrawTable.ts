@@ -197,44 +197,57 @@ export class FiveCardDrawTable {
           this.playersTemp.push(player);
         } else if (player && !player.isBot && player.selectedTableId === this.tableId) {
           sendClientMessage(
-            player.socket, 'Not enough money to join the game. You are now spectator.', 'NO_MONEY_CHANGED_TO_SPECTATOR'
+            player.socket,
+            'Not enough money to join the game. You are now spectator.',
+            'NO_MONEY_CHANGED_TO_SPECTATOR'
           );
           this.spectators.push(player);
         }
       }
-      this.players = this.playersTemp.filter(player => player && player.socket);
+      this.players = this.playersTemp
+        .filter(player => player && player.socket)
+        .slice(0, this.maxSeats);
+      const excessPlayers = this.playersTemp.slice(this.maxSeats);
+      for (const player of excessPlayers) {
+        if (!player.isBot) {
+          sendClientMessage(
+            player.socket,
+            'No seats available. You are now a spectator.',
+            'NO_SEAT_CHANGED_TO_SPECTATOR'
+          );
+          this.spectators.push(player);
+        }
+      }
       this.playersTemp = [];
       if (this.playersToAppend.length > 0) {
         for (const player of this.playersToAppend) {
-          if (player.socket && player.playerMoney > this.tableMinBet) {
+          if (player.socket && player.playerMoney > this.tableMinBet && this.players.length < this.maxSeats) {
             this.players.push(player);
           } else if (!player.isBot) {
             sendClientMessage(
-              player.socket, 'Not enough money to join the game. You are now spectator.', 'NO_MONEY_CHANGED_TO_SPECTATOR'
+              player.socket,
+              this.players.length >= this.maxSeats
+                ? 'No seats available. You are now a spectator.'
+                : 'Not enough money to join the game. You are now a spectator.',
+              this.players.length >= this.maxSeats
+                ? 'NO_SEAT_CHANGED_TO_SPECTATOR'
+                : 'NO_MONEY_CHANGED_TO_SPECTATOR'
             );
             this.spectators.push(player);
           }
         }
         this.playersToAppend = [];
-        if (this.players.length >= this.minPlayers) {
-          setTimeout(() => {
-            this.startGame();
-          }, gameConfig.common.startGameTimeOut);
-        } else {
-          logger.info(`Table ${this.tableName} has not enough players`);
-        }
+      }
+      if (this.players.length >= this.minPlayers) {
+        setTimeout(() => {
+          this.startGame();
+        }, gameConfig.common.startGameTimeOut);
       } else {
-        if (this.players.length >= this.minPlayers) {
-          logger.info(`Table ${this.tableName} no new players to append... starting new game`);
-          setTimeout(() => {
-            this.startGame();
-          }, gameConfig.common.startGameTimeOut);
-        } else {
-          this.currentStatusText = `${this.minPlayers} players needed to start a new game...`;
-        }
+        logger.info(`Table ${this.tableName} has not enough players`);
+        this.currentStatusText = `${this.minPlayers} players needed to start a new game...`;
       }
     } else {
-      logger.warn(`Cant append more players since round is running for table: ${this.tableName}`);
+      logger.warn(`Cannot append more players since a round is running for table: ${this.tableName}`);
     }
   }
 
