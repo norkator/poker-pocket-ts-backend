@@ -570,6 +570,7 @@ class GameHandler implements GameHandlerInterface {
             key: 'rankings',
             data: {
               ranks: ranks,
+              count: ranks.length,
             }
           };
           socket.send(JSON.stringify(response));

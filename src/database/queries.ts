@@ -51,7 +51,7 @@ export async function getRankings(): Promise<RanksInterface[]> {
     order: [
       ['xp', 'DESC'],
     ],
-    limit: 100,
+    // limit: 100,
     raw: true
   });
 }

@@ -223,6 +223,7 @@ export interface ClientResponse {
     tableId?: number;
     initialSpeed?: number;
     deceleration?: number;
+    count?: number;
   };
 }
 
