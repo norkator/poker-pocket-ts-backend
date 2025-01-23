@@ -1,4 +1,5 @@
 import {
+  AchievementDefinition,
   AuthInterface,
   ClientResponse,
   GameHandlerInterface,
@@ -41,6 +42,7 @@ import {
   getUserTables
 } from '../database/queries';
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
+import {getAchievementDefinitionById} from '../achievementDefinitions';
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -550,9 +552,16 @@ class GameHandler implements GameHandlerInterface {
                   winCount: user.win_count,
                   loseCount: user.lose_count,
                   xp: user.xp,
-                  achievements: achievements.map(({id, achievementType}) => ({
-                    id, achievementType,
-                  })),
+                  achievements: achievements.map(({id, achievementId, count}) => {
+                    const definition: AchievementDefinition = getAchievementDefinitionById(achievementId);
+                    return {
+                      id: id,
+                      name: definition.name,
+                      description: definition.description,
+                      icon: definition.icon,
+                      count: count,
+                    }
+                  }),
                   dailyAverageStats: dailyAverageStats,
                 },
                 success: true,
