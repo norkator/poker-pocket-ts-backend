@@ -1098,6 +1098,7 @@ export class FiveCardDrawTable {
                 win_count: user.win_count + 1,
                 xp: user.xp + incrementXp,
                 money: player.playerMoney,
+                play_count: user.play_count + 1,
               });
               player.playerWinCount = player.playerWinCount + 1;
               const response: ClientResponse = {
@@ -1116,6 +1117,7 @@ export class FiveCardDrawTable {
                 await user.update({
                   lose_count: user.lose_count + 1,
                   money: player.playerMoney,
+                  play_count: user.play_count + 1,
                 });
                 player.playerLoseCount = player.playerLoseCount + 1;
               }
