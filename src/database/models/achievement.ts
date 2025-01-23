@@ -27,7 +27,18 @@ export class Achievement extends Model {
   userId!: number;
 
   @AllowNull(false)
-  @Column(DataType.STRING)
-  achievementType!: string;
+  @Column(DataType.INTEGER)
+  achievementId!: number;
+
+  @AllowNull(false)
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  count!: number;
+
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  lastAchievedAt?: Date;
 
 }
