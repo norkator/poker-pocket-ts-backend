@@ -53,6 +53,12 @@ export class User extends Model {
     type: DataType.INTEGER,
     defaultValue: 0,
   })
+  play_count!: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
   win_count!: number;
 
   @Column({
