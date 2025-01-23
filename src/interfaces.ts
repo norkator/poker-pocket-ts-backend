@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import {PlayerState} from './enums';
-import {ChatMessage, ClientMessageType, Game, PlayerAction, ResponseKey} from './types';
+import {AchievementIcon, ChatMessage, ClientMessageType, Game, PlayerAction, ResponseKey} from './types';
 
 export interface ExtendedWebSocket extends WebSocket {
   isAlive: boolean;
@@ -264,7 +264,10 @@ export interface UserStatsInterface {
   xp: number;
   achievements?: {
     id: number;
-    achievementType: string;
+    name: string;
+    description: string;
+    icon: string;
+    count: number;
   }[];
   dailyAverageStats?: DailyAverageStatsInterface;
 }
@@ -309,4 +312,11 @@ export interface ChatCompletionResponse {
     prompt_tokens: number;
     total_tokens: number;
   };
+}
+
+export interface AchievementDefinition {
+  id: number;
+  name: string;
+  description: string;
+  icon: AchievementIcon;
 }

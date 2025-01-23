@@ -79,3 +79,14 @@ export type BotType = 'NORMAL' | 'AI';
 export type PokerCards = {
   [key: string]: string;
 };
+export type AchievementIcon =
+  'shaded_medal_blank'
+  | 'shaded_medal_one'
+  | 'shaded_medal_two'
+  | 'shaded_medal_three'
+  | 'shaded_medal_four'
+  | 'shaded_medal_five'
+  | 'shaded_medal_six'
+  | 'shaded_medal_seven'
+  | 'shaded_medal_eight'
+  | 'shaded_medal_nine';
