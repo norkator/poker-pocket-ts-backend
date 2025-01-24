@@ -29,7 +29,7 @@ export function handlePublicChatMessage(
     }
     const newMessage: ChatMessage = {playerName: player.playerName, message};
     chatMessages.push(newMessage);
-    const response: ClientResponse = {key: 'chatMessage', data: {chatMessage: newMessage}};
+    const response: ClientResponse = {key: 'chatMessage', data: {success: true, chatMessage: newMessage}};
     players.forEach((p: Player) => {
       if (p.selectedTableId === -1 && p.socket && p.socket.readyState === SocketState.OPEN) {
         p.socket.send(JSON.stringify(response));

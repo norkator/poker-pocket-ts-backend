@@ -16,3 +16,5 @@ export const BOT_RAISE = 'bot_raise';
 export const BOT_REMOVE = 'remove_bot';
 export const BOT_DISCARD_AND_DRAW = 'bot_discard_and_draw';
 export const BOT_SPIN_BOTTLE = 'bot_spin_bottle';
+export const MAX_MESSAGE_LENGTH = 400;
+export const MESSAGE_COOLDOWN_MS = 1000;
