@@ -23,7 +23,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 10,
-          afterRoundCountdown: 10
+          afterRoundCountdown: 8
         },
         {
           name: 'Texas Hold\'em with medium bets',
@@ -32,7 +32,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 20,
-          afterRoundCountdown: 10
+          afterRoundCountdown: 8
         },
         {
           name: 'Texas Hold\'em with high bets',
@@ -41,7 +41,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 50,
-          afterRoundCountdown: 10
+          afterRoundCountdown: 8
         }
       ],
     },
@@ -65,7 +65,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 10,
-          afterRoundCountdown: 10,
+          afterRoundCountdown: 8,
           discardAndDrawTimeout: 20,
         },
         {
@@ -75,7 +75,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 20,
-          afterRoundCountdown: 10,
+          afterRoundCountdown: 8,
           discardAndDrawTimeout: 20,
         },
         {
@@ -85,7 +85,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 50,
-          afterRoundCountdown: 10,
+          afterRoundCountdown: 8,
           discardAndDrawTimeout: 20,
         },
       ],
@@ -118,7 +118,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 20,
-          afterRoundCountdown: 10,
+          afterRoundCountdown: 5,
           discardAndDrawTimeout: 20,
         },
         {
@@ -128,7 +128,7 @@ export const gameConfig = {
           minPlayers: 2,
           turnCountdown: 20,
           minBet: 50,
-          afterRoundCountdown: 10,
+          afterRoundCountdown: 5,
           discardAndDrawTimeout: 20,
         },
       ],
