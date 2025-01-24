@@ -16,7 +16,6 @@ import {
   findPlayerById,
   getRandomInt,
   sendClientMessage,
-  sleep,
   stringToAsciiCardsArray
 } from '../../utils';
 import {
@@ -497,7 +496,7 @@ export class HoldemTable implements HoldemTableInterface {
     }
     setTimeout(() => {
       this.staging();
-    }, 3000);
+    }, 2000);
   }
 
   theTurn(): void {
@@ -516,7 +515,7 @@ export class HoldemTable implements HoldemTableInterface {
     }
     setTimeout(() => {
       this.staging();
-    }, 2000);
+    }, 1500);
   }
 
   theRiver(): void {
@@ -535,7 +534,7 @@ export class HoldemTable implements HoldemTableInterface {
     }
     setTimeout(() => {
       this.staging();
-    }, 2000);
+    }, 1500);
   }
 
   sendAllPlayersCards(): void {
@@ -559,7 +558,7 @@ export class HoldemTable implements HoldemTableInterface {
     }
     setTimeout(() => {
       this.staging();
-    }, 3000);
+    }, 2000);
   }
 
   roundResultsEnd(): void {
@@ -660,7 +659,7 @@ export class HoldemTable implements HoldemTableInterface {
             } else {
               setTimeout(() => {
                 this.staging(); // No pot to collect, continue without timing
-              }, 1000);
+              }, 500);
             }
           } else {
             this.players[noRoundPlayedPlayer].isPlayerTurn = true;
@@ -733,7 +732,7 @@ export class HoldemTable implements HoldemTableInterface {
         this.clearTimers();
         this.bettingRound(currentPlayerTurn + 1);
       }
-    }, 1000);
+    }, 500);
     this.turnTimeOutObj = setTimeout(() => {
       if (this.players[currentPlayerTurn].playerState === PlayerState.NONE) {
         this.playerFold(this.players[currentPlayerTurn].playerId);
