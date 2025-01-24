@@ -27,6 +27,7 @@ class Player implements PlayerInterface {
   handName: string | null = null;
   cardsInvolvedOnEvaluation: { value: string; suit: string; }[] = [];
   actionsAvailable: PlayerAction[] = [];
+  lastChatMessageTime: number = 0;
 
   constructor(
     socket: WebSocket,

@@ -29,7 +29,7 @@ import {
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
 import EventEmitter from 'events';
-import {NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
+import {MAX_MESSAGE_LENGTH, MESSAGE_COOLDOWN_MS, NEW_BOT_EVENT_KEY, NEW_PLAYER_STARTING_FUNDS} from '../constants';
 import {Achievement} from '../database/models/achievement';
 import {HoldemBot} from './holdem/holdemBot';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
@@ -377,6 +377,32 @@ class GameHandler implements GameHandlerInterface {
         player = players.get(socket);
         const chatMsg = message.message;
         if (player) {
+          if (chatMsg.length > MAX_MESSAGE_LENGTH) {
+            const response: ClientResponse = {
+              key: 'chatMessage',
+              data: {
+                message: `Message is too long. Maximum length is ${MAX_MESSAGE_LENGTH} characters.`,
+                translationKey: 'MESSAGE_TOO_LONG',
+                success: false,
+              }
+            };
+            socket.send(JSON.stringify(response));
+            break;
+          }
+          const now = Date.now();
+          if (now - player.lastChatMessageTime < MESSAGE_COOLDOWN_MS) {
+            const response: ClientResponse = {
+              key: 'chatMessage',
+              data: {
+                message: `You are sending messages too quickly. Please wait a moment.`,
+                translationKey: 'MESSAGES_TOO_QUICKLY',
+                success: false,
+              }
+            };
+            socket.send(JSON.stringify(response));
+            break;
+          }
+          player.lastChatMessageTime = now;
           tableId = Number(player.selectedTableId);
           table = tables.get(tableId);
           if (table && table instanceof HoldemTable) {
