@@ -43,6 +43,9 @@ import {
 } from '../database/queries';
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
 import {getAchievementDefinitionById} from '../achievementDefinitions';
+import leoProfanity from 'leo-profanity';
+
+leoProfanity.loadDictionary('en');
 
 let playerIdIncrement = 0;
 const players = new Map<WebSocket, Player>();
@@ -402,21 +405,23 @@ class GameHandler implements GameHandlerInterface {
             socket.send(JSON.stringify(response));
             break;
           }
+          const containsProfanity = leoProfanity.check(chatMsg);
+          const filteredChatMsg = containsProfanity ? leoProfanity.clean(chatMsg) : chatMsg;
           player.lastChatMessageTime = now;
           tableId = Number(player.selectedTableId);
           table = tables.get(tableId);
           if (table && table instanceof HoldemTable) {
-            logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
-            table.handleChatMessage(player.playerId, chatMsg)
+            logger.info(`Player ${player.playerId} send chat message ${filteredChatMsg} into table ${table.tableName}`);
+            table.handleChatMessage(player.playerId, filteredChatMsg)
           } else if (table && table instanceof FiveCardDrawTable) {
-            logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
-            table.handleChatMessage(player.playerId, chatMsg)
+            logger.info(`Player ${player.playerId} send chat message ${filteredChatMsg} into table ${table.tableName}`);
+            table.handleChatMessage(player.playerId, filteredChatMsg)
           } else if (table && table instanceof BottleSpinTable) {
-            logger.info(`Player ${player.playerId} send chat message ${chatMsg} into table ${table.tableName}`);
-            table.handleChatMessage(player.playerId, chatMsg)
+            logger.info(`Player ${player.playerId} send chat message ${filteredChatMsg} into table ${table.tableName}`);
+            table.handleChatMessage(player.playerId, filteredChatMsg)
           } else if (tableId === -1) {
-            handlePublicChatMessage(players, player, chatMsg);
-            logger.info(`Player ${player.playerId} send public chat message ${chatMsg}`);
+            handlePublicChatMessage(players, player, filteredChatMsg);
+            logger.info(`Player ${player.playerId} send public chat message ${filteredChatMsg}`);
           }
         }
         break;
