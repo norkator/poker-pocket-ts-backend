@@ -58,3 +58,17 @@ jobs:
           tags: ghcr.io/norkator/poker-pocket-ts-backend:latest
           build-args: NODE_ENV=staging
           file: Dockerfile
+
+  deploy-staging:
+    needs: [ tests, publish-main-image ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sekassel-research/actions-rancher-update@v3.3.0
+        with:
+          rancher_url: ${{ secrets.RANCHER_URL }}
+          rancher_token: ${{ secrets.RANCHER_TOKEN }}
+          cluster_id: ${{ secrets.CLUSTER_ID }}
+          namespace: ${{ secrets.NAMESPACE }}
+          kind: deployment
+          workload: ${{ secrets.WORKLOAD }}
+          docker_image: ghcr.io/norkator/poker-pocket-ts-backend:latest
