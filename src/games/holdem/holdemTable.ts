@@ -1111,7 +1111,7 @@ export class HoldemTable implements HoldemTableInterface {
               this.sendWebSocketData(index, response);
             }
           } else {
-            if (this.totalPot > (this.tableMinBet * this.players.length)) {
+            if (this.totalPot >= (this.tableMinBet * this.players.length)) {
               const user = await User.findOne({where: {id: player.playerDatabaseId}});
               if (user) {
                 await user.update({
