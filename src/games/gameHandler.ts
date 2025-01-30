@@ -195,14 +195,6 @@ class GameHandler implements GameHandlerInterface {
           }
         }
         break;
-      // case 'getSpectateTables':
-      //   const spectateTableParams: ClientResponse = {key: 'getSpectateTables', data: {tables: []}}
-      //   tables.forEach((table: HoldemTable | FiveCardDrawTable | BottleSpinTable) => {
-      //     spectateTableParams.data.tables?.push(table.getTableInfo());
-      //   });
-      //   logger.info('Sending spectate tables... ' + JSON.stringify(spectateTableParams));
-      //   socket.send(JSON.stringify(spectateTableParams));
-      //   break;
       case 'selectSpectateTable':
         tableId = Number(message.tableId);
         table = tables.get(tableId);
@@ -344,7 +336,6 @@ class GameHandler implements GameHandlerInterface {
         tableId = Number(message.tableId);
         table = tables.get(tableId);
         player = players.get(socket);
-        cardsToDiscard = message.cardsToDiscard;
         if (table && player) {
           if (table instanceof HoldemTable || table instanceof BottleSpinTable) {
             const spectatorIndex = table.spectators.indexOf(player);
