@@ -31,14 +31,15 @@ Get following front end client:
 1. Create database named `poker-pocket-ts` or define your own db name by setting env var `DB_NAME`
 2. Add new schema into database called `poker`
 3. Define and fill rest of env vars
-
-```
-DB_HOST=<value>
-DB_USER=<value>
-DB_PASS=<value>
-```
-
-4. Define env var `PW_SECRET=<value>` and get value using `npm run secret`
+    ```
+    DB_HOST=<value>
+    DB_USER=<value>
+    DB_PASS=<value>
+    DB_NAME=<value, by default poker-pocket-ts>
+    ```
+4. Define secrets
+    * Define env var `PW_SECRET=<value>` and get value using `npm run secret`
+    * Define env var `PW_REFRESH_SECRET=<value>` and get value using `npm run secret`
 5. Run `npm install`
 6. Run `npm run start:dev` on development environment (uses nodemon)
 7. Backend is now running.
