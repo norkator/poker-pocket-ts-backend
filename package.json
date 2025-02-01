@@ -25,6 +25,7 @@
     "dotenv": "16.4.7",
     "jsonwebtoken": "9.0.2",
     "leo-profanity": "1.7.0",
+    "node-cron": "3.0.3",
     "pg": "8.13.1",
     "pg-hstore": "2.3.4",
     "pino": "9.6.0",
