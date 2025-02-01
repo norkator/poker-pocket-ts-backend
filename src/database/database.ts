@@ -5,6 +5,7 @@ import {User} from './models/user';
 import {Achievement} from './models/achievement';
 import {Statistic} from './models/statistic';
 import {UserTable} from './models/userTables';
+import {RefreshToken} from './models/refreshToken';
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ const sequelize = new Sequelize({
   database: process.env.DB_NAME || 'poker-pocket-ts',
   // logging: (msg: string) => logger.debug(msg),
   logging: false,
-  models: [User, Achievement, Statistic, UserTable],
+  models: [User, RefreshToken, Achievement, Statistic, UserTable],
   define: {
     schema: 'poker',
   },
