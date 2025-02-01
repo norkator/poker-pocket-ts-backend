@@ -25,6 +25,14 @@ export const verifyToken = (token: string) => {
   return jwt.verify(token, process.env.PW_SECRET as string);
 };
 
+export const generateRefreshToken = (userId: number) => {
+  return jwt.sign({userId}, process.env.PW_REFRESH_SECRET as string, {expiresIn: '7d'});
+};
+
+export const verifyRefreshToken = (token: string) => {
+  return jwt.verify(token, process.env.PW_REFRESH_SECRET as string) as JwtPayload;
+};
+
 export const authenticate = (socket: WebSocket, message: any): AuthInterface => {
   const token = message.token;
   if (!token) {

@@ -224,6 +224,7 @@ export interface ClientResponse {
     initialSpeed?: number;
     deceleration?: number;
     count?: number;
+    refreshToken?: string;
   };
 }
 

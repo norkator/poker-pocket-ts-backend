@@ -3,6 +3,7 @@ import {Statistic} from './models/statistic';
 import {User} from './models/user';
 import {RanksInterface, UserTableInterface} from '../interfaces';
 import {UserTable} from './models/userTables';
+import {RefreshToken} from './models/refreshToken';
 
 export async function getDailyAverageStats(userId: number) {
   const oneMonthAgo = new Date();
@@ -123,3 +124,33 @@ export async function getAllUsersTables(): Promise<UserTableInterface[]> {
     order: [['id', 'ASC']],
   });
 }
+
+export const saveRefreshToken = async (userId: number, token: string, expiresInDays = 7) => {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+  await RefreshToken.create({
+    token,
+    userId,
+    expiresAt,
+  });
+};
+
+export const findRefreshToken = async (token: string) => {
+  return await RefreshToken.findOne({
+    where: {token},
+  });
+};
+
+export const deleteRefreshToken = async (token: string) => {
+  return await RefreshToken.destroy({
+    where: {token},
+  });
+};
+
+export const cleanUpExpiredTokens = async () => {
+  await RefreshToken.destroy({
+    where: {
+      expiresAt: {lt: new Date()},
+    },
+  });
+};
