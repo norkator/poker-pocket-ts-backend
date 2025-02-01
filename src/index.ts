@@ -3,6 +3,8 @@ import logger from './logger';
 import {GameHandler} from './games/gameHandler';
 import {initializeDatabase} from './database/database';
 import {ExtendedWebSocket} from './interfaces';
+import {schedule} from 'node-cron';
+import {cleanUpExpiredTokens} from './database/queries';
 
 const port = 8000;
 const server = new WebSocketServer({port});
@@ -59,4 +61,10 @@ const interval = setInterval(() => {
 
 server.on('close', () => {
   clearInterval(interval);
+});
+
+
+schedule('0 * * * *', async () => {
+  logger.debug(`Cleaning expired tokens`);
+  await cleanUpExpiredTokens();
 });
