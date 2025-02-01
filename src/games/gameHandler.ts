@@ -19,12 +19,12 @@ import {
   authenticate,
   createMockWebSocket,
   findTableByDatabaseId,
-  generatePlayerName,
+  generatePlayerName, generateRefreshToken,
   generateToken,
   getPlayerCount,
   getRandomBotName,
   isPlayerInTable,
-  sendClientNotification,
+  sendClientNotification, verifyRefreshToken,
 } from '../utils';
 import {User} from '../database/models/user';
 import bcrypt from 'bcrypt';
@@ -35,11 +35,14 @@ import {HoldemBot} from './holdem/holdemBot';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
 import {BottleSpinBot} from './bottleSpin/bottleSpinBot';
 import {
-  createUpdateUserTable, getAllUsersTables,
+  createUpdateUserTable,
+  findRefreshToken,
+  getAllUsersTables,
   getDailyAverageStats,
   getRankings,
   getUserTable,
-  getUserTables
+  getUserTables,
+  saveRefreshToken
 } from '../database/queries';
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
 import {getAchievementDefinitionById} from '../achievementDefinitions';
@@ -506,10 +509,13 @@ class GameHandler implements GameHandlerInterface {
             return;
           }
           const token = generateToken(user.id);
+          const refreshToken = generateRefreshToken(user.id);
+          await saveRefreshToken(user.id, refreshToken);
           const response: ClientResponse = {
             key: 'login',
             data: {
               token: token,
+              refreshToken: refreshToken,
               success: true,
             }
           };
@@ -521,6 +527,58 @@ class GameHandler implements GameHandlerInterface {
             data: {
               message: error.message,
               translationKey: 'LOGIN_ERROR',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        }
+        break;
+      }
+      case 'refreshToken': {
+        const {refreshToken} = message;
+        if (!refreshToken) {
+          const response: ClientResponse = {
+            key: 'refreshToken',
+            data: {
+              message: 'refreshToken is required',
+              translationKey: 'REFRESH_TOKEN_REQUIRED',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
+          return;
+        }
+        const storedToken = await findRefreshToken(refreshToken);
+        if (!storedToken) {
+          const response: ClientResponse = {
+            key: 'refreshToken',
+            data: {
+              message: 'Invalid username or password',
+              translationKey: 'INVALID_USERNAME_OR_PASSWORD',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
+          return;
+        }
+        try {
+          const payload = verifyRefreshToken(refreshToken);
+          const newAccessToken = generateToken(payload.userId);
+          const response: ClientResponse = {
+            key: 'refreshToken',
+            data: {
+              token: newAccessToken,
+              success: true,
+            }
+          };
+          socket.send(JSON.stringify(response));
+        } catch (error: any) {
+          logger.error(error.message);
+          const response: ClientResponse = {
+            key: 'refreshToken',
+            data: {
+              message: error.message,
+              translationKey: 'REFRESH_TOKEN_ERROR',
               success: false,
             }
           };

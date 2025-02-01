@@ -11,7 +11,7 @@ import {
 import {User} from './user';
 
 @Table({
-  tableName: 'refresh_tokens',
+  tableName: 'refreshTokens',
   timestamps: true,
 })
 export class RefreshToken extends Model {
