@@ -35,6 +35,7 @@ import {HoldemBot} from './holdem/holdemBot';
 import {FiveCardDrawBot} from './fiveCardDraw/fiveCardDrawBot';
 import {BottleSpinBot} from './bottleSpin/bottleSpinBot';
 import {
+  cleanUpExpiredTokens,
   createUpdateUserTable,
   findRefreshToken,
   getAllUsersTables,
@@ -47,6 +48,7 @@ import {
 import {getPublicChatMessages, handlePublicChatMessage} from '../publicChat';
 import {getAchievementDefinitionById} from '../achievementDefinitions';
 import leoProfanity from 'leo-profanity';
+import {schedule} from 'node-cron';
 
 leoProfanity.loadDictionary('en');
 
@@ -60,6 +62,16 @@ class GameHandler implements GameHandlerInterface {
   constructor() {
     this.eventEmitter = new EventEmitter();
     this.eventEmitter.on(NEW_BOT_EVENT_KEY, this.onAppendBot.bind(this));
+
+    schedule('0 * * * *', () => {
+      const botsToDelete: WebSocket[] = [];
+      for (const [ws, player] of players) {
+        if (player.isBot && player.selectedTableId === -1) {
+          botsToDelete.push(ws);
+        }
+      }
+      botsToDelete.forEach((ws: any) => players.delete(ws));
+    });
   }
 
   async createStartingTables(): Promise<void> {
