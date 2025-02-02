@@ -1,5 +1,3 @@
-# ⚠️ WORK  IN PROGRESS ⚠️
-
 ![poker_pocket_promo](./poker_pocket.png)
 
 # Poker Pocket Typescript Backend
