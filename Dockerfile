@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:20-alpine AS build
+FROM node:23-alpine AS build
 RUN apk --no-cache add curl
 
 WORKDIR /usr/src/app
@@ -21,7 +21,7 @@ RUN mkdir -p ./dist/assets && cp ./src/assets/names.txt ./dist/assets/
 RUN cp ./src/HandRanks.dat ./dist/HandRanks.dat
 
 # Clean Image Stage
-FROM node:20-alpine
+FROM node:23-alpine
 
 WORKDIR /usr/src/app
 
