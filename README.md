@@ -11,7 +11,7 @@ This ts version replaces old js version https://github.com/norkator/poker-pocket
 ### Testing it out
 
 Current staging: https://pokerpocket-staging.nitramite.com  
-Current production: todo, because current runs old js version
+Current production: https://pokerpocket.nitramite.com
 
 Get following front end client:
 
