@@ -451,6 +451,19 @@ class GameHandler implements GameHandlerInterface {
           socket.send(JSON.stringify(response));
           return;
         }
+        const usernameRegex = /^[a-z0-9!@#$%^&*()_+=[\]{}|;:'",.<>?/`~-]+$/; // must be lowercase and contain no spaces
+        if (!usernameRegex.test(username)) {
+          const response: ClientResponse = {
+            key: 'createAccount',
+            data: {
+              message: 'Username must be lowercase and contain no spaces',
+              translationKey: 'INVALID_USERNAME',
+              success: false,
+            }
+          };
+          socket.send(JSON.stringify(response));
+          return;
+        }
         try {
           const user = await User.create({
             username: username,
