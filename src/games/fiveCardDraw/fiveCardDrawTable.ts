@@ -803,6 +803,8 @@ export class FiveCardDrawTable {
         this.players[playerIndex].setStateDiscardAndDraw();
         this.players[playerIndex].playerCards.forEach((card: string, index: number) => {
           if (cardsToDiscard.includes(card)) {
+            // todo six player rooms have issue of cards running out
+            // should limit this to fastest players gets cards or just limit five card draw rooms to have max five players?
             this.players[playerIndex].playerCards[index] = this.getNextDeckCard();
           }
         });
@@ -984,9 +986,12 @@ export class FiveCardDrawTable {
   }
 
   getNextDeckCard(): string {
-    let nextCard = this.deck[this.deckCard];
-    this.deckCard = this.deckCard + 1;
-    return nextCard;
+    if (this.deckCard < 52) {
+      let nextCard = this.deck[this.deckCard];
+      this.deckCard = this.deckCard + 1;
+      return nextCard;
+    }
+    return ''; // todo.. should limit five card draw max players to five?
   }
 
   getPlayerIndex(playerId: number): number {
@@ -1076,7 +1081,8 @@ export class FiveCardDrawTable {
     if (!player || !player.playerCards || player.playerCards.length < 5) {
       return {value: 0, handName: null};
     }
-    const cardsToEvaluate = player.playerCards.slice(0, 5);
+    const cardsToEvaluate = player.playerCards.slice(0, 5)
+      .filter(card => card !== undefined && card !== '');
     const validCardCounts = [3, 5, 6, 7];
     if (validCardCounts.includes(cardsToEvaluate.length)) {
       return evaluator.evalHand(cardsToEvaluate);
