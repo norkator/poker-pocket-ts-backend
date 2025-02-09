@@ -497,7 +497,7 @@ export class FiveCardDrawTable {
           this.players[i].playerCards[2],
           this.players[i].playerCards[3],
           this.players[i].playerCards[4],
-        ]));
+        ].filter((c: string) => c !== undefined && c !== '')));
         this.players[i].cardsInvolvedOnEvaluation = hand.cards;
         // Use Hand ranks to get value and hand name
         let evaluated = this.evaluatePlayerCards(i);
