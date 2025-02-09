@@ -798,8 +798,8 @@ export class FiveCardDrawTable {
 
   playerDiscardAndDraw(playerId: number, cardsToDiscard: string[]): void {
     let playerIndex = this.getPlayerIndex(playerId);
-    if (this.players[playerIndex].socket !== null || this.players[playerIndex].isBot) {
-      if (playerIndex !== -1) {
+    if (playerIndex !== -1) {
+      if (this.players[playerIndex].socket !== null || this.players[playerIndex].isBot) {
         this.players[playerIndex].setStateDiscardAndDraw();
         this.players[playerIndex].playerCards.forEach((card: string, index: number) => {
           if (cardsToDiscard.includes(card)) {
