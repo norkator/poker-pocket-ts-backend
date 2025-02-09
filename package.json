@@ -1,6 +1,6 @@
 {
   "name": "poker-pocket-ts-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Poker Pocket multi game typescript websocket backend",
   "main": "index.js",
   "scripts": {
@@ -41,7 +41,7 @@
     "@types/bcrypt": "5.0.2",
     "@types/jest": "29.5.14",
     "@types/jsonwebtoken": "9.0.8",
-    "@types/node": "22.13.0",
+    "@types/node": "22.13.1",
     "@types/node-cron": "3.0.11",
     "@types/validator": "13.12.2",
     "@types/ws": "8.5.14",
