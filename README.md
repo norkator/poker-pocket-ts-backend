@@ -13,6 +13,8 @@ This ts version replaces old js version https://github.com/norkator/poker-pocket
 Current staging: https://pokerpocket-staging.nitramite.com  
 Current production: https://pokerpocket.nitramite.com
 
+Android client (production): https://play.google.com/store/apps/details?id=com.nitramite.pokerpocket
+
 Get following front end client:
 
 * React Web UI: https://pokerpocket-staging.nitramite.com
